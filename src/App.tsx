@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ChatPage from "./pages/ChatPage";
 import AdminPage from "./pages/AdminPage";
+import HerbsPage from "./pages/HerbsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
