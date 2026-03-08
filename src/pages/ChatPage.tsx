@@ -18,10 +18,11 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
 
-const SUGGESTED_CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   {
     icon: "🌿",
     label: "สรรพคุณสมุนไพร",
+    category: "herbal_info",
     questions: [
       "ฟ้าทะลายโจรมีสรรพคุณอย่างไร?",
       "ขมิ้นชันใช้รักษาอะไรได้บ้าง?",
@@ -31,6 +32,7 @@ const SUGGESTED_CATEGORIES = [
   {
     icon: "💊",
     label: "Drug Interaction",
+    category: "drug_interaction",
     questions: [
       "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?",
       "ฟ้าทะลายโจรมีปฏิกิริยากับยาอะไรบ้าง?",
@@ -40,6 +42,7 @@ const SUGGESTED_CATEGORIES = [
   {
     icon: "⚖️",
     label: "ขนาดยาและวิธีใช้",
+    category: "dosage",
     questions: [
       "ฟ้าทะลายโจรใช้ขนาดเท่าไร หญิงตั้งครรภ์กินได้ไหม?",
       "ยาเบญจกูลใช้อย่างไร มีข้อห้ามอะไร?",
@@ -49,6 +52,7 @@ const SUGGESTED_CATEGORIES = [
   {
     icon: "🏥",
     label: "กลุ่มเฉพาะ",
+    category: "general",
     questions: [
       "สมุนไพรอะไรที่ผู้ป่วยโรคไตควรหลีกเลี่ยง?",
       "หญิงให้นมบุตรกินขมิ้นชันได้ไหม?",
@@ -56,6 +60,14 @@ const SUGGESTED_CATEGORIES = [
     ],
   },
 ];
+
+const CATEGORY_META: Record<string, { icon: string; label: string }> = {
+  herbal_info: { icon: "🌿", label: "สรรพคุณสมุนไพร" },
+  drug_interaction: { icon: "💊", label: "Drug Interaction" },
+  dosage: { icon: "⚖️", label: "ขนาดยาและวิธีใช้" },
+  side_effects: { icon: "⚠️", label: "ผลข้างเคียง" },
+  general: { icon: "🏥", label: "ทั่วไป" },
+};
 
 function parseMetadata(content: string) {
   const metaMatch = content.match(/\[METADATA\]([\s\S]*?)\[\/METADATA\]/);
@@ -83,7 +95,50 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [suggestedCategories, setSuggestedCategories] = useState(DEFAULT_CATEGORIES);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load popular questions from DB
+  useEffect(() => {
+    const loadPopularQuestions = async () => {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("content, category")
+        .eq("role", "user")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error || !data || data.length < 5) return;
+
+      // Group by category and pick top questions (deduplicate similar ones)
+      const byCategory: Record<string, string[]> = {};
+      for (const row of data) {
+        const cat = row.category || "general";
+        if (!byCategory[cat]) byCategory[cat] = [];
+        // Skip very short or duplicate-ish questions
+        if (row.content.length < 10) continue;
+        const isDuplicate = byCategory[cat].some(
+          (q) => q.toLowerCase() === row.content.toLowerCase()
+        );
+        if (!isDuplicate && byCategory[cat].length < 3) {
+          byCategory[cat].push(row.content);
+        }
+      }
+
+      // Build dynamic categories, fall back to defaults if not enough
+      const dynamic = DEFAULT_CATEGORIES.map((def) => {
+        const dbQuestions = byCategory[def.category];
+        if (dbQuestions && dbQuestions.length >= 2) {
+          return { ...def, questions: dbQuestions };
+        }
+        return def;
+      });
+
+      setSuggestedCategories(dynamic);
+    };
+
+    loadPopularQuestions();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -304,7 +359,7 @@ const ChatPage = () => {
             </p>
 
             <div className="w-full max-w-2xl space-y-4">
-              {SUGGESTED_CATEGORIES.map((cat, ci) => (
+              {suggestedCategories.map((cat, ci) => (
                 <motion.div
                   key={ci}
                   initial={{ opacity: 0, y: 10 }}
