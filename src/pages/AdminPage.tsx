@@ -65,6 +65,14 @@ const StatCard = ({ icon: Icon, label, value, trend, color }: { icon: any; label
 );
 
 const AdminPage = () => {
+  const [authenticated, setAuthenticated] = useState(
+    () => sessionStorage.getItem("admin_auth") === "true"
+  );
+
+  if (!authenticated) {
+    return <AdminLogin onLogin={() => setAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
