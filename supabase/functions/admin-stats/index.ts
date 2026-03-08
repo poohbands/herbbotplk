@@ -35,65 +35,94 @@ serve(async (req) => {
         .gte('created_at', sevenDaysAgo.toISOString())
         .eq('role', 'user');
 
-      // Group by day
-      const dailyMap: Record<string, { questions: number; interactions: number }> = {};
       const dayNames = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-      
+      const dailyMap: Record<string, { questions: number; interactions: number }> = {};
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().split('T')[0];
-        dailyMap[key] = { questions: 0, interactions: 0 };
+        dailyMap[d.toISOString().split('T')[0]] = { questions: 0, interactions: 0 };
       }
 
       (dailyMessages || []).forEach((msg: any) => {
         const key = msg.created_at.split('T')[0];
         if (dailyMap[key]) {
           dailyMap[key].questions++;
-          if (msg.category === 'drug_interaction') {
-            dailyMap[key].interactions++;
-          }
+          if (msg.category === 'drug_interaction') dailyMap[key].interactions++;
         }
       });
 
-      const dailyData = Object.entries(dailyMap).map(([date, data]) => {
-        const d = new Date(date);
-        return {
-          date: dayNames[d.getDay()],
-          questions: data.questions,
-          interactions: data.interactions,
-        };
-      });
+      const dailyData = Object.entries(dailyMap).map(([date, data]) => ({
+        date: dayNames[new Date(date).getDay()],
+        questions: data.questions,
+        interactions: data.interactions,
+      }));
 
-      // Top herbs
+      // All messages with metadata
       const { data: allMessages } = await supabase
         .from('chat_messages')
-        .select('herbs_mentioned, drugs_mentioned')
-        .not('herbs_mentioned', 'is', null);
+        .select('herbs_mentioned, drugs_mentioned, category, severity, created_at, role')
+        .eq('role', 'assistant');
 
       const herbCount: Record<string, number> = {};
       const drugCount: Record<string, number> = {};
+      const interactionPairs: Record<string, number> = {};
+      const severityCount: Record<string, number> = { major: 0, moderate: 0, minor: 0 };
+      const monthlyMap: Record<string, { total: number; interaction: number; dosage: number; herbal: number; side_effects: number }> = {};
 
       (allMessages || []).forEach((msg: any) => {
+        // Herb/drug counts
         (msg.herbs_mentioned || []).forEach((h: string) => {
           herbCount[h] = (herbCount[h] || 0) + 1;
         });
         (msg.drugs_mentioned || []).forEach((d: string) => {
           drugCount[d] = (drugCount[d] || 0) + 1;
         });
+
+        // Interaction pairs: herb × drug
+        if (msg.category === 'drug_interaction' && msg.herbs_mentioned?.length && msg.drugs_mentioned?.length) {
+          for (const herb of msg.herbs_mentioned) {
+            for (const drug of msg.drugs_mentioned) {
+              const pair = `${herb} × ${drug}`;
+              interactionPairs[pair] = (interactionPairs[pair] || 0) + 1;
+            }
+          }
+        }
+
+        // Severity breakdown
+        if (msg.severity && severityCount[msg.severity] !== undefined) {
+          severityCount[msg.severity]++;
+        }
+
+        // Monthly trends
+        const month = msg.created_at?.substring(0, 7); // YYYY-MM
+        if (month) {
+          if (!monthlyMap[month]) monthlyMap[month] = { total: 0, interaction: 0, dosage: 0, herbal: 0, side_effects: 0 };
+          monthlyMap[month].total++;
+          if (msg.category === 'drug_interaction') monthlyMap[month].interaction++;
+          if (msg.category === 'dosage') monthlyMap[month].dosage++;
+          if (msg.category === 'herbal_info') monthlyMap[month].herbal++;
+          if (msg.category === 'side_effects') monthlyMap[month].side_effects++;
+        }
       });
 
-      const topHerbs = Object.entries(herbCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 6)
-        .map(([name, count]) => ({ name, count }));
+      const topHerbs = Object.entries(herbCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
+      const topDrugs = Object.entries(drugCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
+      const topInteractionPairs = Object.entries(interactionPairs).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([pair, count]) => ({ pair, count }));
 
-      const topDrugs = Object.entries(drugCount)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 5)
-        .map(([name, count]) => ({ name, count }));
+      const monthNames: Record<string, string> = {
+        '01': 'ม.ค.', '02': 'ก.พ.', '03': 'มี.ค.', '04': 'เม.ย.',
+        '05': 'พ.ค.', '06': 'มิ.ย.', '07': 'ก.ค.', '08': 'ส.ค.',
+        '09': 'ก.ย.', '10': 'ต.ค.', '11': 'พ.ย.', '12': 'ธ.ค.',
+      };
 
-      // Category breakdown
+      const monthlyData = Object.entries(monthlyMap)
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(-6)
+        .map(([month, data]) => ({
+          month: monthNames[month.split('-')[1]] || month,
+          ...data,
+        }));
+
       const categoryData = [
         { name: 'ข้อมูลสมุนไพร', value: stats?.herbal_info_count || 0 },
         { name: 'Drug Interaction', value: stats?.drug_interaction_count || 0 },
@@ -109,6 +138,9 @@ serve(async (req) => {
         dailyData,
         topHerbs,
         topDrugs,
+        topInteractionPairs,
+        severityBreakdown: severityCount,
+        monthlyData,
         categoryData,
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
