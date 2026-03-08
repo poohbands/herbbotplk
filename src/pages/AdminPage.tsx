@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Leaf, BarChart3, MessageCircle, AlertTriangle, TrendingUp, Users, ArrowLeft, Pill } from "lucide-react";
+import AdminLogin from "@/components/AdminLogin";
 import { motion } from "framer-motion";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from "recharts";
 
@@ -64,6 +65,14 @@ const StatCard = ({ icon: Icon, label, value, trend, color }: { icon: any; label
 );
 
 const AdminPage = () => {
+  const [authenticated, setAuthenticated] = useState(
+    () => sessionStorage.getItem("admin_auth") === "true"
+  );
+
+  if (!authenticated) {
+    return <AdminLogin onLogin={() => setAuthenticated(true)} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
