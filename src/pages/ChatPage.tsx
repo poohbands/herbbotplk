@@ -342,6 +342,23 @@ const ChatPage = () => {
         )}
       </div>
 
+      {/* Emergency Banner */}
+      <div className="border-t border-destructive/20 bg-destructive/5">
+        <div className="container max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-destructive">
+            <ShieldAlert className="w-4 h-4 shrink-0" />
+            <span>หากมีอาการไม่พึงประสงค์จากการใช้ยา ให้หยุดใช้ทันทีและติดต่อแพทย์</span>
+          </div>
+          <a
+            href="tel:1669"
+            className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+          >
+            <Phone className="w-3.5 h-3.5" />
+            1669 ฉุกเฉิน
+          </a>
+        </div>
+      </div>
+
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur-sm sticky bottom-0">
         <div className="container max-w-4xl mx-auto px-4 py-3">
@@ -365,7 +382,7 @@ const ChatPage = () => {
             </button>
           </form>
           <p className="text-xs text-muted-foreground text-center mt-2">
-            ⚠️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
+            ⚕️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
           </p>
         </div>
       </div>
