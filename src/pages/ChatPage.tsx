@@ -1,84 +1,221 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, Pill, AlertTriangle } from "lucide-react";
+import { Send, Leaf, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
+import { toast } from "sonner";
 
 type Message = {
   id: string;
   role: "user" | "assistant";
   content: string;
   category?: string;
+  severity?: string;
+  sources?: string[];
   timestamp: Date;
 };
 
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
+
 const SAMPLE_QUESTIONS = [
   "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?",
-  "ฟ้าทะลายโจรมีฤทธิ์อย่างไร?",
+  "ฟ้าทะลายโจรมีสรรพคุณอย่างไร?",
   "สมุนไพรอะไรช่วยลดน้ำตาลในเลือด?",
   "กระชายขาวมี drug interaction กับยาอะไรบ้าง?",
 ];
 
-// Mock AI response for demo
-const getMockResponse = (question: string): { content: string; category: string } => {
-  if (question.includes("Warfarin") || question.includes("warfarin")) {
-    return {
-      content: `## ⚠️ ขมิ้นชัน × Warfarin\n\n**ระดับความเสี่ยง:** สูง\n\n**คำแนะนำ:**\nขมิ้นชัน (Curcumin) มีฤทธิ์ต้านการแข็งตัวของเลือด ซึ่งอาจเสริมฤทธิ์ของยา Warfarin ทำให้เกิดความเสี่ยงต่อ:\n\n- เลือดออกง่ายขึ้น\n- รอยฟกช้ำ\n- เลือดกำเดาไหล\n\n**ข้อแนะนำ:** ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ร่วมกัน และควรตรวจค่า INR เป็นประจำ\n\n> *ข้อมูลนี้เป็นข้อมูลทั่วไป ไม่ใช่คำแนะนำทางการแพทย์*`,
-      category: "drug-interaction",
-    };
-  }
-  if (question.includes("ฟ้าทะลายโจร")) {
-    return {
-      content: `## 🌿 ฟ้าทะลายโจร (Andrographis paniculata)\n\n**สรรพคุณหลัก:**\n- ลดไข้ แก้หวัด\n- ต้านการอักเสบ\n- กระตุ้นภูมิคุ้มกัน\n- ต้านไวรัส\n\n**ขนาดที่แนะนำ:** 1-3 กรัม/วัน (ผงแห้ง)\n\n**ข้อควรระวัง:**\n- ไม่ควรใช้ในหญิงตั้งครรภ์\n- อาจมีปฏิกิริยากับยาลดความดันและยาต้านการแข็งตัวของเลือด\n\n> *ควรปรึกษาแพทย์ก่อนใช้*`,
-      category: "herbal-info",
-    };
-  }
-  if (question.includes("น้ำตาล")) {
-    return {
-      content: `## 🍃 สมุนไพรที่ช่วยลดน้ำตาลในเลือด\n\n1. **มะระขี้นก** — ช่วยกระตุ้นการหลั่งอินซูลิน\n2. **อบเชย** — ช่วยเพิ่มความไวต่ออินซูลิน\n3. **ขมิ้นชัน** — มีฤทธิ์ต้านการอักเสบและช่วยควบคุมน้ำตาล\n4. **ใบหม่อน** — ยับยั้งเอนไซม์ alpha-glucosidase\n\n**⚠️ ข้อควรระวัง:** หากใช้ยาลดน้ำตาลอยู่แล้ว ต้องระวังภาวะน้ำตาลต่ำ\n\n> *ปรึกษาแพทย์ก่อนใช้ร่วมกับยาแผนปัจจุบัน*`,
-      category: "herbal-info",
-    };
-  }
-  return {
-    content: `## 🌿 ข้อมูลสมุนไพร\n\nขอบคุณสำหรับคำถามครับ/ค่ะ\n\nสำหรับคำถามเกี่ยวกับ "${question}" — ระบบกำลังประมวลผลข้อมูลจากฐานข้อมูลสมุนไพรไทย\n\n**คำแนะนำเบื้องต้น:**\n- ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้สมุนไพรร่วมกับยาแผนปัจจุบัน\n- ตรวจสอบ drug interaction ก่อนใช้เสมอ\n\n> *เชื่อมต่อ Lovable Cloud เพื่อใช้ AI ตอบคำถามแบบเต็มรูปแบบ*`,
-    category: "general",
+function parseMetadata(content: string) {
+  const metaMatch = content.match(/\[METADATA\]([\s\S]*?)\[\/METADATA\]/);
+  if (!metaMatch) return { cleanContent: content, category: "general", severity: "none", herbs: [], drugs: [] };
+
+  const cleanContent = content.replace(/\[METADATA\][\s\S]*?\[\/METADATA\]/, "").trim();
+  const meta = metaMatch[1];
+
+  const getField = (field: string) => {
+    const m = meta.match(new RegExp(`${field}:\\s*(.+)`));
+    return m ? m[1].trim() : "";
   };
-};
+
+  return {
+    cleanContent,
+    category: getField("category") || "general",
+    severity: getField("severity") || "none",
+    herbs: getField("herbs").split(",").map((s) => s.trim()).filter(Boolean),
+    drugs: getField("drugs").split(",").map((s) => s.trim()).filter(Boolean),
+  };
+}
 
 const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const createSession = async () => {
+    if (sessionId) return sessionId;
+    const { data, error } = await supabase.from("chat_sessions").insert({}).select("id").single();
+    if (error) {
+      console.error("Failed to create session:", error);
+      return null;
+    }
+    setSessionId(data.id);
+    return data.id;
+  };
+
+  const saveMessage = async (sid: string, role: string, content: string, meta?: any) => {
+    await supabase.from("chat_messages").insert({
+      session_id: sid,
+      role,
+      content,
+      category: meta?.category || "general",
+      severity: meta?.severity || null,
+      herbs_mentioned: meta?.herbs || [],
+      drugs_mentioned: meta?.drugs || [],
+      sources: meta?.sources || [],
+    });
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
+    const userContent = input.trim();
     const userMsg: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input.trim(),
+      content: userContent,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
 
-    // Simulate AI delay
-    await new Promise((r) => setTimeout(r, 1200));
-    const response = getMockResponse(userMsg.content);
-    const aiMsg: Message = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant",
-      content: response.content,
-      category: response.category,
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, aiMsg]);
-    setIsLoading(false);
+    const sid = await createSession();
+    if (sid) {
+      saveMessage(sid, "user", userContent);
+    }
+
+    try {
+      const allMessages = [...messages, userMsg].map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ messages: allMessages }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Error ${resp.status}`);
+      }
+
+      if (!resp.body) throw new Error("No response body");
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let assistantContent = "";
+      let streamDone = false;
+
+      while (!streamDone) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") {
+            streamDone = true;
+            break;
+          }
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) =>
+                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
+                  );
+                }
+                return [
+                  ...prev,
+                  {
+                    id: (Date.now() + 1).toString(),
+                    role: "assistant",
+                    content: assistantContent,
+                    timestamp: new Date(),
+                  },
+                ];
+              });
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
+      // Parse metadata and save
+      const { cleanContent, category, severity, herbs, drugs } = parseMetadata(assistantContent);
+
+      // Update final message with clean content
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i === prev.length - 1 && m.role === "assistant"
+            ? { ...m, content: cleanContent, category, severity }
+            : m
+        )
+      );
+
+      if (sid) {
+        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs });
+      }
+    } catch (e: any) {
+      console.error("Chat error:", e);
+      toast.error(e.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getCategoryLabel = (cat?: string) => {
+    switch (cat) {
+      case "drug_interaction": return "💊 Drug Interaction";
+      case "herbal_info": return "🌿 ข้อมูลสมุนไพร";
+      case "dosage": return "⚖️ วิธีใช้/ขนาดยา";
+      case "side_effects": return "⚠️ ผลข้างเคียง";
+      default: return "📋 ทั่วไป";
+    }
+  };
+
+  const getSeverityBadge = (sev?: string) => {
+    switch (sev) {
+      case "major": return <span className="text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive font-medium">⚠️ Major</span>;
+      case "moderate": return <span className="text-xs px-2 py-0.5 rounded-full bg-herb-gold/20 text-herb-earth font-medium">⚡ Moderate</span>;
+      case "minor": return <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">ℹ️ Minor</span>;
+      default: return null;
+    }
   };
 
   return (
@@ -116,11 +253,9 @@ const ChatPage = () => {
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             />
-            <h2 className="text-2xl font-bold font-thai text-foreground mb-2">
-              สวัสดีครับ/ค่ะ 🙏
-            </h2>
+            <h2 className="text-2xl font-bold font-thai text-foreground mb-2">สวัสดีครับ/ค่ะ 🙏</h2>
             <p className="text-muted-foreground mb-8 max-w-md">
-              ถามเรื่องสมุนไพรไทย, สรรพคุณ, วิธีใช้ หรือตรวจสอบปฏิกิริยาระหว่างยาสมุนไพรกับยาแผนปัจจุบัน
+              ถามเรื่องสมุนไพรไทย, สรรพคุณ, วิธีใช้ หรือตรวจสอบ Drug-Herb Interaction พร้อมอ้างอิงแหล่งข้อมูลที่เชื่อถือได้
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
@@ -130,9 +265,7 @@ const ChatPage = () => {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 + i * 0.1 }}
-                  onClick={() => {
-                    setInput(q);
-                  }}
+                  onClick={() => setInput(q)}
                   className="text-left p-3 rounded-lg border border-border bg-card hover:shadow-herbal hover:border-primary/30 transition-all text-sm text-foreground group"
                 >
                   <span className="flex items-start gap-2">
@@ -171,13 +304,12 @@ const ChatPage = () => {
                     ) : (
                       <p className="text-sm">{msg.content}</p>
                     )}
-                    {msg.category && (
-                      <div className="mt-2 flex items-center gap-1">
+                    {msg.role === "assistant" && (msg.category || msg.severity) && (
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
                         <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                          {msg.category === "drug-interaction" && "💊 Drug Interaction"}
-                          {msg.category === "herbal-info" && "🌿 ข้อมูลสมุนไพร"}
-                          {msg.category === "general" && "📋 ทั่วไป"}
+                          {getCategoryLabel(msg.category)}
                         </span>
+                        {getSeverityBadge(msg.severity)}
                       </div>
                     )}
                   </div>
@@ -186,15 +318,11 @@ const ChatPage = () => {
             </AnimatePresence>
 
             {isLoading && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex justify-start"
-              >
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
                 <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Leaf className="w-4 h-4 animate-pulse-soft text-primary" />
-                    <span className="text-sm">กำลังค้นหาข้อมูล...</span>
+                    <span className="text-sm">กำลังค้นหาข้อมูลจากฐานข้อมูลสมุนไพร...</span>
                     <div className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <motion.div
@@ -217,19 +345,13 @@ const ChatPage = () => {
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur-sm sticky bottom-0">
         <div className="container max-w-4xl mx-auto px-4 py-3">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendMessage();
-            }}
-            className="flex items-center gap-2"
-          >
+          <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="ถามเรื่องสมุนไพร หรือ Drug Interaction..."
+                placeholder="ถามเรื่องสมุนไพร หรือ Drug-Herb Interaction..."
                 className="w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all text-sm"
                 disabled={isLoading}
               />
@@ -243,7 +365,7 @@ const ChatPage = () => {
             </button>
           </form>
           <p className="text-xs text-muted-foreground text-center mt-2">
-            ⚠️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ยาสมุนไพร
+            ⚠️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
           </p>
         </div>
       </div>
