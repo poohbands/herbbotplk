@@ -145,6 +145,69 @@ export type Database = {
         }
         Relationships: []
       }
+      thai_formulas: {
+        Row: {
+          category: string | null
+          contraindications: string[] | null
+          created_at: string
+          dosage: string | null
+          drug_interactions: string[] | null
+          formula_code: string | null
+          id: string
+          image_url: string | null
+          indication: string | null
+          ingredients: string[] | null
+          is_in_nlem: boolean | null
+          name_english: string | null
+          name_thai: string
+          precautions: string[] | null
+          preparation: string | null
+          properties: string[] | null
+          updated_at: string
+          usage_instructions: string | null
+        }
+        Insert: {
+          category?: string | null
+          contraindications?: string[] | null
+          created_at?: string
+          dosage?: string | null
+          drug_interactions?: string[] | null
+          formula_code?: string | null
+          id?: string
+          image_url?: string | null
+          indication?: string | null
+          ingredients?: string[] | null
+          is_in_nlem?: boolean | null
+          name_english?: string | null
+          name_thai: string
+          precautions?: string[] | null
+          preparation?: string | null
+          properties?: string[] | null
+          updated_at?: string
+          usage_instructions?: string | null
+        }
+        Update: {
+          category?: string | null
+          contraindications?: string[] | null
+          created_at?: string
+          dosage?: string | null
+          drug_interactions?: string[] | null
+          formula_code?: string | null
+          id?: string
+          image_url?: string | null
+          indication?: string | null
+          ingredients?: string[] | null
+          is_in_nlem?: boolean | null
+          name_english?: string | null
+          name_thai?: string
+          precautions?: string[] | null
+          preparation?: string | null
+          properties?: string[] | null
+          updated_at?: string
+          usage_instructions?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       chat_statistics: {
