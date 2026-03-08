@@ -14,16 +14,97 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          category: Database["public"]["Enums"]["question_category"] | null
+          content: string
+          created_at: string
+          drugs_mentioned: string[] | null
+          herbs_mentioned: string[] | null
+          id: string
+          role: string
+          session_id: string
+          severity: Database["public"]["Enums"]["interaction_severity"] | null
+          sources: string[] | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["question_category"] | null
+          content: string
+          created_at?: string
+          drugs_mentioned?: string[] | null
+          herbs_mentioned?: string[] | null
+          id?: string
+          role: string
+          session_id: string
+          severity?: Database["public"]["Enums"]["interaction_severity"] | null
+          sources?: string[] | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["question_category"] | null
+          content?: string
+          created_at?: string
+          drugs_mentioned?: string[] | null
+          herbs_mentioned?: string[] | null
+          id?: string
+          role?: string
+          session_id?: string
+          severity?: Database["public"]["Enums"]["interaction_severity"] | null
+          sources?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "chat_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      chat_statistics: {
+        Row: {
+          dosage_count: number | null
+          drug_interaction_count: number | null
+          general_count: number | null
+          herbal_info_count: number | null
+          side_effects_count: number | null
+          total_questions: number | null
+          total_sessions: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      interaction_severity: "major" | "moderate" | "minor" | "none"
+      question_category:
+        | "herbal_info"
+        | "drug_interaction"
+        | "dosage"
+        | "side_effects"
+        | "general"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +231,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      interaction_severity: ["major", "moderate", "minor", "none"],
+      question_category: [
+        "herbal_info",
+        "drug_interaction",
+        "dosage",
+        "side_effects",
+        "general",
+      ],
+    },
   },
 } as const
