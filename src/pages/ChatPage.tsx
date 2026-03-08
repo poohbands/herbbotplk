@@ -18,10 +18,11 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
 
-const SUGGESTED_CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   {
     icon: "🌿",
     label: "สรรพคุณสมุนไพร",
+    category: "herbal_info",
     questions: [
       "ฟ้าทะลายโจรมีสรรพคุณอย่างไร?",
       "ขมิ้นชันใช้รักษาอะไรได้บ้าง?",
@@ -31,6 +32,7 @@ const SUGGESTED_CATEGORIES = [
   {
     icon: "💊",
     label: "Drug Interaction",
+    category: "drug_interaction",
     questions: [
       "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?",
       "ฟ้าทะลายโจรมีปฏิกิริยากับยาอะไรบ้าง?",
@@ -40,6 +42,7 @@ const SUGGESTED_CATEGORIES = [
   {
     icon: "⚖️",
     label: "ขนาดยาและวิธีใช้",
+    category: "dosage",
     questions: [
       "ฟ้าทะลายโจรใช้ขนาดเท่าไร หญิงตั้งครรภ์กินได้ไหม?",
       "ยาเบญจกูลใช้อย่างไร มีข้อห้ามอะไร?",
@@ -49,6 +52,7 @@ const SUGGESTED_CATEGORIES = [
   {
     icon: "🏥",
     label: "กลุ่มเฉพาะ",
+    category: "general",
     questions: [
       "สมุนไพรอะไรที่ผู้ป่วยโรคไตควรหลีกเลี่ยง?",
       "หญิงให้นมบุตรกินขมิ้นชันได้ไหม?",
@@ -56,6 +60,14 @@ const SUGGESTED_CATEGORIES = [
     ],
   },
 ];
+
+const CATEGORY_META: Record<string, { icon: string; label: string }> = {
+  herbal_info: { icon: "🌿", label: "สรรพคุณสมุนไพร" },
+  drug_interaction: { icon: "💊", label: "Drug Interaction" },
+  dosage: { icon: "⚖️", label: "ขนาดยาและวิธีใช้" },
+  side_effects: { icon: "⚠️", label: "ผลข้างเคียง" },
+  general: { icon: "🏥", label: "ทั่วไป" },
+};
 
 function parseMetadata(content: string) {
   const metaMatch = content.match(/\[METADATA\]([\s\S]*?)\[\/METADATA\]/);
