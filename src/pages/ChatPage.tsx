@@ -232,9 +232,14 @@ const ChatPage = () => {
               <p className="text-xs text-muted-foreground">ที่ปรึกษาด้านยาสมุนไพรและ Drug Interaction</p>
             </div>
           </div>
-          <a href="/admin" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
-            Admin
-          </a>
+          <div className="flex items-center gap-2">
+            <a href="/herbs" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
+              📖 สารานุกรม
+            </a>
+            <a href="/admin" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
+              Admin
+            </a>
+          </div>
         </div>
       </header>
 

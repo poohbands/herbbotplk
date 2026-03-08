@@ -79,6 +79,72 @@ export type Database = {
         }
         Relationships: []
       }
+      herbs: {
+        Row: {
+          category: string | null
+          contraindications: string[] | null
+          created_at: string
+          description: string | null
+          dosage: string | null
+          drug_interactions: string[] | null
+          family: string | null
+          id: string
+          image_url: string | null
+          is_in_nlem: boolean | null
+          local_names: string[] | null
+          name_english: string | null
+          name_scientific: string | null
+          name_thai: string
+          precautions: string[] | null
+          properties: string[] | null
+          search_vector: unknown
+          updated_at: string
+          usage_instructions: string | null
+        }
+        Insert: {
+          category?: string | null
+          contraindications?: string[] | null
+          created_at?: string
+          description?: string | null
+          dosage?: string | null
+          drug_interactions?: string[] | null
+          family?: string | null
+          id?: string
+          image_url?: string | null
+          is_in_nlem?: boolean | null
+          local_names?: string[] | null
+          name_english?: string | null
+          name_scientific?: string | null
+          name_thai: string
+          precautions?: string[] | null
+          properties?: string[] | null
+          search_vector?: unknown
+          updated_at?: string
+          usage_instructions?: string | null
+        }
+        Update: {
+          category?: string | null
+          contraindications?: string[] | null
+          created_at?: string
+          description?: string | null
+          dosage?: string | null
+          drug_interactions?: string[] | null
+          family?: string | null
+          id?: string
+          image_url?: string | null
+          is_in_nlem?: boolean | null
+          local_names?: string[] | null
+          name_english?: string | null
+          name_scientific?: string | null
+          name_thai?: string
+          precautions?: string[] | null
+          properties?: string[] | null
+          search_vector?: unknown
+          updated_at?: string
+          usage_instructions?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       chat_statistics: {
