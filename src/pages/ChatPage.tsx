@@ -359,7 +359,7 @@ const ChatPage = () => {
             </p>
 
             <div className="w-full max-w-2xl space-y-4">
-              {SUGGESTED_CATEGORIES.map((cat, ci) => (
+              {suggestedCategories.map((cat, ci) => (
                 <motion.div
                   key={ci}
                   initial={{ opacity: 0, y: 10 }}
