@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
@@ -265,6 +265,14 @@ const ChatPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {messages.length > 0 && (
+              <button
+                onClick={() => { setMessages([]); setSessionId(null); setInput(""); }}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted flex items-center gap-1"
+              >
+                <Home className="w-4 h-4" /> หน้าแรก
+              </button>
+            )}
             <a href="/herbs" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
               📖 สารานุกรม
             </a>
