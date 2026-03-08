@@ -95,7 +95,50 @@ const ChatPage = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [suggestedCategories, setSuggestedCategories] = useState(DEFAULT_CATEGORIES);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Load popular questions from DB
+  useEffect(() => {
+    const loadPopularQuestions = async () => {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .select("content, category")
+        .eq("role", "user")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (error || !data || data.length < 5) return;
+
+      // Group by category and pick top questions (deduplicate similar ones)
+      const byCategory: Record<string, string[]> = {};
+      for (const row of data) {
+        const cat = row.category || "general";
+        if (!byCategory[cat]) byCategory[cat] = [];
+        // Skip very short or duplicate-ish questions
+        if (row.content.length < 10) continue;
+        const isDuplicate = byCategory[cat].some(
+          (q) => q.toLowerCase() === row.content.toLowerCase()
+        );
+        if (!isDuplicate && byCategory[cat].length < 3) {
+          byCategory[cat].push(row.content);
+        }
+      }
+
+      // Build dynamic categories, fall back to defaults if not enough
+      const dynamic = DEFAULT_CATEGORIES.map((def) => {
+        const dbQuestions = byCategory[def.category];
+        if (dbQuestions && dbQuestions.length >= 2) {
+          return { ...def, questions: dbQuestions };
+        }
+        return def;
+      });
+
+      setSuggestedCategories(dynamic);
+    };
+
+    loadPopularQuestions();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
