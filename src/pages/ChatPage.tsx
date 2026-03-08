@@ -18,11 +18,43 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
 
-const SAMPLE_QUESTIONS = [
-  "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?",
-  "ฟ้าทะลายโจรมีสรรพคุณอย่างไร?",
-  "สมุนไพรอะไรช่วยลดน้ำตาลในเลือด?",
-  "กระชายขาวมี drug interaction กับยาอะไรบ้าง?",
+const SUGGESTED_CATEGORIES = [
+  {
+    icon: "🌿",
+    label: "สรรพคุณสมุนไพร",
+    questions: [
+      "ฟ้าทะลายโจรมีสรรพคุณอย่างไร?",
+      "ขมิ้นชันใช้รักษาอะไรได้บ้าง?",
+      "กระชายขาวมีประโยชน์อย่างไร?",
+    ],
+  },
+  {
+    icon: "💊",
+    label: "Drug Interaction",
+    questions: [
+      "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?",
+      "ฟ้าทะลายโจรมีปฏิกิริยากับยาอะไรบ้าง?",
+      "ใบแปะก๊วยกินร่วมกับยาละลายลิ่มเลือดได้ไหม?",
+    ],
+  },
+  {
+    icon: "⚖️",
+    label: "ขนาดยาและวิธีใช้",
+    questions: [
+      "ฟ้าทะลายโจรใช้ขนาดเท่าไร หญิงตั้งครรภ์กินได้ไหม?",
+      "ยาเบญจกูลใช้อย่างไร มีข้อห้ามอะไร?",
+      "ยาจันทน์ลีลาใช้ลดไข้ได้ไหม ขนาดเท่าไร?",
+    ],
+  },
+  {
+    icon: "🏥",
+    label: "กลุ่มเฉพาะ",
+    questions: [
+      "สมุนไพรอะไรที่ผู้ป่วยโรคไตควรหลีกเลี่ยง?",
+      "หญิงให้นมบุตรกินขมิ้นชันได้ไหม?",
+      "สมุนไพรอะไรช่วยลดน้ำตาลในเลือดได้?",
+    ],
+  },
 ];
 
 function parseMetadata(content: string) {
@@ -263,25 +295,29 @@ const ChatPage = () => {
               ถามเรื่องสมุนไพรไทย, สรรพคุณ, วิธีใช้ หรือตรวจสอบ Drug-Herb Interaction พร้อมอ้างอิงแหล่งข้อมูลที่เชื่อถือได้
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
-              {SAMPLE_QUESTIONS.map((q, i) => (
-                <motion.button
-                  key={i}
+            <div className="w-full max-w-2xl space-y-4">
+              {SUGGESTED_CATEGORIES.map((cat, ci) => (
+                <motion.div
+                  key={ci}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 + i * 0.1 }}
-                  onClick={() => setInput(q)}
-                  className="text-left p-3 rounded-lg border border-border bg-card hover:shadow-herbal hover:border-primary/30 transition-all text-sm text-foreground group"
+                  transition={{ delay: 0.2 + ci * 0.1 }}
                 >
-                  <span className="flex items-start gap-2">
-                    {q.includes("drug") || q.includes("Warfarin") || q.includes("interaction") ? (
-                      <AlertTriangle className="w-4 h-4 text-herb-terracotta mt-0.5 shrink-0" />
-                    ) : (
-                      <Leaf className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    )}
-                    <span className="group-hover:text-primary transition-colors">{q}</span>
-                  </span>
-                </motion.button>
+                  <h3 className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1.5">
+                    <span>{cat.icon}</span> {cat.label}
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {cat.questions.map((q, qi) => (
+                      <button
+                        key={qi}
+                        onClick={() => { setInput(q); setTimeout(() => { const form = document.querySelector('form'); form?.requestSubmit(); }, 50); }}
+                        className="text-left px-3 py-2 rounded-lg border border-border bg-card hover:shadow-herbal hover:border-primary/30 transition-all text-xs text-foreground hover:text-primary"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
               ))}
             </div>
           </motion.div>
