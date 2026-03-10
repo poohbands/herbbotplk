@@ -78,7 +78,7 @@ const AdminPage = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold font-thai text-foreground">KPI & Analytics Dashboard</h1>
-              <p className="text-xs text-muted-foreground">สถิติเชิงนโยบายด้านสาธารณสุข — สมุนไพรAI</p>
+              <p className="text-xs text-muted-foreground">สถิติเชิงนโยบายด้านสาธารณสุข — กลุ่มงานการแพทย์แผนไทยและสมุนไพร สสจ.พิษณุโลก</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
