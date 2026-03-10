@@ -316,7 +316,7 @@ const ChatPage = () => {
             </div>
             <div>
               <h1 className="text-lg font-bold font-thai text-foreground">กลุ่มงานการแพทย์แผนไทยและสมุนไพร</h1>
-              <p className="text-xs text-muted-foreground">ที่ปรึกษาด้านยาสมุนไพรและ Drug Interaction</p>
+              <p className="text-xs text-muted-foreground">สำนักงานสาธารณสุขจังหวัดพิษณุโลก</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
