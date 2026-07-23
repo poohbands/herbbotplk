@@ -282,19 +282,23 @@ const ChatPage = () => {
       }
 
       // Parse metadata and save
-      const { cleanContent, category, severity, herbs, drugs } = parseMetadata(assistantContent);
+      const { cleanContent, category, severity, herbs, drugs, sources } = parseMetadata(assistantContent);
 
       // Update final message with clean content
       setMessages((prev) =>
         prev.map((m, i) =>
           i === prev.length - 1 && m.role === "assistant"
-            ? { ...m, content: cleanContent, category, severity }
+            ? { ...m, content: cleanContent, category, severity, sources }
             : m
         )
       );
 
       if (sid) {
-        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs });
+        const flatSources = [
+          ...(sources?.pubmed || []).map((p) => `PMID:${p.pmid}`),
+          ...(sources?.internal || []).map((i) => `${i.type}:${i.id}`),
+        ];
+        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs, sources: flatSources });
       }
     } catch (e: any) {
       console.error("Chat error:", e);
