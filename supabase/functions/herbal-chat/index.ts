@@ -212,6 +212,42 @@ async function findRelevantHerbs(supabase: any, question: string) {
   return { herbs: matchedHerbs, formulas: matchedFormulas };
 }
 
+/** ค้นหาเอกสารความรู้จากตาราง knowledge_documents ด้วย full-text search */
+async function findRelevantKnowledge(supabase: any, question: string): Promise<KnowledgeDoc[]> {
+  const q = question.trim();
+  if (!q) return [];
+
+  // แยกคำ (ไทย/อังกฤษ) และตัดคำที่สั้นเกินไป
+  const tokens = q
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((t) => t.length >= 2)
+    .slice(0, 20);
+  if (tokens.length === 0) return [];
+
+  const tsQuery = tokens.map((t) => `${t.replace(/[:&|!()<>]/g, "")}:*`).join(" | ");
+
+  const { data, error } = await supabase
+    .from("knowledge_documents")
+    .select("id, title, category, content, tags, source, source_url")
+    .eq("is_published", true)
+    .textSearch("search_vector", tsQuery, { config: "simple" })
+    .limit(5);
+
+  if (error) {
+    console.error("[herbal-chat] knowledge search error:", error.message);
+    // fallback: match by tag/title ilike
+    const { data: fallback } = await supabase
+      .from("knowledge_documents")
+      .select("id, title, category, content, tags, source, source_url")
+      .eq("is_published", true)
+      .or(tokens.slice(0, 3).map((t) => `title.ilike.%${t}%,content.ilike.%${t}%`).join(","))
+      .limit(5);
+    return (fallback || []) as KnowledgeDoc[];
+  }
+  return (data || []) as KnowledgeDoc[];
+}
+
 /** สร้าง PubMed query โดยใช้ทั้ง (1) herb ที่ match ใน DB (2) dictionary ไทย→sci (3) dictionary ยาไทย→อังกฤษ */
 function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[] } {
   const q = question.toLowerCase();
