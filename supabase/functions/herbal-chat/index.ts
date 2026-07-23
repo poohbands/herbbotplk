@@ -160,8 +160,7 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
 - วิธีใช้: ${h.usage_instructions || "-"}
 - ข้อควรระวัง: ${(h.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(h.contraindications || []).join("; ") || "-"}
-- Drug interactions: ${(h.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${h.id}`);
+- Drug interactions: ${(h.drug_interactions || []).join("; ") || "-"}`);
     }
   }
 
@@ -175,8 +174,7 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
 - ขนาดยา: ${f.dosage || "-"}
 - ข้อควรระวัง: ${(f.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(f.contraindications || []).join("; ") || "-"}
-- Drug interactions: ${(f.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${f.id}`);
+- Drug interactions: ${(f.drug_interactions || []).join("; ") || "-"}`);
     }
   }
 
