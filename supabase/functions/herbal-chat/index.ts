@@ -51,6 +51,25 @@ type InternalSource = {
   name: string;
 };
 
+type KnowledgeDoc = {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  tags: string[] | null;
+  source: string | null;
+  source_url: string | null;
+};
+
+type KnowledgeSource = {
+  id: string;
+  title: string;
+  category: string;
+  source: string | null;
+  source_url: string | null;
+};
+
+
 // ---------- Thai keyword dictionaries ----------
 
 // สมุนไพร: คำภาษาไทย (lowercase) → ชื่อวิทยาศาสตร์สำหรับค้น PubMed
