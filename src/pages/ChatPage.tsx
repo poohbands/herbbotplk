@@ -74,24 +74,38 @@ const CATEGORY_META: Record<string, { icon: string; label: string }> = {
 };
 
 function parseMetadata(content: string) {
+  let cleanContent = content;
+  let category = "general";
+  let severity = "none";
+  let herbs: string[] = [];
+  let drugs: string[] = [];
+  let sources: SourcesPayload | undefined;
+
   const metaMatch = content.match(/\[METADATA\]([\s\S]*?)\[\/METADATA\]/);
-  if (!metaMatch) return { cleanContent: content, category: "general", severity: "none", herbs: [], drugs: [] };
+  if (metaMatch) {
+    const meta = metaMatch[1];
+    const getField = (field: string) => {
+      const m = meta.match(new RegExp(`${field}:\\s*(.+)`));
+      return m ? m[1].trim() : "";
+    };
+    category = getField("category") || "general";
+    severity = getField("severity") || "none";
+    herbs = getField("herbs").split(",").map((s) => s.trim()).filter(Boolean);
+    drugs = getField("drugs").split(",").map((s) => s.trim()).filter(Boolean);
+    cleanContent = cleanContent.replace(/\[METADATA\][\s\S]*?\[\/METADATA\]/, "").trim();
+  }
 
-  const cleanContent = content.replace(/\[METADATA\][\s\S]*?\[\/METADATA\]/, "").trim();
-  const meta = metaMatch[1];
+  const srcMatch = content.match(/\[SOURCES\]([\s\S]*?)\[\/SOURCES\]/);
+  if (srcMatch) {
+    try {
+      sources = JSON.parse(srcMatch[1].trim());
+    } catch {
+      // ignore malformed
+    }
+    cleanContent = cleanContent.replace(/\[SOURCES\][\s\S]*?\[\/SOURCES\]/, "").trim();
+  }
 
-  const getField = (field: string) => {
-    const m = meta.match(new RegExp(`${field}:\\s*(.+)`));
-    return m ? m[1].trim() : "";
-  };
-
-  return {
-    cleanContent,
-    category: getField("category") || "general",
-    severity: getField("severity") || "none",
-    herbs: getField("herbs").split(",").map((s) => s.trim()).filter(Boolean),
-    drugs: getField("drugs").split(",").map((s) => s.trim()).filter(Boolean),
-  };
+  return { cleanContent, category, severity, herbs, drugs, sources };
 }
 
 const ChatPage = () => {
