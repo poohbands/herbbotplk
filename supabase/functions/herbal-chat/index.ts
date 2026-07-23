@@ -388,10 +388,13 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
+    const isCommonDisease = isCommonDiseaseQuestion(question);
     const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
-    const pubmed = await fetchPubMed(pubmedQuery);
+    // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
+    const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
 
     console.log("[herbal-chat] question:", question);
+    console.log("[herbal-chat] common disease intent:", isCommonDisease);
     console.log("[herbal-chat] matched herbs:", herbs.map((h) => h.name_thai));
     console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
     console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
@@ -403,8 +406,13 @@ serve(async (req) => {
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
     ];
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames);
-    const sourcesJson = JSON.stringify({ pubmed, internal: internalSources });
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, isCommonDisease);
+    const sourcesJson = JSON.stringify({
+      pubmed,
+      internal: internalSources,
+      ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
+    });
+
 
     const contextMessage = {
       role: "system" as const,
