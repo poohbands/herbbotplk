@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
+
+type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
+type InternalSource = { type: "herb" | "formula"; id: string; name: string };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[] };
 
 type Message = {
   id: string;
@@ -12,7 +16,7 @@ type Message = {
   content: string;
   category?: string;
   severity?: string;
-  sources?: string[];
+  sources?: SourcesPayload;
   timestamp: Date;
 };
 
@@ -70,24 +74,38 @@ const CATEGORY_META: Record<string, { icon: string; label: string }> = {
 };
 
 function parseMetadata(content: string) {
+  let cleanContent = content;
+  let category = "general";
+  let severity = "none";
+  let herbs: string[] = [];
+  let drugs: string[] = [];
+  let sources: SourcesPayload | undefined;
+
   const metaMatch = content.match(/\[METADATA\]([\s\S]*?)\[\/METADATA\]/);
-  if (!metaMatch) return { cleanContent: content, category: "general", severity: "none", herbs: [], drugs: [] };
+  if (metaMatch) {
+    const meta = metaMatch[1];
+    const getField = (field: string) => {
+      const m = meta.match(new RegExp(`${field}:\\s*(.+)`));
+      return m ? m[1].trim() : "";
+    };
+    category = getField("category") || "general";
+    severity = getField("severity") || "none";
+    herbs = getField("herbs").split(",").map((s) => s.trim()).filter(Boolean);
+    drugs = getField("drugs").split(",").map((s) => s.trim()).filter(Boolean);
+    cleanContent = cleanContent.replace(/\[METADATA\][\s\S]*?\[\/METADATA\]/, "").trim();
+  }
 
-  const cleanContent = content.replace(/\[METADATA\][\s\S]*?\[\/METADATA\]/, "").trim();
-  const meta = metaMatch[1];
+  const srcMatch = content.match(/\[SOURCES\]([\s\S]*?)\[\/SOURCES\]/);
+  if (srcMatch) {
+    try {
+      sources = JSON.parse(srcMatch[1].trim());
+    } catch {
+      // ignore malformed
+    }
+    cleanContent = cleanContent.replace(/\[SOURCES\][\s\S]*?\[\/SOURCES\]/, "").trim();
+  }
 
-  const getField = (field: string) => {
-    const m = meta.match(new RegExp(`${field}:\\s*(.+)`));
-    return m ? m[1].trim() : "";
-  };
-
-  return {
-    cleanContent,
-    category: getField("category") || "general",
-    severity: getField("severity") || "none",
-    herbs: getField("herbs").split(",").map((s) => s.trim()).filter(Boolean),
-    drugs: getField("drugs").split(",").map((s) => s.trim()).filter(Boolean),
-  };
+  return { cleanContent, category, severity, herbs, drugs, sources };
 }
 
 const ChatPage = () => {
@@ -264,19 +282,23 @@ const ChatPage = () => {
       }
 
       // Parse metadata and save
-      const { cleanContent, category, severity, herbs, drugs } = parseMetadata(assistantContent);
+      const { cleanContent, category, severity, herbs, drugs, sources } = parseMetadata(assistantContent);
 
       // Update final message with clean content
       setMessages((prev) =>
         prev.map((m, i) =>
           i === prev.length - 1 && m.role === "assistant"
-            ? { ...m, content: cleanContent, category, severity }
+            ? { ...m, content: cleanContent, category, severity, sources }
             : m
         )
       );
 
       if (sid) {
-        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs });
+        const flatSources = [
+          ...(sources?.pubmed || []).map((p) => `PMID:${p.pmid}`),
+          ...(sources?.internal || []).map((i) => `${i.type}:${i.id}`),
+        ];
+        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs, sources: flatSources });
       }
     } catch (e: any) {
       console.error("Chat error:", e);
@@ -415,6 +437,58 @@ const ChatPage = () => {
                         </span>
                         {getSeverityBadge(msg.severity)}
                       </div>
+                    )}
+                    {msg.role === "assistant" && msg.sources && (
+                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0) && (
+                        <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>แหล่งอ้างอิงที่ตรวจสอบได้</span>
+                          </div>
+                          {msg.sources.internal?.length > 0 && (
+                            <div className="space-y-1">
+                              {msg.sources.internal.map((s) => (
+                                <a
+                                  key={`${s.type}-${s.id}`}
+                                  href={`/herbs?${s.type}=${s.id}`}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                >
+                                  <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                  <span className="flex-1">
+                                    <span className="font-medium text-foreground">{s.name}</span>
+                                    <span className="text-muted-foreground ml-1">
+                                      — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูลภายใน)
+                                    </span>
+                                  </span>
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {msg.sources.pubmed?.length > 0 && (
+                            <div className="space-y-1">
+                              {msg.sources.pubmed.map((p) => (
+                                <a
+                                  key={p.pmid}
+                                  href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
+                                >
+                                  <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
+                                  <span className="flex-1 min-w-0">
+                                    <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
+                                    <span className="text-muted-foreground block mt-0.5">
+                                      {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
+                                    </span>
+                                  </span>
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
                     )}
                   </div>
                 </motion.div>
