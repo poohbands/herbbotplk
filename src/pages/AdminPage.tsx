@@ -307,6 +307,10 @@ const AdminPage = () => {
             {/* Q&A Report */}
             <QAReport />
 
+            {/* Knowledge Base Manager */}
+            <KnowledgeManager />
+
+
             {/* Policy Insight */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="bg-card rounded-xl border border-primary/20 p-5 shadow-herbal">
               <h3 className="text-base font-semibold font-thai text-foreground mb-3 flex items-center gap-2">
