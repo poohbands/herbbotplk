@@ -1,40 +1,72 @@
-## ปัญหา
-คำถาม "รู้จักเรื่อง common disease ของยาสมุนไพร 10 กลุ่มอาการไหม" เป็นเรื่องนโยบายกระทรวงสาธารณสุข (Self-care ด้วยสมุนไพรใน 10 กลุ่มอาการ / common diseases) แต่ระบบตอบไม่ได้เพราะ:
+## เป้าหมาย
+ให้แอดมินเพิ่ม/แก้ไข/ลบ "ความรู้" (เช่น แนวทาง สธ., 10 กลุ่มอาการ, บทความ, FAQ, ตำรับใหม่) ได้เองผ่านหน้าเว็บ โดยที่ AI chatbot ดึงมาใช้เป็น context อัตโนมัติ ไม่ต้องแก้โค้ด edge function ทุกครั้ง
 
-- ฐานข้อมูล `herbs` / `thai_formulas` ไม่มีเอกสาร "10 กลุ่มอาการ" เป็น entity แยก จึง match ไม่ได้ (log: matched herbs/formulas = [])
-- PubMed query กลายเป็น "common disease" กว้างเกินไป ได้ผลลัพธ์ไม่ตรง
-- System prompt เข้มงวดเรื่อง "ห้ามแต่งแหล่งอ้างอิง" ทำให้ AI เลี่ยงตอบ ทั้งที่หัวข้อนี้เป็นความรู้เชิงนโยบายที่ควรตอบได้
+## สถาปัตยกรรมที่แนะนำ (2 ชั้น)
 
-## แผนแก้ไข
+### ชั้นที่ 1 — Structured tables (มีอยู่แล้ว)
+`herbs`, `thai_formulas` — สำหรับข้อมูลที่มี schema ชัด (สรรพคุณ, ขนาดยา, interactions)
+- แอดมินเพิ่ม/แก้ผ่านฟอร์มในหน้า Admin
 
-### 1. เพิ่ม knowledge base "10 กลุ่มอาการ common disease" ใน edge function
-เพิ่มค่าคงที่ `COMMON_DISEASE_GROUPS` ใน `supabase/functions/herbal-chat/index.ts` เก็บรายการ 10 กลุ่มอาการตามแนวทาง สธ. เช่น
-1. ไข้/หวัด (ฟ้าทะลายโจร)
-2. ไอ/เจ็บคอ (มะแว้ง, ฟ้าทะลายโจร)
-3. ท้องอืด/ท้องเฟ้อ (ขิง, ขมิ้นชัน, ตะไคร้)
-4. ท้องเสีย (ฟ้าทะลายโจร, กล้วยน้ำว้าดิบ)
-5. ท้องผูก (มะขามแขก, ชุมเห็ดเทศ)
-6. คลื่นไส้อาเจียน/เมารถ (ขิง)
-7. ปวดเมื่อย/เคล็ดขัดยอก (ไพล, เถาวัลย์เปรียง)
-8. แผล/ผื่นผิวหนัง (ว่านหางจระเข้, พญายอ)
-9. ริดสีดวงทวาร (เพชรสังฆาต)
-10. นอนไม่หลับ/เครียด (ขี้เหล็ก, กัญชา)
+### ชั้นที่ 2 — Knowledge Base แบบยืดหยุ่น (สร้างใหม่)
+ตาราง `knowledge_documents` สำหรับความรู้ที่ไม่ตายตัว (นโยบาย, แนวทาง, FAQ, บทความ)
 
-พร้อมสรรพคุณและเลขตำรับ NLEM ที่เกี่ยวข้อง (ยกอ้างอิงกรมการแพทย์แผนไทยฯ / บัญชียาหลักแห่งชาติ)
+```
+knowledge_documents
+- id, title, category (policy|guideline|faq|article|formula_note)
+- content (markdown ยาว)
+- tags text[] (keyword ค้นหา)
+- source (แหล่งอ้างอิง เช่น "กรมการแพทย์แผนไทยฯ")
+- source_url (ถ้ามี)
+- is_published boolean
+- created_at, updated_at
+- embedding vector(3072)   ← สำหรับ semantic search
+```
 
-### 2. Detect intent และ inject เข้า context
-ใน `buildContext()` ตรวจ keyword เช่น "10 กลุ่มอาการ", "common disease", "self care", "อาการทั่วไป" แล้วแนบตาราง 10 กลุ่มอาการเข้า `<CONTEXT>` เป็นแหล่งอ้างอิงภายใน (source: "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก / บัญชียาหลักแห่งชาติ")
+## แผนดำเนินการ
 
-### 3. ปรับ PubMed fallback
-ถ้า detect intent = "10 กลุ่มอาการ" ให้ข้าม PubMed (ไม่เกี่ยวข้อง) เพื่อลด noise
+### 1. Database
+- เปิด extension `pgvector`
+- สร้างตาราง `knowledge_documents` + HNSW index สำหรับ embedding
+- สร้าง SQL function `match_knowledge(query_embedding, match_count, min_similarity)`
+- RLS: อ่านได้ทุกคน (published เท่านั้น), เขียนได้เฉพาะ service_role
+- Seed ข้อมูล "10 กลุ่มอาการ common disease" เป็น document แรก (ย้ายออกจากโค้ด edge function)
 
-### 4. ปรับ system prompt เล็กน้อย
-เพิ่มบรรทัด: "ถ้า CONTEXT มีข้อมูลนโยบาย/แนวทางของกระทรวงสาธารณสุข (เช่น 10 กลุ่มอาการ common disease) ให้ตอบได้เต็มที่โดยอ้างอิงแหล่งภายในนั้น"
+### 2. Edge Function ใหม่: `embed-knowledge`
+- รับ document id → เรียก Lovable AI embeddings (`google/gemini-embedding-2`) → บันทึก vector
+- Trigger อัตโนมัติเมื่อสร้าง/แก้ไข document (ผ่าน DB trigger เรียก pg_net หรือเรียกจากฝั่ง client หลัง insert)
 
-### 5. ทดสอบ
-เรียก edge function ด้วยคำถามเดิม ตรวจว่าตอบครบทั้ง 10 กลุ่ม พร้อมสมุนไพรและตำรับที่แนะนำ และมี [SOURCES] ชี้ไปที่แนวทาง สธ.
+### 3. ปรับปรุง `herbal-chat`
+- Embed คำถามผู้ใช้ → เรียก `match_knowledge` → ดึง top 3-5 documents ที่ relevant
+- แทรกเข้า `<CONTEXT>` เช่นเดียวกับ herbs/formulas
+- แสดงใน `[SOURCES]` เป็นประเภท "knowledge" พร้อม title + source
 
-## ไฟล์ที่จะแก้
-- `supabase/functions/herbal-chat/index.ts` (เพิ่ม constant, detect intent, ปรับ context builder และ prompt)
+### 4. หน้า Admin ใหม่: Knowledge Manager
+เพิ่ม tab ใน `AdminPage` หรือหน้าใหม่ `/admin/knowledge`:
+- ตารางรายการ documents พร้อม filter (category, published)
+- ปุ่ม "+ เพิ่มความรู้ใหม่" → dialog ฟอร์ม (title, category, content markdown, tags, source)
+- ปุ่มแก้ไข/ลบ/toggle publish
+- แสดงสถานะ embedding (pending / ready)
+- Preview markdown
 
-ไม่ต้องแตะ frontend หรือ schema
+### 5. (Optional) นำเข้าไฟล์
+- อัปโหลดไฟล์ .md / .txt / .pdf → parse → ตัด chunk → สร้างเป็นหลาย documents อัตโนมัติ
+  (เฟสถัดไป ถ้าต้องการ)
+
+## ประโยชน์
+- แอดมินเพิ่มข้อมูลได้เองโดยไม่ต้องแก้โค้ด
+- ระบบตอบได้ครอบคลุมมากขึ้นเรื่อยๆ ตามข้อมูลที่ใส่
+- Semantic search ทำให้ AI หา context ที่ตรงกับคำถามได้แม่นแม้ผู้ใช้ถามคนละคำ
+- Source citation ตรวจสอบย้อนหลังได้
+
+## ไฟล์ที่จะสร้าง/แก้
+- Migration: `knowledge_documents` table + `match_knowledge` function + pgvector
+- Seed data: 10 กลุ่มอาการ (ย้ายจาก edge function)
+- `supabase/functions/embed-knowledge/index.ts` (ใหม่)
+- `supabase/functions/herbal-chat/index.ts` (เพิ่ม semantic retrieval)
+- `src/pages/AdminKnowledgePage.tsx` หรือ tab ใน `AdminPage.tsx` (ใหม่)
+- `src/components/KnowledgeEditor.tsx` (ใหม่ — ฟอร์มเพิ่ม/แก้)
+- Route ใน `App.tsx`
+
+## คำถามก่อนเริ่ม
+1. ต้องการทำครบทุกส่วนในรอบเดียว หรือเริ่มจาก MVP (ตาราง + หน้า Admin CRUD + ให้ chatbot อ่าน โดยยังไม่ใช้ embedding — ใช้ keyword/tag match ก่อน) แล้วค่อยเพิ่ม semantic search ทีหลัง?
+2. ต้องการฟีเจอร์อัปโหลดไฟล์ (PDF/Word) ในเฟสแรกไหม หรือแค่พิมพ์/วาง markdown ก็พอ?
