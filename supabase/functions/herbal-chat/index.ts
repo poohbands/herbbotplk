@@ -276,8 +276,14 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[]): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], includeCommonDisease = false): string {
   const parts: string[] = [];
+
+  if (includeCommonDisease) {
+    parts.push("### แนวทางกระทรวงสาธารณสุข: การใช้ยาสมุนไพรใน 10 กลุ่มอาการ (Common Diseases)");
+    parts.push(COMMON_DISEASE_GROUPS);
+  }
+
 
   if (herbs.length > 0) {
     parts.push("### ข้อมูลสมุนไพรจากฐานข้อมูลภายใน (กลุ่มงานการแพทย์แผนไทยและสมุนไพร สสจ.พิษณุโลก)");
