@@ -456,6 +456,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
+    const knowledge = await findRelevantKnowledge(supabase, question);
     const isCommonDisease = isCommonDiseaseQuestion(question);
     const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
     // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
@@ -465,6 +466,7 @@ serve(async (req) => {
     console.log("[herbal-chat] common disease intent:", isCommonDisease);
     console.log("[herbal-chat] matched herbs:", herbs.map((h) => h.name_thai));
     console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
+    console.log("[herbal-chat] matched knowledge:", knowledge.map((k) => k.title));
     console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
@@ -473,13 +475,18 @@ serve(async (req) => {
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
     ];
+    const knowledgeSources: KnowledgeSource[] = knowledge.map((k) => ({
+      id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
+    }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, isCommonDisease);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease);
     const sourcesJson = JSON.stringify({
       pubmed,
       internal: internalSources,
+      knowledge: knowledgeSources,
       ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
     });
+
 
 
     const contextMessage = {
