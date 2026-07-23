@@ -160,8 +160,7 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
 - วิธีใช้: ${h.usage_instructions || "-"}
 - ข้อควรระวัง: ${(h.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(h.contraindications || []).join("; ") || "-"}
-- Drug interactions: ${(h.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${h.id}`);
+- Drug interactions: ${(h.drug_interactions || []).join("; ") || "-"}`);
     }
   }
 
@@ -175,8 +174,7 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
 - ขนาดยา: ${f.dosage || "-"}
 - ข้อควรระวัง: ${(f.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(f.contraindications || []).join("; ") || "-"}
-- Drug interactions: ${(f.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${f.id}`);
+- Drug interactions: ${(f.drug_interactions || []).join("; ") || "-"}`);
     }
   }
 
@@ -203,6 +201,7 @@ const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด
 2. **ห้ามสร้างหรือแต่งแหล่งอ้างอิงเอง (No Hallucination)** — ใช้ได้เฉพาะแหล่งอ้างอิงที่มีอยู่ใน <CONTEXT> ที่ระบบให้มาเท่านั้น
 3. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** — ถ้าไม่มีข้อมูลใน CONTEXT ให้ตอบตรง ๆ ว่า "ยังไม่มีข้อมูลจากฐานข้อมูลและงานวิจัยที่ตรวจสอบได้" แล้วแนะนำให้ปรึกษาแพทย์
 4. เมื่ออ้างอิง PubMed ให้ใส่แค่ PMID เช่น "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง อย่าใส่ URL
+5. **ห้ามแสดง internal ID ของฐานข้อมูลในคำตอบ** เช่น UUID หรือรหัสภายใน "id: ..." ให้อ้างอิบโดยใช้ชื่อสมุนไพร/ตำรับยาเท่านั้น
 
 ## รูปแบบคำตอบ
 - ตอบเป็น Markdown ภาษาไทย มีโครงสร้างชัดเจน
