@@ -51,6 +51,25 @@ type InternalSource = {
   name: string;
 };
 
+type KnowledgeDoc = {
+  id: string;
+  title: string;
+  category: string;
+  content: string;
+  tags: string[] | null;
+  source: string | null;
+  source_url: string | null;
+};
+
+type KnowledgeSource = {
+  id: string;
+  title: string;
+  category: string;
+  source: string | null;
+  source_url: string | null;
+};
+
+
 // ---------- Thai keyword dictionaries ----------
 
 // สมุนไพร: คำภาษาไทย (lowercase) → ชื่อวิทยาศาสตร์สำหรับค้น PubMed
@@ -193,6 +212,42 @@ async function findRelevantHerbs(supabase: any, question: string) {
   return { herbs: matchedHerbs, formulas: matchedFormulas };
 }
 
+/** ค้นหาเอกสารความรู้จากตาราง knowledge_documents ด้วย full-text search */
+async function findRelevantKnowledge(supabase: any, question: string): Promise<KnowledgeDoc[]> {
+  const q = question.trim();
+  if (!q) return [];
+
+  // แยกคำ (ไทย/อังกฤษ) และตัดคำที่สั้นเกินไป
+  const tokens = q
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .split(/\s+/)
+    .filter((t) => t.length >= 2)
+    .slice(0, 20);
+  if (tokens.length === 0) return [];
+
+  const tsQuery = tokens.map((t) => `${t.replace(/[:&|!()<>]/g, "")}:*`).join(" | ");
+
+  const { data, error } = await supabase
+    .from("knowledge_documents")
+    .select("id, title, category, content, tags, source, source_url")
+    .eq("is_published", true)
+    .textSearch("search_vector", tsQuery, { config: "simple" })
+    .limit(5);
+
+  if (error) {
+    console.error("[herbal-chat] knowledge search error:", error.message);
+    // fallback: match by tag/title ilike
+    const { data: fallback } = await supabase
+      .from("knowledge_documents")
+      .select("id, title, category, content, tags, source, source_url")
+      .eq("is_published", true)
+      .or(tokens.slice(0, 3).map((t) => `title.ilike.%${t}%,content.ilike.%${t}%`).join(","))
+      .limit(5);
+    return (fallback || []) as KnowledgeDoc[];
+  }
+  return (data || []) as KnowledgeDoc[];
+}
+
 /** สร้าง PubMed query โดยใช้ทั้ง (1) herb ที่ match ใน DB (2) dictionary ไทย→sci (3) dictionary ยาไทย→อังกฤษ */
 function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[] } {
   const q = question.toLowerCase();
@@ -276,13 +331,25 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], includeCommonDisease = false): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false): string {
   const parts: string[] = [];
 
-  if (includeCommonDisease) {
+  if (knowledge.length > 0) {
+    parts.push("### ความรู้จากคลังเอกสารภายใน (Knowledge Base — จัดการโดยแอดมิน)");
+    for (const k of knowledge) {
+      parts.push(`
+**${k.title}** [${k.category}]
+${k.content}
+- แหล่งอ้างอิง: ${k.source || "-"}${k.source_url ? ` (${k.source_url})` : ""}
+- knowledge id: ${k.id}`);
+    }
+  }
+
+  if (includeCommonDisease && knowledge.length === 0) {
     parts.push("### แนวทางกระทรวงสาธารณสุข: การใช้ยาสมุนไพรใน 10 กลุ่มอาการ (Common Diseases)");
     parts.push(COMMON_DISEASE_GROUPS);
   }
+
 
 
   if (herbs.length > 0) {
@@ -389,6 +456,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
+    const knowledge = await findRelevantKnowledge(supabase, question);
     const isCommonDisease = isCommonDiseaseQuestion(question);
     const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
     // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
@@ -398,6 +466,7 @@ serve(async (req) => {
     console.log("[herbal-chat] common disease intent:", isCommonDisease);
     console.log("[herbal-chat] matched herbs:", herbs.map((h) => h.name_thai));
     console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
+    console.log("[herbal-chat] matched knowledge:", knowledge.map((k) => k.title));
     console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
@@ -406,13 +475,18 @@ serve(async (req) => {
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
     ];
+    const knowledgeSources: KnowledgeSource[] = knowledge.map((k) => ({
+      id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
+    }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, isCommonDisease);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease);
     const sourcesJson = JSON.stringify({
       pubmed,
       internal: internalSources,
+      knowledge: knowledgeSources,
       ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
     });
+
 
 
     const contextMessage = {

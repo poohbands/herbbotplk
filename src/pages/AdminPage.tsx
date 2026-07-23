@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { supabase } from "@/integrations/supabase/client";
 import AdminLogin from "@/components/AdminLogin";
 import QAReport from "@/components/QAReport";
+import KnowledgeManager from "@/components/KnowledgeManager";
 
 const COLORS = ["hsl(145, 45%, 28%)", "hsl(15, 50%, 45%)", "hsl(38, 70%, 50%)", "hsl(145, 35%, 45%)", "hsl(25, 30%, 35%)"];
 const SEVERITY_COLORS: Record<string, string> = {
@@ -305,6 +306,10 @@ const AdminPage = () => {
 
             {/* Q&A Report */}
             <QAReport />
+
+            {/* Knowledge Base Manager */}
+            <KnowledgeManager />
+
 
             {/* Policy Insight */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="bg-card rounded-xl border border-primary/20 p-5 shadow-herbal">
