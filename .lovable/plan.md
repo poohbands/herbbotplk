@@ -1,47 +1,40 @@
-## ปัญหา (ยืนยันแล้ว)
-คำถาม "ใบแปะก๊วยกินร่วมกับยาละลายลิ่มเลือดได้ไหม" ตอบไม่ได้ เพราะ:
+## ปัญหา
+คำถาม "รู้จักเรื่อง common disease ของยาสมุนไพร 10 กลุ่มอาการไหม" เป็นเรื่องนโยบายกระทรวงสาธารณสุข (Self-care ด้วยสมุนไพรใน 10 กลุ่มอาการ / common diseases) แต่ระบบตอบไม่ได้เพราะ:
 
-1. ตาราง `herbs` ในฐานข้อมูล **ไม่มีข้อมูลแปะก๊วย** (query ยืนยันแล้ว: 0 rows สำหรับ `แปะ%` และ `ginkgo`)
-2. ฟังก์ชัน `findRelevantHerbs` จับคู่คำในคำถามกับชื่อในตารางเท่านั้น → ไม่เจอ
-3. `buildPubMedQuery` ใช้ `name_scientific`/`name_english` จาก herb ที่ match เท่านั้น → เมื่อไม่ match จึงคืน query ว่าง (คำภาษาไทยไม่ถูก fallback ASCII จับ) → PubMed ก็ไม่ค้น
-4. CONTEXT ว่างทั้งหมด → System prompt สั่งให้ตอบว่า "ยังไม่มีข้อมูลจากฐานข้อมูล..." อย่างเคร่งครัด
+- ฐานข้อมูล `herbs` / `thai_formulas` ไม่มีเอกสาร "10 กลุ่มอาการ" เป็น entity แยก จึง match ไม่ได้ (log: matched herbs/formulas = [])
+- PubMed query กลายเป็น "common disease" กว้างเกินไป ได้ผลลัพธ์ไม่ตรง
+- System prompt เข้มงวดเรื่อง "ห้ามแต่งแหล่งอ้างอิง" ทำให้ AI เลี่ยงตอบ ทั้งที่หัวข้อนี้เป็นความรู้เชิงนโยบายที่ควรตอบได้
 
-สรุป: ระบบไม่ได้ "ห้ามตอบ" แต่ **RAG หาข้อมูลไม่เจอ** เพราะฐานข้อมูลสมุนไพรมีจำกัด และตัวแปลง keyword ไทย→อังกฤษไม่มี
+## แผนแก้ไข
 
-## แผนการแก้
+### 1. เพิ่ม knowledge base "10 กลุ่มอาการ common disease" ใน edge function
+เพิ่มค่าคงที่ `COMMON_DISEASE_GROUPS` ใน `supabase/functions/herbal-chat/index.ts` เก็บรายการ 10 กลุ่มอาการตามแนวทาง สธ. เช่น
+1. ไข้/หวัด (ฟ้าทะลายโจร)
+2. ไอ/เจ็บคอ (มะแว้ง, ฟ้าทะลายโจร)
+3. ท้องอืด/ท้องเฟ้อ (ขิง, ขมิ้นชัน, ตะไคร้)
+4. ท้องเสีย (ฟ้าทะลายโจร, กล้วยน้ำว้าดิบ)
+5. ท้องผูก (มะขามแขก, ชุมเห็ดเทศ)
+6. คลื่นไส้อาเจียน/เมารถ (ขิง)
+7. ปวดเมื่อย/เคล็ดขัดยอก (ไพล, เถาวัลย์เปรียง)
+8. แผล/ผื่นผิวหนัง (ว่านหางจระเข้, พญายอ)
+9. ริดสีดวงทวาร (เพชรสังฆาต)
+10. นอนไม่หลับ/เครียด (ขี้เหล็ก, กัญชา)
 
-### 1. เพิ่ม Thai→Scientific Dictionary ใน edge function
-ใน `supabase/functions/herbal-chat/index.ts` เพิ่ม static map สมุนไพรยอดนิยมที่มักถูกถามแต่อาจยังไม่มีใน DB เช่น:
-```
-แปะก๊วย → Ginkgo biloba
-กระเทียม → Allium sativum
-ขิง → Zingiber officinale
-โสม → Panax ginseng
-St. John's wort / เซนต์จอห์นเวิร์ต → Hypericum perforatum
-...
-```
-ปรับ `findRelevantHerbs` / `buildPubMedQuery`:
-- ตรวจ dictionary ก่อน — ถ้าคำถามมีชื่อไทยตรงกัน ให้เพิ่ม scientific term เข้า PubMed query แม้จะไม่มีใน DB
-- ยัง detect intent "ร่วมกับ / ละลายลิ่มเลือด / warfarin / anticoagulant" เพื่อเติม `AND (drug interaction OR anticoagulant OR warfarin)`
+พร้อมสรรพคุณและเลขตำรับ NLEM ที่เกี่ยวข้อง (ยกอ้างอิงกรมการแพทย์แผนไทยฯ / บัญชียาหลักแห่งชาติ)
 
-### 2. เพิ่ม fallback keyword ยาแผนปัจจุบัน (ไทย→อังกฤษ)
-เช่น "ยาละลายลิ่มเลือด → warfarin OR anticoagulant", "แอสไพริน → aspirin", "ยาคุม → oral contraceptive" — ใช้ประกอบใน PubMed query
+### 2. Detect intent และ inject เข้า context
+ใน `buildContext()` ตรวจ keyword เช่น "10 กลุ่มอาการ", "common disease", "self care", "อาการทั่วไป" แล้วแนบตาราง 10 กลุ่มอาการเข้า `<CONTEXT>` เป็นแหล่งอ้างอิงภายใน (source: "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก / บัญชียาหลักแห่งชาติ")
 
-### 3. ผ่อนคลาย System Prompt เมื่อไม่มีข้อมูลใน internal DB
-แก้กติกาข้อ 3 ให้:
-- ถ้า **ไม่มีใน internal DB แต่มีผลจาก PubMed** → ตอบได้ โดยอ้างอิงเฉพาะ PubMed
-- ถ้า **ไม่มีทั้งสอง** → ค่อยตอบว่าไม่มีข้อมูล + แนะนำปรึกษาแพทย์
-คงหลัก "ห้ามแต่ง PMID/URL"
+### 3. ปรับ PubMed fallback
+ถ้า detect intent = "10 กลุ่มอาการ" ให้ข้าม PubMed (ไม่เกี่ยวข้อง) เพื่อลด noise
 
-### 4. เพิ่มข้อมูลสมุนไพรยอดนิยมลง DB (migration + insert)
-เพิ่ม 6–10 รายการที่มักถูกถามเรื่อง interaction: แปะก๊วย, กระเทียม, ขิง, โสม, ขมิ้นชัน (ถ้ายังไม่มี), เซนต์จอห์นเวิร์ต, ชาเขียว, ตังกุย — เน้น field `drug_interactions` ให้ครบ เพื่อให้ RAG ตอบได้แม่นแม้ PubMed ล่ม
+### 4. ปรับ system prompt เล็กน้อย
+เพิ่มบรรทัด: "ถ้า CONTEXT มีข้อมูลนโยบาย/แนวทางของกระทรวงสาธารณสุข (เช่น 10 กลุ่มอาการ common disease) ให้ตอบได้เต็มที่โดยอ้างอิงแหล่งภายในนั้น"
 
-### 5. เพิ่ม logging
-Log จำนวน herbs matched, formulas matched, PubMed query, PubMed results count ใน edge function เพื่อดีบั๊กในอนาคต
+### 5. ทดสอบ
+เรียก edge function ด้วยคำถามเดิม ตรวจว่าตอบครบทั้ง 10 กลุ่ม พร้อมสมุนไพรและตำรับที่แนะนำ และมี [SOURCES] ชี้ไปที่แนวทาง สธ.
 
 ## ไฟล์ที่จะแก้
-- `supabase/functions/herbal-chat/index.ts` — dictionary, ปรับ RAG, ผ่อน prompt, logging
-- migration ใหม่ + insert — เพิ่มสมุนไพรลงตาราง `herbs`
+- `supabase/functions/herbal-chat/index.ts` (เพิ่ม constant, detect intent, ปรับ context builder และ prompt)
 
-## หลังทำเสร็จ
-ทดสอบคำถามเดิม "ใบแปะก๊วยกินร่วมกับยาละลายลิ่มเลือดได้ไหม" ผ่าน preview + ตรวจ edge function logs ว่า PubMed คืนผล และคำตอบมี citation จริง
+ไม่ต้องแตะ frontend หรือ schema
