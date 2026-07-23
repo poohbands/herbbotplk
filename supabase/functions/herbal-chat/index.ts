@@ -331,13 +331,25 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], includeCommonDisease = false): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false): string {
   const parts: string[] = [];
 
-  if (includeCommonDisease) {
+  if (knowledge.length > 0) {
+    parts.push("### ความรู้จากคลังเอกสารภายใน (Knowledge Base — จัดการโดยแอดมิน)");
+    for (const k of knowledge) {
+      parts.push(`
+**${k.title}** [${k.category}]
+${k.content}
+- แหล่งอ้างอิง: ${k.source || "-"}${k.source_url ? ` (${k.source_url})` : ""}
+- knowledge id: ${k.id}`);
+    }
+  }
+
+  if (includeCommonDisease && knowledge.length === 0) {
     parts.push("### แนวทางกระทรวงสาธารณสุข: การใช้ยาสมุนไพรใน 10 กลุ่มอาการ (Common Diseases)");
     parts.push(COMMON_DISEASE_GROUPS);
   }
+
 
 
   if (herbs.length > 0) {
