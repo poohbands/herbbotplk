@@ -114,6 +114,53 @@ const DRUG_THAI_TO_EN: Record<string, string> = {
   "ดิจอกซิน": "digoxin",
 };
 
+// ---------- Common Disease 10 กลุ่มอาการ (กระทรวงสาธารณสุข) ----------
+// อ้างอิง: กรมการแพทย์แผนไทยและการแพทย์ทางเลือก + บัญชียาหลักแห่งชาติด้านสมุนไพร (Self-care)
+const COMMON_DISEASE_GROUPS = `
+### 10 กลุ่มอาการ (Common Diseases) ที่ดูแลตนเองด้วยยาสมุนไพร — กระทรวงสาธารณสุข
+
+1. **ไข้ หวัด เจ็บคอ**
+   - สมุนไพร/ตำรับ: ฟ้าทะลายโจร (แคปซูล/ยาผง), ยาจันทน์ลีลา, ยาห้าราก (เบญจโลกวิเชียร)
+   - สรรพคุณ: บรรเทาไข้ ลดไข้ตัวร้อน แก้เจ็บคอ
+2. **ไอ ระคายคอ มีเสมหะ**
+   - สมุนไพร/ตำรับ: มะแว้ง (ยาอมมะแว้ง), ยาประสะมะแว้ง, ยาตรีผลา
+   - สรรพคุณ: บรรเทาอาการไอ ขับเสมหะ ชุ่มคอ
+3. **ท้องอืด ท้องเฟ้อ อาหารไม่ย่อย**
+   - สมุนไพร/ตำรับ: ขิง, ขมิ้นชัน, ยาธาตุอบเชย, ยาธาตุบรรจบ, ยาประสะกะเพรา
+   - สรรพคุณ: ขับลม แก้ท้องอืด กระตุ้นการย่อย
+4. **ท้องเสีย (ไม่ติดเชื้อ)**
+   - สมุนไพร/ตำรับ: ฟ้าทะลายโจร, กล้วยน้ำว้าดิบ (ผงกล้วย), ยาเหลืองปิดสมุทร
+   - สรรพคุณ: บรรเทาอาการท้องเสียชนิดไม่ติดเชื้อ
+5. **ท้องผูก**
+   - สมุนไพร/ตำรับ: มะขามแขก, ชุมเห็ดเทศ, ยาถ่ายดีเกลือฝรั่ง (ตามข้อบ่งใช้)
+   - สรรพคุณ: ระบาย บรรเทาอาการท้องผูก (ไม่ใช้ต่อเนื่องนาน)
+6. **คลื่นไส้ อาเจียน เมารถเมาเรือ**
+   - สมุนไพร/ตำรับ: ขิง (แคปซูลขิง)
+   - สรรพคุณ: บรรเทาอาการคลื่นไส้อาเจียนจากการเมารถ/แพ้ท้อง/หลังผ่าตัด
+7. **ปวดเมื่อยกล้ามเนื้อ เคล็ดขัดยอก**
+   - สมุนไพร/ตำรับ: ไพล (ครีมไพล/น้ำมันไพล), เถาวัลย์เปรียง, ยาประคบสมุนไพร
+   - สรรพคุณ: บรรเทาอาการปวดเมื่อย ฟกช้ำ อักเสบเฉพาะที่
+8. **แผล ผื่นคัน โรคผิวหนัง**
+   - สมุนไพร/ตำรับ: ว่านหางจระเข้ (แผลไฟไหม้/น้ำร้อนลวก), พญายอ (เริม/งูสวัด), ทิงเจอร์ทองพันชั่ง (กลาก เกลื้อน)
+   - สรรพคุณ: สมานแผล ลดการอักเสบ ต้านเชื้อรา/ไวรัสผิวหนัง
+9. **ริดสีดวงทวาร**
+   - สมุนไพร/ตำรับ: เพชรสังฆาต (แคปซูล), ยาริดสีดวงมหากาฬ
+   - สรรพคุณ: บรรเทาอาการริดสีดวงทวารระยะแรก
+10. **นอนไม่หลับ เครียด วิตกกังวล**
+    - สมุนไพร/ตำรับ: ขี้เหล็ก (ใบขี้เหล็ก), ยาหอมเทพจิตร, ยาหอมนวโกฐ
+    - สรรพคุณ: ช่วยให้นอนหลับ คลายเครียด บำรุงหัวใจ
+
+**แหล่งอ้างอิงหลัก:**
+- กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข — คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น
+- บัญชียาหลักแห่งชาติด้านสมุนไพร (NLEM Herbal) พ.ศ. ปัจจุบัน
+- สำนักงานคณะกรรมการอาหารและยา (อย.)
+`;
+
+function isCommonDiseaseQuestion(q: string): boolean {
+  const s = q.toLowerCase();
+  return /10\s*กลุ่มอาการ|สิบกลุ่มอาการ|common\s*disease|self[-\s]?care|อาการทั่วไป|โรคทั่วไป|ดูแลตนเอง|ดูแลตัวเอง|บัญชียาหลัก.*สมุนไพร/i.test(s);
+}
+
 // ---------- Helpers ----------
 
 /** ค้นหาสมุนไพร/ตำรับที่ชื่อปรากฏในคำถาม */
@@ -229,8 +276,14 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[]): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], includeCommonDisease = false): string {
   const parts: string[] = [];
+
+  if (includeCommonDisease) {
+    parts.push("### แนวทางกระทรวงสาธารณสุข: การใช้ยาสมุนไพรใน 10 กลุ่มอาการ (Common Diseases)");
+    parts.push(COMMON_DISEASE_GROUPS);
+  }
+
 
   if (herbs.length > 0) {
     parts.push("### ข้อมูลสมุนไพรจากฐานข้อมูลภายใน (กลุ่มงานการแพทย์แผนไทยและสมุนไพร สสจ.พิษณุโลก)");
@@ -292,6 +345,7 @@ const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด
    - ถ้ามีทั้ง internal DB และ PubMed → ใช้ทั้งสอง
    - ถ้ามีแค่ PubMed (ไม่มีใน internal DB) → **ตอบได้** โดยอ้างอิงเฉพาะ PubMed และแจ้งว่า "สมุนไพร/ยานี้ยังไม่มีในฐานข้อมูลภายใน แต่มีงานวิจัยอ้างอิงจาก PubMed"
    - ถ้าไม่มีทั้งสอง → ตอบว่า "ยังไม่มีข้อมูลจากฐานข้อมูลและงานวิจัยที่ตรวจสอบได้" แล้วแนะนำให้ปรึกษาแพทย์/เภสัชกร
+   - **ถ้า CONTEXT มีข้อมูลแนวทาง/นโยบายกระทรวงสาธารณสุข (เช่น 10 กลุ่มอาการ common disease, บัญชียาหลักแห่งชาติด้านสมุนไพร) → ตอบได้เต็มที่ตามเนื้อหาที่ให้มา โดยอ้างอิงว่า "อ้างอิงจากกรมการแพทย์แผนไทยฯ/บัญชียาหลักแห่งชาติด้านสมุนไพร"**
 4. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** เวลาอ้าง PubMed ให้ใส่แค่ "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง
 
 ## รูปแบบคำตอบ
@@ -335,10 +389,13 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
+    const isCommonDisease = isCommonDiseaseQuestion(question);
     const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
-    const pubmed = await fetchPubMed(pubmedQuery);
+    // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
+    const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
 
     console.log("[herbal-chat] question:", question);
+    console.log("[herbal-chat] common disease intent:", isCommonDisease);
     console.log("[herbal-chat] matched herbs:", herbs.map((h) => h.name_thai));
     console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
     console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
@@ -350,8 +407,13 @@ serve(async (req) => {
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
     ];
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames);
-    const sourcesJson = JSON.stringify({ pubmed, internal: internalSources });
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, isCommonDisease);
+    const sourcesJson = JSON.stringify({
+      pubmed,
+      internal: internalSources,
+      ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
+    });
+
 
     const contextMessage = {
       role: "system" as const,
