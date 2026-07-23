@@ -438,6 +438,58 @@ const ChatPage = () => {
                         {getSeverityBadge(msg.severity)}
                       </div>
                     )}
+                    {msg.role === "assistant" && msg.sources && (
+                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0) && (
+                        <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>แหล่งอ้างอิงที่ตรวจสอบได้</span>
+                          </div>
+                          {msg.sources.internal?.length > 0 && (
+                            <div className="space-y-1">
+                              {msg.sources.internal.map((s) => (
+                                <a
+                                  key={`${s.type}-${s.id}`}
+                                  href={`/herbs?${s.type}=${s.id}`}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                >
+                                  <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                  <span className="flex-1">
+                                    <span className="font-medium text-foreground">{s.name}</span>
+                                    <span className="text-muted-foreground ml-1">
+                                      — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูลภายใน)
+                                    </span>
+                                  </span>
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                          {msg.sources.pubmed?.length > 0 && (
+                            <div className="space-y-1">
+                              {msg.sources.pubmed.map((p) => (
+                                <a
+                                  key={p.pmid}
+                                  href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
+                                >
+                                  <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
+                                  <span className="flex-1 min-w-0">
+                                    <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
+                                    <span className="text-muted-foreground block mt-0.5">
+                                      {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
+                                    </span>
+                                  </span>
+                                  <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    )}
                   </div>
                 </motion.div>
               ))}
