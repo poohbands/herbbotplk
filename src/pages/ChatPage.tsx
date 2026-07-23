@@ -1,10 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
+
+type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
+type InternalSource = { type: "herb" | "formula"; id: string; name: string };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[] };
 
 type Message = {
   id: string;
@@ -12,7 +16,7 @@ type Message = {
   content: string;
   category?: string;
   severity?: string;
-  sources?: string[];
+  sources?: SourcesPayload;
   timestamp: Date;
 };
 
