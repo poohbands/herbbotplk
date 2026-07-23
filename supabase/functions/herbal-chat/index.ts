@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// ---------- Helpers ----------
+// ---------- Types ----------
 
 type HerbRow = {
   id: string;
@@ -51,7 +51,72 @@ type InternalSource = {
   name: string;
 };
 
-/** Find herbs/formulas whose Thai/English/scientific/local names appear in the question. */
+// ---------- Thai keyword dictionaries ----------
+
+// สมุนไพร: คำภาษาไทย (lowercase) → ชื่อวิทยาศาสตร์สำหรับค้น PubMed
+const HERB_THAI_TO_SCI: Record<string, string> = {
+  "แปะก๊วย": "Ginkgo biloba",
+  "ใบแปะก๊วย": "Ginkgo biloba",
+  "กระเทียม": "Allium sativum",
+  "ขิง": "Zingiber officinale",
+  "โสม": "Panax ginseng",
+  "โสมเกาหลี": "Panax ginseng",
+  "ขมิ้นชัน": "Curcuma longa",
+  "ขมิ้น": "Curcuma longa",
+  "ฟ้าทะลายโจร": "Andrographis paniculata",
+  "กระชายดำ": "Kaempferia parviflora",
+  "กระชาย": "Boesenbergia rotunda",
+  "ชาเขียว": "Camellia sinensis",
+  "ตังกุย": "Angelica sinensis",
+  "เซนต์จอห์นเวิร์ต": "Hypericum perforatum",
+  "เซนต์จอห์น": "Hypericum perforatum",
+  "มะรุม": "Moringa oleifera",
+  "ว่านหางจระเข้": "Aloe vera",
+  "รางจืด": "Thunbergia laurifolia",
+  "บัวบก": "Centella asiatica",
+  "มะขามป้อม": "Phyllanthus emblica",
+  "กะเพรา": "Ocimum tenuiflorum",
+  "โหระพา": "Ocimum basilicum",
+  "ตะไคร้": "Cymbopogon citratus",
+  "พริกไทย": "Piper nigrum",
+  "อบเชย": "Cinnamomum verum",
+  "ชะพลู": "Piper sarmentosum",
+  "มะระขี้นก": "Momordica charantia",
+  "หญ้าหวาน": "Stevia rebaudiana",
+  "ดอกคำฝอย": "Carthamus tinctorius",
+  "เก๋ากี้": "Lycium barbarum",
+  "เห็ดหลินจือ": "Ganoderma lucidum",
+};
+
+// ยาแผนปัจจุบัน: คำภาษาไทย → term ภาษาอังกฤษสำหรับ PubMed
+const DRUG_THAI_TO_EN: Record<string, string> = {
+  "ยาละลายลิ่มเลือด": "anticoagulant OR warfarin OR antiplatelet",
+  "ละลายลิ่มเลือด": "anticoagulant OR warfarin",
+  "ยาต้านการแข็งตัวของเลือด": "anticoagulant OR warfarin",
+  "วาร์ฟาริน": "warfarin",
+  "แอสไพริน": "aspirin",
+  "ยาแอสไพริน": "aspirin",
+  "โคลพิโดเกรล": "clopidogrel",
+  "ยาคุมกำเนิด": "oral contraceptive",
+  "ยาคุม": "oral contraceptive",
+  "ยาลดความดัน": "antihypertensive",
+  "ยาความดัน": "antihypertensive",
+  "ยาเบาหวาน": "antidiabetic OR metformin",
+  "อินซูลิน": "insulin",
+  "ยากดภูมิ": "immunosuppressant",
+  "ยาปฏิชีวนะ": "antibiotic",
+  "ยาแก้ปวด": "analgesic OR NSAID",
+  "ยาแก้อักเสบ": "NSAID",
+  "สแตติน": "statin",
+  "ยาลดไขมัน": "statin",
+  "ยาต้านซึมเศร้า": "antidepressant OR SSRI",
+  "ยาโรคหัวใจ": "digoxin OR cardiovascular drug",
+  "ดิจอกซิน": "digoxin",
+};
+
+// ---------- Helpers ----------
+
+/** ค้นหาสมุนไพร/ตำรับที่ชื่อปรากฏในคำถาม */
 async function findRelevantHerbs(supabase: any, question: string) {
   const q = question.toLowerCase();
 
@@ -81,36 +146,56 @@ async function findRelevantHerbs(supabase: any, question: string) {
   return { herbs: matchedHerbs, formulas: matchedFormulas };
 }
 
-/** Build a PubMed search query from Thai herbs by converting to scientific/English names. */
-function buildPubMedQuery(question: string, herbs: HerbRow[]): string {
-  const terms: string[] = [];
-
-  for (const h of herbs) {
-    if (h.name_scientific) terms.push(`"${h.name_scientific}"`);
-    else if (h.name_english) terms.push(`"${h.name_english}"`);
-  }
-
-  // Detect drug interaction / adverse effect intent (Thai & English)
+/** สร้าง PubMed query โดยใช้ทั้ง (1) herb ที่ match ใน DB (2) dictionary ไทย→sci (3) dictionary ยาไทย→อังกฤษ */
+function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[] } {
   const q = question.toLowerCase();
-  if (q.includes("interaction") || q.includes("ปฏิกิริยา") || q.includes("ตีกัน") || q.includes("ร่วมกับ") || q.includes("warfarin")) {
-    if (terms.length > 0) return `(${terms.join(" OR ")}) AND (drug interaction OR herb-drug interaction)`;
+  const herbTerms = new Set<string>();
+  const extraHerbNames: string[] = [];
+
+  // (1) จาก DB
+  for (const h of herbs) {
+    if (h.name_scientific) herbTerms.add(`"${h.name_scientific}"`);
+    else if (h.name_english) herbTerms.add(`"${h.name_english}"`);
   }
 
-  if (terms.length > 0) return terms.join(" OR ");
+  // (2) จาก dictionary
+  for (const [thai, sci] of Object.entries(HERB_THAI_TO_SCI)) {
+    if (q.includes(thai.toLowerCase())) {
+      herbTerms.add(`"${sci}"`);
+      if (!herbs.some((h) => h.name_scientific === sci)) extraHerbNames.push(`${thai} (${sci})`);
+    }
+  }
 
-  // Fallback: pull ASCII words from question (unlikely to work with Thai, but safe)
-  const ascii = question.match(/[A-Za-z][A-Za-z0-9-]{2,}/g);
-  if (ascii && ascii.length > 0) return ascii.slice(0, 4).join(" ");
+  // (3) drug terms
+  const drugTerms = new Set<string>();
+  for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
+    if (q.includes(thai.toLowerCase())) drugTerms.add(`(${en})`);
+  }
+  // English drug names in the question itself
+  const asciiDrugs = q.match(/\b(warfarin|aspirin|clopidogrel|heparin|digoxin|metformin|insulin|statin|ibuprofen|paracetamol)\b/gi);
+  if (asciiDrugs) for (const d of asciiDrugs) drugTerms.add(d.toLowerCase());
 
-  return "";
+  // Intent: interaction / adverse
+  const interactionIntent = /interaction|ปฏิกิริยา|ตีกัน|ร่วมกับ|ร่วมกัน|กินร่วม/i.test(q) || drugTerms.size > 0;
+
+  let query = "";
+  if (herbTerms.size > 0 && drugTerms.size > 0) {
+    query = `(${[...herbTerms].join(" OR ")}) AND (${[...drugTerms].join(" OR ")})`;
+  } else if (herbTerms.size > 0 && interactionIntent) {
+    query = `(${[...herbTerms].join(" OR ")}) AND (drug interaction OR herb-drug interaction)`;
+  } else if (herbTerms.size > 0) {
+    query = [...herbTerms].join(" OR ");
+  } else {
+    const ascii = question.match(/[A-Za-z][A-Za-z0-9-]{2,}/g);
+    if (ascii && ascii.length > 0) query = ascii.slice(0, 4).join(" ");
+  }
+
+  return { query, extraHerbNames };
 }
 
-/** Query PubMed E-utilities for real research articles. Returns up to 5. */
 async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   if (!query.trim()) return [];
-
   try {
-    // esearch: get PMIDs
     const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=5&retmode=json&sort=relevance`;
     const searchResp = await fetch(searchUrl);
     if (!searchResp.ok) return [];
@@ -118,7 +203,6 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
     const pmids: string[] = searchData?.esearchresult?.idlist || [];
     if (pmids.length === 0) return [];
 
-    // esummary: get metadata
     const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(",")}&retmode=json`;
     const summaryResp = await fetch(summaryUrl);
     if (!summaryResp.ok) return [];
@@ -145,8 +229,7 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-/** Build a context block that the LLM must ground its answer in. */
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[]): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[]): string {
   const parts: string[] = [];
 
   if (herbs.length > 0) {
@@ -180,6 +263,10 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
     }
   }
 
+  if (extraHerbNames.length > 0) {
+    parts.push(`\n### สมุนไพรที่ระบุจากคำถาม (ยังไม่มีในฐานข้อมูลภายใน แต่ใช้ค้น PubMed แล้ว)\n- ${extraHerbNames.join("\n- ")}`);
+  }
+
   if (pubmed.length > 0) {
     parts.push("\n### งานวิจัยที่เกี่ยวข้องจาก PubMed (ดึงมาสด ๆ จาก NCBI)");
     for (const p of pubmed) {
@@ -201,8 +288,11 @@ const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด
 ## ข้อจำกัดสำคัญที่สุด (บังคับปฏิบัติ)
 1. ตอบได้เฉพาะคำถามด้านการแพทย์ ยาสมุนไพร Drug-Herb Interaction เท่านั้น ถ้าถามเรื่องอื่นให้ตอบ: "ผมเป็นที่ปรึกษาด้านยาสมุนไพรและ Drug Interaction ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้ครับ"
 2. **ห้ามสร้างหรือแต่งแหล่งอ้างอิงเอง (No Hallucination)** — ใช้ได้เฉพาะแหล่งอ้างอิงที่มีอยู่ใน <CONTEXT> ที่ระบบให้มาเท่านั้น
-3. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** — ถ้าไม่มีข้อมูลใน CONTEXT ให้ตอบตรง ๆ ว่า "ยังไม่มีข้อมูลจากฐานข้อมูลและงานวิจัยที่ตรวจสอบได้" แล้วแนะนำให้ปรึกษาแพทย์
-4. เมื่ออ้างอิง PubMed ให้ใส่แค่ PMID เช่น "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง อย่าใส่ URL
+3. **ลำดับความสำคัญของข้อมูล**:
+   - ถ้ามีทั้ง internal DB และ PubMed → ใช้ทั้งสอง
+   - ถ้ามีแค่ PubMed (ไม่มีใน internal DB) → **ตอบได้** โดยอ้างอิงเฉพาะ PubMed และแจ้งว่า "สมุนไพร/ยานี้ยังไม่มีในฐานข้อมูลภายใน แต่มีงานวิจัยอ้างอิงจาก PubMed"
+   - ถ้าไม่มีทั้งสอง → ตอบว่า "ยังไม่มีข้อมูลจากฐานข้อมูลและงานวิจัยที่ตรวจสอบได้" แล้วแนะนำให้ปรึกษาแพทย์/เภสัชกร
+4. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** เวลาอ้าง PubMed ให้ใส่แค่ "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง
 
 ## รูปแบบคำตอบ
 - ตอบเป็น Markdown ภาษาไทย มีโครงสร้างชัดเจน
@@ -237,28 +327,32 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
-    // Get last user question
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
     const question: string = lastUserMsg?.content || "";
 
-    // RAG: fetch context from internal DB + PubMed
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
-    const pubmedQuery = buildPubMedQuery(question, herbs);
+    const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
     const pubmed = await fetchPubMed(pubmedQuery);
+
+    console.log("[herbal-chat] question:", question);
+    console.log("[herbal-chat] matched herbs:", herbs.map((h) => h.name_thai));
+    console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
+    console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
+    console.log("[herbal-chat] pubmed query:", pubmedQuery);
+    console.log("[herbal-chat] pubmed results:", pubmed.length);
 
     const internalSources: InternalSource[] = [
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
     ];
 
-    const contextBlock = buildContext(herbs, formulas, pubmed);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames);
     const sourcesJson = JSON.stringify({ pubmed, internal: internalSources });
 
-    // Prepend a system-role context message so the model sees the grounded data
     const contextMessage = {
       role: "system" as const,
       content: `<CONTEXT>

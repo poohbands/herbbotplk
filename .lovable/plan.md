@@ -1,68 +1,47 @@
-## ปัญหา
-AI ตอบด้วยแหล่งอ้างอิงที่ "hallucinate" (แต่งขึ้นเอง) — ทั้ง URL, PMID, และชื่องานวิจัย ทำให้กดแล้วเจอลิงก์เสียหรือไปเจอเนื้อหาคนละเรื่อง เพราะ LLM ไม่มีสิทธิ์เข้าถึงข้อมูลจริง
+## ปัญหา (ยืนยันแล้ว)
+คำถาม "ใบแปะก๊วยกินร่วมกับยาละลายลิ่มเลือดได้ไหม" ตอบไม่ได้ เพราะ:
 
-## แนวทางแก้
-เปลี่ยนจาก "AI จินตนาการแหล่งอ้างอิง" → "AI ตอบจากแหล่งข้อมูลจริงเท่านั้น" โดยใช้ 2 แหล่ง:
+1. ตาราง `herbs` ในฐานข้อมูล **ไม่มีข้อมูลแปะก๊วย** (query ยืนยันแล้ว: 0 rows สำหรับ `แปะ%` และ `ginkgo`)
+2. ฟังก์ชัน `findRelevantHerbs` จับคู่คำในคำถามกับชื่อในตารางเท่านั้น → ไม่เจอ
+3. `buildPubMedQuery` ใช้ `name_scientific`/`name_english` จาก herb ที่ match เท่านั้น → เมื่อไม่ match จึงคืน query ว่าง (คำภาษาไทยไม่ถูก fallback ASCII จับ) → PubMed ก็ไม่ค้น
+4. CONTEXT ว่างทั้งหมด → System prompt สั่งให้ตอบว่า "ยังไม่มีข้อมูลจากฐานข้อมูล..." อย่างเคร่งครัด
 
-1. **ฐานข้อมูลภายใน** (herbs, thai_formulas) — ค้นหาก่อนทุกครั้ง
-2. **PubMed API จริง** — ค้นหางานวิจัยด้วย NCBI E-utilities (ฟรี ไม่ต้องใช้ API key)
+สรุป: ระบบไม่ได้ "ห้ามตอบ" แต่ **RAG หาข้อมูลไม่เจอ** เพราะฐานข้อมูลสมุนไพรมีจำกัด และตัวแปลง keyword ไทย→อังกฤษไม่มี
 
-## ขั้นตอนการทำงาน (ใหม่)
+## แผนการแก้
 
-```text
-คำถามผู้ใช้
-    ↓
-[1] Query herbs + thai_formulas จาก DB ด้วยคีย์เวิร์ด
-    ↓
-[2] Query PubMed E-utilities (esearch → esummary)
-    ดึง PMID, title, authors, year, journal จริง
-    ↓
-[3] ประกอบ context จากทั้ง 2 แหล่ง ส่งให้ LLM
-    ↓
-[4] LLM ตอบโดยอ้างอิงเฉพาะข้อมูลที่ได้รับ
-    ห้ามสร้างแหล่งอ้างอิงใหม่
-    ↓
-[5] แสดงแหล่งอ้างอิงพร้อมลิงก์จริง
-    - PubMed: https://pubmed.ncbi.nlm.nih.gov/{PMID}
-    - ฐานข้อมูลภายใน: อ้างอิงชื่อสมุนไพร/ตำรับในระบบ
+### 1. เพิ่ม Thai→Scientific Dictionary ใน edge function
+ใน `supabase/functions/herbal-chat/index.ts` เพิ่ม static map สมุนไพรยอดนิยมที่มักถูกถามแต่อาจยังไม่มีใน DB เช่น:
 ```
+แปะก๊วย → Ginkgo biloba
+กระเทียม → Allium sativum
+ขิง → Zingiber officinale
+โสม → Panax ginseng
+St. John's wort / เซนต์จอห์นเวิร์ต → Hypericum perforatum
+...
+```
+ปรับ `findRelevantHerbs` / `buildPubMedQuery`:
+- ตรวจ dictionary ก่อน — ถ้าคำถามมีชื่อไทยตรงกัน ให้เพิ่ม scientific term เข้า PubMed query แม้จะไม่มีใน DB
+- ยัง detect intent "ร่วมกับ / ละลายลิ่มเลือด / warfarin / anticoagulant" เพื่อเติม `AND (drug interaction OR anticoagulant OR warfarin)`
 
-## รายการงานที่ต้องทำ
+### 2. เพิ่ม fallback keyword ยาแผนปัจจุบัน (ไทย→อังกฤษ)
+เช่น "ยาละลายลิ่มเลือด → warfarin OR anticoagulant", "แอสไพริน → aspirin", "ยาคุม → oral contraceptive" — ใช้ประกอบใน PubMed query
 
-### 1. แก้ Edge Function `herbal-chat`
-- เพิ่มขั้นตอน pre-fetch ก่อนเรียก LLM:
-  - Extract คีย์เวิร์ด (ชื่อสมุนไพร/ยา) จากคำถาม
-  - Query `herbs` และ `thai_formulas` ด้วย ilike/full-text search
-  - Query PubMed E-utilities API (esearch + esummary) — ไม่ต้องใช้ API key แต่จำกัด 3 req/sec
-- ปรับ system prompt:
-  - บอก AI ว่ามี context จริง 2 ชุด
-  - บังคับให้อ้างอิงเฉพาะจาก context ที่ให้ ห้ามสร้าง citation ใหม่
-  - ถ้าไม่มีข้อมูล ให้บอก "ไม่พบข้อมูลในฐานข้อมูล" ตรงๆ
-- ส่งกลับ sources เป็น JSON structured ท้าย response
+### 3. ผ่อนคลาย System Prompt เมื่อไม่มีข้อมูลใน internal DB
+แก้กติกาข้อ 3 ให้:
+- ถ้า **ไม่มีใน internal DB แต่มีผลจาก PubMed** → ตอบได้ โดยอ้างอิงเฉพาะ PubMed
+- ถ้า **ไม่มีทั้งสอง** → ค่อยตอบว่าไม่มีข้อมูล + แนะนำปรึกษาแพทย์
+คงหลัก "ห้ามแต่ง PMID/URL"
 
-### 2. อัปเดต ChatPage (frontend)
-- Parse sources จาก response
-- Render แหล่งอ้างอิงเป็นการ์ดคลิกได้:
-  - PubMed link → เปิด pubmed.ncbi.nlm.nih.gov/{PMID}
-  - Internal DB → ลิงก์ไปหน้า /herbs (สารานุกรม)
-- แสดงบอก user ชัดเจนว่าแหล่งไหนมาจาก DB ภายใน แหล่งไหนจาก PubMed
+### 4. เพิ่มข้อมูลสมุนไพรยอดนิยมลง DB (migration + insert)
+เพิ่ม 6–10 รายการที่มักถูกถามเรื่อง interaction: แปะก๊วย, กระเทียม, ขิง, โสม, ขมิ้นชัน (ถ้ายังไม่มี), เซนต์จอห์นเวิร์ต, ชาเขียว, ตังกุย — เน้น field `drug_interactions` ให้ครบ เพื่อให้ RAG ตอบได้แม่นแม้ PubMed ล่ม
 
-## รายละเอียดเชิงเทคนิค
+### 5. เพิ่ม logging
+Log จำนวน herbs matched, formulas matched, PubMed query, PubMed results count ใน edge function เพื่อดีบั๊กในอนาคต
 
-**PubMed E-utilities endpoints (ฟรี ไม่ต้อง key):**
-- `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={query}&retmax=5&retmode=json`
-- `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id={pmids}&retmode=json`
+## ไฟล์ที่จะแก้
+- `supabase/functions/herbal-chat/index.ts` — dictionary, ปรับ RAG, ผ่อน prompt, logging
+- migration ใหม่ + insert — เพิ่มสมุนไพรลงตาราง `herbs`
 
-**Rate limit:** 3 requests/second โดยไม่มี key — พอสำหรับ chat 1 คำถามต่อครั้ง
-
-**Keyword extraction:** ใช้ LLM รอบแรกสั้นๆ หรือใช้ regex ดึงชื่อสมุนไพร/ยาที่ match ในตาราง herbs.name_thai / name_english / name_scientific
-
-## ผลที่คาดหวัง
-- ทุกลิงก์ที่แสดงคลิกได้จริง เปิดไปเจอบทความจริง
-- ถ้าไม่มีข้อมูลจริง AI จะบอกตรงๆ ว่าไม่พบ ไม่แต่ง
-- ผู้ใช้เชื่อถือคำตอบได้มากขึ้น เพราะตรวจสอบได้
-
-## ข้อจำกัดที่ควรทราบ
-- PubMed มีเฉพาะภาษาอังกฤษ — ถ้าค้นด้วยชื่อไทยอาจไม่เจอ ต้องแปลงเป็นชื่อวิทยาศาสตร์/อังกฤษก่อน (ใช้ mapping จากตาราง herbs)
-- Response จะช้าขึ้นเล็กน้อย (~1-2 วินาที) เพราะต้องเรียก API เพิ่ม
-- ครั้งแรกอาจไม่พบข้อมูลใน DB ภายในถ้าถามสมุนไพรที่ยังไม่มีในตาราง — ต้องพึ่ง PubMed เป็นหลัก
+## หลังทำเสร็จ
+ทดสอบคำถามเดิม "ใบแปะก๊วยกินร่วมกับยาละลายลิ่มเลือดได้ไหม" ผ่าน preview + ตรวจ edge function logs ว่า PubMed คืนผล และคำตอบมี citation จริง
