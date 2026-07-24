@@ -120,14 +120,32 @@ const DRUG_THAI_TO_EN: Record<string, string> = {
   "ยาคุม": "oral contraceptive",
   "ยาลดความดัน": "antihypertensive",
   "ยาความดัน": "antihypertensive",
+  "แอมโลดิพีน": "amlodipine",
+  "โลซาร์แทน": "losartan",
+  "อีนาลาพริล": "enalapril",
   "ยาเบาหวาน": "antidiabetic OR metformin",
+  "เมทฟอร์มิน": "metformin",
   "อินซูลิน": "insulin",
   "ยากดภูมิ": "immunosuppressant",
   "ยาปฏิชีวนะ": "antibiotic",
-  "ยาแก้ปวด": "analgesic OR NSAID",
+  "อะม็อกซี": "amoxicillin",
+  "อะม็อกซิลลิน": "amoxicillin",
+  "ยาแก้ปวด": "analgesic OR NSAID OR paracetamol",
   "ยาแก้อักเสบ": "NSAID",
+  "พารา": "paracetamol OR acetaminophen",
+  "พาราเซตามอล": "paracetamol OR acetaminophen",
+  "ยาลดไข้": "paracetamol OR antipyretic",
+  "ไอบูโพรเฟน": "ibuprofen",
+  "บรูเฟน": "ibuprofen",
+  "ยาลดกรด": "omeprazole OR proton pump inhibitor OR antacid",
+  "โอเมพราโซล": "omeprazole",
+  "ยาแก้แพ้": "antihistamine",
+  "เซทิริซีน": "cetirizine",
+  "ลอราทาดีน": "loratadine",
   "สแตติน": "statin",
   "ยาลดไขมัน": "statin",
+  "ซิมวาสแตติน": "simvastatin",
+  "อะทอร์วาสแตติน": "atorvastatin",
   "ยาต้านซึมเศร้า": "antidepressant OR SSRI",
   "ยาโรคหัวใจ": "digoxin OR cardiovascular drug",
   "ดิจอกซิน": "digoxin",
@@ -249,7 +267,7 @@ async function findRelevantKnowledge(supabase: any, question: string): Promise<K
 }
 
 /** สร้าง PubMed query โดยใช้ทั้ง (1) herb ที่ match ใน DB (2) dictionary ไทย→sci (3) dictionary ยาไทย→อังกฤษ */
-function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[] } {
+function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[]; drugTerms: string[] } {
   const q = question.toLowerCase();
   const herbTerms = new Set<string>();
   const extraHerbNames: string[] = [];
@@ -273,12 +291,18 @@ function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; 
   for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
     if (q.includes(thai.toLowerCase())) drugTerms.add(`(${en})`);
   }
-  // English drug names in the question itself
-  const asciiDrugs = q.match(/\b(warfarin|aspirin|clopidogrel|heparin|digoxin|metformin|insulin|statin|ibuprofen|paracetamol)\b/gi);
-  if (asciiDrugs) for (const d of asciiDrugs) drugTerms.add(d.toLowerCase());
+  // English drug names / abbreviations in the question itself
+  const asciiDrugs = q.match(/\b(warfarin|aspirin|clopidogrel|heparin|digoxin|metformin|insulin|statin|ibuprofen|paracetamol|acetaminophen|para|omeprazole|cetirizine|loratadine|simvastatin|atorvastatin|amlodipine|losartan|enalapril|amoxicillin)\b/gi);
+  if (asciiDrugs) {
+    for (const d of asciiDrugs) {
+      const lower = d.toLowerCase();
+      if (lower === "para") drugTerms.add("(paracetamol OR acetaminophen)");
+      else drugTerms.add(lower);
+    }
+  }
 
   // Intent: interaction / adverse
-  const interactionIntent = /interaction|ปฏิกิริยา|ตีกัน|ร่วมกับ|ร่วมกัน|กินร่วม/i.test(q) || drugTerms.size > 0;
+  const interactionIntent = /interaction|ปฏิกิริยา|ตีกัน|ร่วมกับ|ร่วมกัน|กินร่วม|กินคู่|กินพร้อม|ใช้ร่วม/i.test(q) || drugTerms.size > 0;
 
   let query = "";
   if (herbTerms.size > 0 && drugTerms.size > 0) {
@@ -292,7 +316,7 @@ function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; 
     if (ascii && ascii.length > 0) query = ascii.slice(0, 4).join(" ");
   }
 
-  return { query, extraHerbNames };
+  return { query, extraHerbNames, drugTerms: [...drugTerms] };
 }
 
 async function fetchPubMed(query: string): Promise<PubMedSource[]> {
@@ -405,8 +429,30 @@ ${k.content}
 
 const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด้านยาสมุนไพรไทยและ Drug-Herb Interaction ของ "กลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก"
 
-## ข้อจำกัดสำคัญที่สุด (บังคับปฏิบัติ)
-1. ตอบได้เฉพาะคำถามด้านการแพทย์ ยาสมุนไพร Drug-Herb Interaction เท่านั้น ถ้าถามเรื่องอื่นให้ตอบ: "ผมเป็นที่ปรึกษาด้านยาสมุนไพรและ Drug Interaction ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้ครับ"
+## ขอบเขตการตอบ (สำคัญที่สุด — อ่านให้เข้าใจก่อนปฏิเสธ)
+
+**อยู่ในขอบเขต — ต้องตอบ:**
+- สมุนไพร ตำรับยาแผนไทย บัญชียาหลักด้านสมุนไพร
+- ยาแผนปัจจุบันทุกชนิด ทั้งชื่อเต็ม ชื่อสามัญ ชื่อการค้า และชื่อย่อ (เช่น "para" = paracetamol, "บรูเฟน" = ibuprofen, "วาร์ฟาริน" = warfarin)
+- Drug-Herb Interaction, Drug-Drug Interaction ที่เกี่ยวกับสมุนไพร
+- ขนาดยา วิธีใช้ ข้อห้าม ข้อควรระวัง ผลข้างเคียง
+- อาการ/โรคทั่วไปที่ใช้สมุนไพรดูแลตนเอง (10 กลุ่มอาการ common disease)
+- กลุ่มเฉพาะ: หญิงตั้งครรภ์ ให้นมบุตร เด็ก ผู้สูงอายุ ผู้ป่วยตับ/ไต
+
+**พิจารณาบริบทสนทนา (Conversation History):**
+- ถ้าเทิร์นก่อนหน้าพูดถึงสมุนไพร/ตำรับ/ยา แล้วเทิร์นใหม่เป็นคำถามสั้น/สรรพนาม/ต่อเนื่อง (เช่น "แล้วขนาดเท่าไร", "กินร่วมกับ para ได้ไหม", "ใช้กี่วัน", "มีผลข้างเคียงไหม") → **ถือว่าอยู่ในขอบเขตต่อเนื่อง ตอบต่อทันที** โดยผูกกับหัวข้อเดิม
+- อย่าปฏิเสธเพียงเพราะคำถามใหม่สั้นหรือไม่มีคำว่า "สมุนไพร"
+
+**นอกขอบเขต — ปฏิเสธด้วยข้อความ:** "ผมเป็นที่ปรึกษาด้านยาสมุนไพรและ Drug Interaction ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้ครับ"
+เฉพาะเมื่อคำถามชัดเจนว่าไม่เกี่ยวข้อง เช่น การเมือง กีฬา พยากรณ์อากาศ เขียนโค้ด แปลภาษา ดูดวง เรื่องส่วนตัวของ AI
+
+**ตัวอย่าง:**
+- "ยาจันทน์ลีลาใช้ลดไข้ได้ไหม ขนาดเท่าไร?" → ตอบ (ในขอบเขต)
+- "กินร่วมกับ para ได้ไหม" (หลังพูดถึงยาจันทน์ลีลา) → ตอบเรื่อง interaction paracetamol × ยาจันทน์ลีลา
+- "แปะก๊วยกินกับวาร์ฟารินได้ไหม" → ตอบ (ในขอบเขต)
+- "วันนี้อากาศเป็นยังไง" → ปฏิเสธ
+
+
 2. **ห้ามสร้างหรือแต่งแหล่งอ้างอิงเอง (No Hallucination)** — ใช้ได้เฉพาะแหล่งอ้างอิงที่มีอยู่ใน <CONTEXT> ที่ระบบให้มาเท่านั้น
 3. **ลำดับความสำคัญของข้อมูล**:
    - ถ้ามีทั้ง internal DB และ PubMed → ใช้ทั้งสอง
@@ -458,7 +504,7 @@ serve(async (req) => {
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
     const knowledge = await findRelevantKnowledge(supabase, question);
     const isCommonDisease = isCommonDiseaseQuestion(question);
-    const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
+    const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
     // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
     const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
 
@@ -468,6 +514,7 @@ serve(async (req) => {
     console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
     console.log("[herbal-chat] matched knowledge:", knowledge.map((k) => k.title));
     console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
+    console.log("[herbal-chat] matched drug terms:", drugTerms);
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
 
