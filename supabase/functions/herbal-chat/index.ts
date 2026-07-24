@@ -514,6 +514,7 @@ serve(async (req) => {
     console.log("[herbal-chat] matched formulas:", formulas.map((f) => f.name_thai));
     console.log("[herbal-chat] matched knowledge:", knowledge.map((k) => k.title));
     console.log("[herbal-chat] extra herbs from dict:", extraHerbNames);
+    console.log("[herbal-chat] matched drug terms:", drugTerms);
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
 
