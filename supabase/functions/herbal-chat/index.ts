@@ -504,7 +504,7 @@ serve(async (req) => {
     const { herbs, formulas } = await findRelevantHerbs(supabase, question);
     const knowledge = await findRelevantKnowledge(supabase, question);
     const isCommonDisease = isCommonDiseaseQuestion(question);
-    const { query: pubmedQuery, extraHerbNames } = buildPubMedQuery(question, herbs);
+    const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
     // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
     const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
 
