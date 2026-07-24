@@ -267,7 +267,7 @@ async function findRelevantKnowledge(supabase: any, question: string): Promise<K
 }
 
 /** สร้าง PubMed query โดยใช้ทั้ง (1) herb ที่ match ใน DB (2) dictionary ไทย→sci (3) dictionary ยาไทย→อังกฤษ */
-function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[] } {
+function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; extraHerbNames: string[]; drugTerms: string[] } {
   const q = question.toLowerCase();
   const herbTerms = new Set<string>();
   const extraHerbNames: string[] = [];
