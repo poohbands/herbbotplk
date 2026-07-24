@@ -291,12 +291,18 @@ function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; 
   for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
     if (q.includes(thai.toLowerCase())) drugTerms.add(`(${en})`);
   }
-  // English drug names in the question itself
-  const asciiDrugs = q.match(/\b(warfarin|aspirin|clopidogrel|heparin|digoxin|metformin|insulin|statin|ibuprofen|paracetamol)\b/gi);
-  if (asciiDrugs) for (const d of asciiDrugs) drugTerms.add(d.toLowerCase());
+  // English drug names / abbreviations in the question itself
+  const asciiDrugs = q.match(/\b(warfarin|aspirin|clopidogrel|heparin|digoxin|metformin|insulin|statin|ibuprofen|paracetamol|acetaminophen|para|omeprazole|cetirizine|loratadine|simvastatin|atorvastatin|amlodipine|losartan|enalapril|amoxicillin)\b/gi);
+  if (asciiDrugs) {
+    for (const d of asciiDrugs) {
+      const lower = d.toLowerCase();
+      if (lower === "para") drugTerms.add("(paracetamol OR acetaminophen)");
+      else drugTerms.add(lower);
+    }
+  }
 
   // Intent: interaction / adverse
-  const interactionIntent = /interaction|ปฏิกิริยา|ตีกัน|ร่วมกับ|ร่วมกัน|กินร่วม/i.test(q) || drugTerms.size > 0;
+  const interactionIntent = /interaction|ปฏิกิริยา|ตีกัน|ร่วมกับ|ร่วมกัน|กินร่วม|กินคู่|กินพร้อม|ใช้ร่วม/i.test(q) || drugTerms.size > 0;
 
   let query = "";
   if (herbTerms.size > 0 && drugTerms.size > 0) {
