@@ -316,7 +316,7 @@ function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; 
     if (ascii && ascii.length > 0) query = ascii.slice(0, 4).join(" ");
   }
 
-  return { query, extraHerbNames };
+  return { query, extraHerbNames, drugTerms: [...drugTerms] };
 }
 
 async function fetchPubMed(query: string): Promise<PubMedSource[]> {
