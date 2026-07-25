@@ -361,7 +361,70 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false): string {
+/**
+ * AI Fallback: เมื่อไม่พบข้อมูลใน DB ภายใน / knowledge / PubMed
+ * เรียก Gemini เพื่อสรุปความรู้ทั่วไปเกี่ยวกับสมุนไพร/ตำรับที่ถูกถาม
+ * (จากข้อมูลที่โมเดลได้รับการฝึกมา — ไม่ใช่ค้นเว็บสด)
+ * ผลลัพธ์จะถูกแนบเข้า context พร้อม disclaimer ชัดเจน
+ */
+async function fetchAiFallback(question: string, apiKey: string): Promise<AiFallback> {
+  try {
+    const prompt = `คุณคือผู้เชี่ยวชาญด้านเภสัชกรรมไทยและบัญชียาหลักแห่งชาติด้านสมุนไพร
+
+ผู้ใช้ถามว่า: "${question}"
+
+โปรดสรุปข้อมูลที่คุณรู้เกี่ยวกับสมุนไพร/ตำรับยาแผนไทย/ยาที่กล่าวถึงในคำถามนี้ โดยอ้างอิงตามหลักการของ:
+- กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข
+- บัญชียาหลักแห่งชาติด้านสมุนไพร (NLEM Herbal)
+- ตำราแพทย์แผนไทย (เช่น คัมภีร์สรรพคุณ, ตำราพระโอสถพระนารายณ์)
+
+**กรอบคำตอบ (ต้องมีครบ):**
+1. ชื่อ/ประเภทตำรับ (สมุนไพรเดี่ยว หรือ ตำรับ)
+2. ส่วนประกอบหลัก (ถ้าเป็นตำรับ)
+3. ข้อบ่งใช้/สรรพคุณตามตำรา
+4. ขนาดยาและวิธีใช้ (ถ้าทราบ)
+5. ข้อควรระวัง / ข้อห้ามใช้ / กลุ่มเสี่ยง
+6. Drug-Herb Interaction ที่ทราบ (ถ้ามี)
+7. สถานะในบัญชียาหลักแห่งชาติ (ถ้าทราบ)
+
+**สำคัญ:**
+- ตอบเฉพาะสิ่งที่มั่นใจ ถ้าไม่ทราบให้ระบุ "ไม่มีข้อมูลที่ยืนยันได้"
+- ห้ามแต่งชื่องานวิจัย, PMID, หรือ URL
+- ตอบเป็นภาษาไทย รูปแบบ markdown สั้น กระชับ (ไม่เกิน 400 คำ)
+- ห้ามใส่คำเตือน/disclaimer ท้ายคำตอบ (ระบบจะเพิ่มให้เอง)
+
+ถ้าคำถามไม่ได้เกี่ยวกับสมุนไพร ยาแผนไทย หรือยาใดๆ เลย ให้ตอบเพียง: "NO_RELEVANT_INFO"`;
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-pro",
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+      }),
+    });
+    if (!resp.ok) {
+      console.error("[herbal-chat] fallback ai failed:", resp.status);
+      return { summary: "", used: false };
+    }
+    const data = await resp.json();
+    const text: string = data?.choices?.[0]?.message?.content?.trim() || "";
+    if (!text || text.includes("NO_RELEVANT_INFO") || text.length < 40) {
+      return { summary: "", used: false };
+    }
+    return { summary: text, used: true };
+  } catch (e) {
+    console.error("[herbal-chat] fallback ai exception:", e);
+    return { summary: "", used: false };
+  }
+}
+
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false, aiFallback: AiFallback = { summary: "", used: false }): string {
+
   const parts: string[] = [];
 
   if (knowledge.length > 0) {
