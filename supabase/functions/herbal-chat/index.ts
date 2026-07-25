@@ -598,6 +598,15 @@ serve(async (req) => {
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
 
+    // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
+    let aiFallback: AiFallback = { summary: "", used: false };
+    const noInternal = herbs.length === 0 && formulas.length === 0 && knowledge.length === 0;
+    if (noInternal && pubmed.length === 0 && !isCommonDisease) {
+      console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
+      aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
+      console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
+    }
+
     const internalSources: InternalSource[] = [
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
@@ -606,13 +615,15 @@ serve(async (req) => {
       id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
     }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease, aiFallback);
     const sourcesJson = JSON.stringify({
       pubmed,
       internal: internalSources,
       knowledge: knowledgeSources,
       ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
+      ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
+
 
 
 
