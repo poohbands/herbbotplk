@@ -69,6 +69,12 @@ type KnowledgeSource = {
   source_url: string | null;
 };
 
+type AiFallback = {
+  summary: string;
+  used: boolean;
+};
+
+
 
 // ---------- Thai keyword dictionaries ----------
 
@@ -355,7 +361,70 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false): string {
+/**
+ * AI Fallback: เมื่อไม่พบข้อมูลใน DB ภายใน / knowledge / PubMed
+ * เรียก Gemini เพื่อสรุปความรู้ทั่วไปเกี่ยวกับสมุนไพร/ตำรับที่ถูกถาม
+ * (จากข้อมูลที่โมเดลได้รับการฝึกมา — ไม่ใช่ค้นเว็บสด)
+ * ผลลัพธ์จะถูกแนบเข้า context พร้อม disclaimer ชัดเจน
+ */
+async function fetchAiFallback(question: string, apiKey: string): Promise<AiFallback> {
+  try {
+    const prompt = `คุณคือผู้เชี่ยวชาญด้านเภสัชกรรมไทยและบัญชียาหลักแห่งชาติด้านสมุนไพร
+
+ผู้ใช้ถามว่า: "${question}"
+
+โปรดสรุปข้อมูลที่คุณรู้เกี่ยวกับสมุนไพร/ตำรับยาแผนไทย/ยาที่กล่าวถึงในคำถามนี้ โดยอ้างอิงตามหลักการของ:
+- กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข
+- บัญชียาหลักแห่งชาติด้านสมุนไพร (NLEM Herbal)
+- ตำราแพทย์แผนไทย (เช่น คัมภีร์สรรพคุณ, ตำราพระโอสถพระนารายณ์)
+
+**กรอบคำตอบ (ต้องมีครบ):**
+1. ชื่อ/ประเภทตำรับ (สมุนไพรเดี่ยว หรือ ตำรับ)
+2. ส่วนประกอบหลัก (ถ้าเป็นตำรับ)
+3. ข้อบ่งใช้/สรรพคุณตามตำรา
+4. ขนาดยาและวิธีใช้ (ถ้าทราบ)
+5. ข้อควรระวัง / ข้อห้ามใช้ / กลุ่มเสี่ยง
+6. Drug-Herb Interaction ที่ทราบ (ถ้ามี)
+7. สถานะในบัญชียาหลักแห่งชาติ (ถ้าทราบ)
+
+**สำคัญ:**
+- ตอบเฉพาะสิ่งที่มั่นใจ ถ้าไม่ทราบให้ระบุ "ไม่มีข้อมูลที่ยืนยันได้"
+- ห้ามแต่งชื่องานวิจัย, PMID, หรือ URL
+- ตอบเป็นภาษาไทย รูปแบบ markdown สั้น กระชับ (ไม่เกิน 400 คำ)
+- ห้ามใส่คำเตือน/disclaimer ท้ายคำตอบ (ระบบจะเพิ่มให้เอง)
+
+ถ้าคำถามไม่ได้เกี่ยวกับสมุนไพร ยาแผนไทย หรือยาใดๆ เลย ให้ตอบเพียง: "NO_RELEVANT_INFO"`;
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-pro",
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+      }),
+    });
+    if (!resp.ok) {
+      console.error("[herbal-chat] fallback ai failed:", resp.status);
+      return { summary: "", used: false };
+    }
+    const data = await resp.json();
+    const text: string = data?.choices?.[0]?.message?.content?.trim() || "";
+    if (!text || text.includes("NO_RELEVANT_INFO") || text.length < 40) {
+      return { summary: "", used: false };
+    }
+    return { summary: text, used: true };
+  } catch (e) {
+    console.error("[herbal-chat] fallback ai exception:", e);
+    return { summary: "", used: false };
+  }
+}
+
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false, aiFallback: AiFallback = { summary: "", used: false }): string {
+
   const parts: string[] = [];
 
   if (knowledge.length > 0) {
@@ -418,12 +487,23 @@ ${k.content}
     }
   }
 
+  if (aiFallback.used && aiFallback.summary) {
+    parts.push(`
+### ข้อมูลเสริมจาก AI (ยังไม่ยืนยันจากฐานข้อมูลภายในหรืองานวิจัย — โปรดตรวจสอบซ้ำ)
+> แหล่งที่มา: ความรู้ทั่วไปของโมเดล AI (Gemini) ที่ถูกฝึกจากตำราแพทย์แผนไทยและเอกสารสาธารณะ
+> ข้อมูลนี้ยังไม่ผ่านการตรวจสอบจากฐานข้อมูลภายในของกลุ่มงานฯ
+
+${aiFallback.summary}
+`);
+  }
+
   if (parts.length === 0) {
     return "ไม่พบข้อมูลสมุนไพร/ตำรับ/งานวิจัยที่เกี่ยวข้องในฐานข้อมูลและ PubMed สำหรับคำถามนี้";
   }
 
   return parts.join("\n");
 }
+
 
 // ---------- System Prompt ----------
 
@@ -457,7 +537,9 @@ const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด
 3. **ลำดับความสำคัญของข้อมูล**:
    - ถ้ามีทั้ง internal DB และ PubMed → ใช้ทั้งสอง
    - ถ้ามีแค่ PubMed (ไม่มีใน internal DB) → **ตอบได้** โดยอ้างอิงเฉพาะ PubMed และแจ้งว่า "สมุนไพร/ยานี้ยังไม่มีในฐานข้อมูลภายใน แต่มีงานวิจัยอ้างอิงจาก PubMed"
-   - ถ้าไม่มีทั้งสอง → ตอบว่า "ยังไม่มีข้อมูลจากฐานข้อมูลและงานวิจัยที่ตรวจสอบได้" แล้วแนะนำให้ปรึกษาแพทย์/เภสัชกร
+   - ถ้ามีเฉพาะ "ข้อมูลเสริมจาก AI" (fallback) → **ตอบตามข้อมูลนั้นได้** แต่ต้องขึ้นต้นย่อหน้าด้วย: "⚠️ **ข้อมูลนี้ยังไม่ยืนยันจากฐานข้อมูลภายในของกลุ่มงานฯ เป็นความรู้ทั่วไปของ AI ควรตรวจสอบกับเภสัชกรแพทย์แผนไทยอีกครั้ง**" แล้วจึงตอบเนื้อหา และแนะนำให้ปรึกษาผู้เชี่ยวชาญ
+   - ถ้าไม่มีข้อมูลจากแหล่งใดเลย → ตอบว่า "ยังไม่มีข้อมูลที่ตรวจสอบได้" แล้วแนะนำให้ปรึกษาแพทย์/เภสัชกร
+
    - **ถ้า CONTEXT มีข้อมูลแนวทาง/นโยบายกระทรวงสาธารณสุข (เช่น 10 กลุ่มอาการ common disease, บัญชียาหลักแห่งชาติด้านสมุนไพร) → ตอบได้เต็มที่ตามเนื้อหาที่ให้มา โดยอ้างอิงว่า "อ้างอิงจากกรมการแพทย์แผนไทยฯ/บัญชียาหลักแห่งชาติด้านสมุนไพร"**
 4. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** เวลาอ้าง PubMed ให้ใส่แค่ "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง
 
@@ -518,6 +600,15 @@ serve(async (req) => {
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
 
+    // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
+    let aiFallback: AiFallback = { summary: "", used: false };
+    const noInternal = herbs.length === 0 && formulas.length === 0 && knowledge.length === 0;
+    if (noInternal && pubmed.length === 0 && !isCommonDisease) {
+      console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
+      aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
+      console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
+    }
+
     const internalSources: InternalSource[] = [
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
@@ -526,13 +617,15 @@ serve(async (req) => {
       id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
     }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease, aiFallback);
     const sourcesJson = JSON.stringify({
       pubmed,
       internal: internalSources,
       knowledge: knowledgeSources,
       ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
+      ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
+
 
 
 
