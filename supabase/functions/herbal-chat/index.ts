@@ -69,6 +69,12 @@ type KnowledgeSource = {
   source_url: string | null;
 };
 
+type AiFallback = {
+  summary: string;
+  used: boolean;
+};
+
+
 
 // ---------- Thai keyword dictionaries ----------
 
