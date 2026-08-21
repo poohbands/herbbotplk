@@ -407,7 +407,7 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
 **สำคัญ:**
 - ตอบเฉพาะสิ่งที่มั่นใจ ถ้าไม่ทราบให้ระบุ "ไม่มีข้อมูลที่ยืนยันได้"
 - ห้ามแต่งชื่องานวิจัย, PMID, หรือ URL
-- ตอบเป็นภาษาไทย รูปแบบ markdown สั้น กระชับ (ไม่เกิน 400 คำ)
+- ตอบเป็นภาษาไทย รูปแบบ markdown สั้น กระชับ (ไม่เกิน 250 คำ)
 - ห้ามใส่คำเตือน/disclaimer ท้ายคำตอบ (ระบบจะเพิ่มให้เอง)
 
 ถ้าคำถามไม่ได้เกี่ยวกับสมุนไพร ยาแผนไทย หรือยาใดๆ เลย ให้ตอบเพียง: "NO_RELEVANT_INFO"`;
@@ -419,11 +419,14 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         stream: false,
+        max_tokens: 700,
       }),
+      signal: AbortSignal.timeout(8000),
     });
+
     if (!resp.ok) {
       console.error("[herbal-chat] fallback ai failed:", resp.status);
       return { summary: "", used: false };
