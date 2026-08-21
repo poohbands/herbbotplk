@@ -19,6 +19,8 @@ import { useToast } from "@/hooks/use-toast";
 
 type AnyRow = Record<string, any>;
 type Extracted = { herbs: AnyRow[]; formulas: AnyRow[]; knowledge: AnyRow[] };
+type Stats = { chunks: number; names_found: number; names_extracted: number; missing: string[]; truncated?: boolean };
+type Source = { file_path?: string; file_name?: string; text?: string };
 
 type ImportJob = {
   id: string;
@@ -81,6 +83,8 @@ const DataImporter = () => {
   const [jobId, setJobId] = useState<string | null>(null);
   const [data, setData] = useState<Extracted | null>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [sources, setSources] = useState<Source[]>([]);
   const [jobs, setJobs] = useState<ImportJob[]>([]);
   const [versions, setVersions] = useState<DataVersion[]>([]);
 
@@ -94,6 +98,14 @@ const DataImporter = () => {
   };
 
   useEffect(() => { loadMeta(); }, []);
+
+  const mergeStats = (list: (Stats | undefined)[]): Stats => ({
+    chunks: list.reduce((a, s) => a + (s?.chunks || 0), 0),
+    names_found: list.reduce((a, s) => a + (s?.names_found || 0), 0),
+    names_extracted: list.reduce((a, s) => a + (s?.names_extracted || 0), 0),
+    missing: Array.from(new Set(list.flatMap((s) => s?.missing || []))),
+    truncated: list.some((s) => s?.truncated),
+  });
 
   const setResult = (id: string | null, res: Extracted) => {
     setJobId(id);
@@ -124,6 +136,8 @@ const DataImporter = () => {
     if (!files?.length) return;
     setBusy(true);
     const all: Extracted = { herbs: [], formulas: [], knowledge: [] };
+    const srcs: Source[] = [];
+    const statList: (Stats | undefined)[] = [];
     let lastJob: string | null = null;
     try {
       for (const file of Array.from(files)) {
@@ -134,10 +148,14 @@ const DataImporter = () => {
         setProgress(`AI กำลังอ่าน ${file.name}...`);
         const res = await callFn({ action: "extract", file_path: path, file_name: file.name });
         lastJob = res.job_id;
+        srcs.push({ file_path: path, file_name: file.name });
+        statList.push(res.extracted?.stats);
         all.herbs.push(...(res.extracted?.herbs || []));
         all.formulas.push(...(res.extracted?.formulas || []));
         all.knowledge.push(...(res.extracted?.knowledge || []));
       }
+      setSources(srcs);
+      setStats(mergeStats(statList));
       setResult(lastJob, all);
       toast({ title: "อ่านเอกสารสำเร็จ", description: `พบ ${all.herbs.length + all.formulas.length + all.knowledge.length} รายการ — กรุณาตรวจทานก่อนบันทึก` });
     } catch (e: any) {
@@ -153,11 +171,48 @@ const DataImporter = () => {
     setBusy(true); setProgress("AI กำลังแยกข้อมูลจากข้อความ...");
     try {
       const res = await callFn({ action: "extract", text: pasted, file_name: "ข้อความที่วาง" });
+      setSources([{ text: pasted }]);
+      setStats(res.extracted?.stats || null);
       setResult(res.job_id, res.extracted);
       toast({ title: "แยกข้อมูลสำเร็จ", description: "กรุณาตรวจทานก่อนบันทึก" });
     } catch (e: any) {
       toast({ title: "ประมวลผลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally { setBusy(false); setProgress(""); loadMeta(); }
+  };
+
+  const retryMissing = async () => {
+    if (!stats?.missing?.length || !sources.length) return;
+    setBusy(true); setProgress(`กำลังดึงรายการที่ขาด ${stats.missing.length} รายการ...`);
+    try {
+      const merged: Extracted = {
+        herbs: [...(data?.herbs || [])],
+        formulas: [...(data?.formulas || [])],
+        knowledge: [...(data?.knowledge || [])],
+      };
+      const statList: (Stats | undefined)[] = [];
+      for (const src of sources) {
+        const res = await callFn({ action: "extract", ...src, only_names: stats.missing });
+        const ex = res.extracted || {};
+        const known = new Set(
+          [...merged.herbs, ...merged.formulas].map((r) => String(r.name_thai || "").replace(/\s+/g, "")),
+        );
+        merged.herbs.push(...(ex.herbs || []).filter((r: AnyRow) => !known.has(String(r.name_thai || "").replace(/\s+/g, ""))));
+        merged.formulas.push(...(ex.formulas || []).filter((r: AnyRow) => !known.has(String(r.name_thai || "").replace(/\s+/g, ""))));
+        statList.push(ex.stats);
+      }
+      const gotNames = new Set(
+        [...merged.herbs, ...merged.formulas].map((r) => String(r.name_thai || "").replace(/\s+/g, "")),
+      );
+      setResult(jobId, merged);
+      setStats({
+        ...stats,
+        names_extracted: merged.herbs.length + merged.formulas.length,
+        missing: stats.missing.filter((n) => !gotNames.has(n.replace(/\s+/g, ""))),
+      });
+      toast({ title: "ดึงข้อมูลรอบเพิ่มเติมเสร็จแล้ว" });
+    } catch (e: any) {
+      toast({ title: "ดึงข้อมูลไม่สำเร็จ", description: e.message, variant: "destructive" });
+    } finally { setBusy(false); setProgress(""); }
   };
 
   const updateField = (group: keyof Extracted, idx: number, field: string, value: any) => {
@@ -186,7 +241,7 @@ const DataImporter = () => {
         title: "บันทึกสำเร็จ",
         description: `เพิ่มใหม่ ${res.summary.inserted} · อัปเดต ${res.summary.updated} · ข้าม ${res.summary.skipped} รายการ`,
       });
-      setData(null); setJobId(null);
+      setData(null); setJobId(null); setStats(null); setSources([]);
     } catch (e: any) {
       toast({ title: "บันทึกไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally { setBusy(false); setProgress(""); loadMeta(); }
@@ -411,12 +466,31 @@ const DataImporter = () => {
               <Sparkles className="w-4 h-4 text-primary" /> ตรวจทานข้อมูลก่อนบันทึก ({totalFound} รายการ)
             </h4>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setData(null); setJobId(null); }}>ยกเลิก</Button>
+              <Button variant="outline" size="sm" onClick={() => { setData(null); setJobId(null); setStats(null); setSources([]); }}>ยกเลิก</Button>
               <Button size="sm" onClick={commit} disabled={busy} className="gap-2">
                 <Save className="w-4 h-4" /> บันทึกลงฐานข้อมูล
               </Button>
             </div>
           </div>
+
+          {stats && (
+            <div className="mb-4 rounded-lg border border-border bg-muted/40 p-3 text-xs font-thai space-y-2">
+              <p className="text-muted-foreground">
+                อ่านเอกสาร {stats.chunks} ส่วน · ตรวจพบชื่อยา {stats.names_found} รายการ · ดึงรายละเอียดได้ {stats.names_extracted} รายการ
+                {stats.truncated ? " · เอกสารยาวมาก อาจอ่านไม่ครบทุกส่วน" : ""}
+              </p>
+              {stats.missing.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-destructive">
+                    ยังขาด {stats.missing.length} รายการ: {stats.missing.join(", ")}
+                  </p>
+                  <Button size="sm" variant="outline" onClick={retryMissing} disabled={busy} className="gap-2">
+                    <RotateCcw className="w-3.5 h-3.5" /> ดึงข้อมูลรายการที่ขาดอีกครั้ง
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
 
           {(["herbs", "formulas", "knowledge"] as const).map((g) =>
             data[g].length ? (
