@@ -22,7 +22,7 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
 
-/** เปิดลิงก์ภายนอกให้หลุดออกจากกรอบ preview (iframe) เสมอ */
+/** เปิดลิงก์ภายนอกในแท็บใหม่เสมอ โดยไม่เปลี่ยนหน้าปัจจุบัน */
 function openExternal(url: string) {
   try {
     const win = window.open(url, "_blank", "noopener,noreferrer");
@@ -31,12 +31,20 @@ function openExternal(url: string) {
     /* ignore */
   }
   try {
-    // fallback: พาหน้าบนสุดไปยังลิงก์แทนการโหลดใน iframe
-    (window.top ?? window).location.href = url;
+    // fallback: ใช้ anchor target=_blank (ไม่แตะ location ของหน้าปัจจุบัน)
+    const a = document.createElement("a");
+    a.href = url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   } catch {
-    window.location.href = url;
+    void copyLink(url);
+    toast.info("เบราว์เซอร์บล็อกการเปิดแท็บใหม่ — คัดลอกลิงก์ให้แล้ว");
   }
 }
+
 
 async function copyLink(url: string) {
   try {
