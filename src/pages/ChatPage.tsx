@@ -513,7 +513,14 @@ const ChatPage = () => {
                 <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Leaf className="w-4 h-4 animate-pulse-soft text-primary" />
-                    <span className="text-sm">กำลังค้นหาข้อมูลจากฐานข้อมูลสมุนไพร...</span>
+                    <span className="text-sm">
+                      {loadingStage === 0
+                        ? "กำลังค้นฐานข้อมูลสมุนไพร..."
+                        : loadingStage === 1
+                        ? "กำลังค้นงานวิจัยที่เกี่ยวข้อง..."
+                        : "กำลังเรียบเรียงคำตอบ..."}
+                    </span>
+
                     <div className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <motion.div
