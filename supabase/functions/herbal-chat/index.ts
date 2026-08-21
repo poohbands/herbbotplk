@@ -452,7 +452,7 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
     for (const k of knowledge) {
       parts.push(`
 **${k.title}** [${k.category}]
-${k.content}
+${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(ตัดเนื้อหาบางส่วน)" : k.content}
 - แหล่งอ้างอิง: ${k.source || "-"}${k.source_url ? ` (${k.source_url})` : ""}
 - knowledge id: ${k.id}`);
     }
