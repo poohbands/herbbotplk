@@ -353,7 +353,7 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
     if (pmids.length === 0) return [];
 
     const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(",")}&retmode=json`;
-    const summaryResp = await fetch(summaryUrl);
+    const summaryResp = await fetch(summaryUrl, { signal: AbortSignal.timeout(4000) });
     if (!summaryResp.ok) return [];
     const summaryData = await summaryResp.json();
 
