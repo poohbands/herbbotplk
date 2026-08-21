@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +21,31 @@ type Message = {
 };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
+
+/** เปิดลิงก์ภายนอกให้หลุดออกจากกรอบ preview (iframe) เสมอ */
+function openExternal(url: string) {
+  try {
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (win) return;
+  } catch {
+    /* ignore */
+  }
+  try {
+    // fallback: พาหน้าบนสุดไปยังลิงก์แทนการโหลดใน iframe
+    (window.top ?? window).location.href = url;
+  } catch {
+    window.location.href = url;
+  }
+}
+
+async function copyLink(url: string) {
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success("คัดลอกลิงก์แล้ว");
+  } catch {
+    toast.error("คัดลอกลิงก์ไม่สำเร็จ");
+  }
+}
 
 const DEFAULT_CATEGORIES = [
   {
@@ -480,24 +505,50 @@ const ChatPage = () => {
                           )}
                           {msg.sources.pubmed?.length > 0 && (
                             <div className="space-y-1">
-                              {msg.sources.pubmed.map((p) => (
-                                <a
-                                  key={p.pmid}
-                                  href={`https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
-                                >
-                                  <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
-                                  <span className="flex-1 min-w-0">
-                                    <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
-                                    <span className="text-muted-foreground block mt-0.5">
-                                      {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
-                                    </span>
-                                  </span>
-                                  <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100" />
-                                </a>
-                              ))}
+                              {msg.sources.pubmed.map((p) => {
+                                const url = `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`;
+                                return (
+                                  <div
+                                    key={p.pmid}
+                                    className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
+                                  >
+                                    <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        openExternal(url);
+                                      }}
+                                      className="flex-1 min-w-0 text-left"
+                                    >
+                                      <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
+                                      <span className="text-muted-foreground block mt-0.5">
+                                        {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
+                                      </span>
+                                    </a>
+                                    <button
+                                      type="button"
+                                      aria-label="คัดลอกลิงก์"
+                                      title="คัดลอกลิงก์"
+                                      onClick={() => copyLink(url)}
+                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                    >
+                                      <Copy className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      aria-label="เปิดลิงก์ในแท็บใหม่"
+                                      title="เปิดลิงก์ในแท็บใหม่"
+                                      onClick={() => openExternal(url)}
+                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                    >
+                                      <ExternalLink className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
                         </div>
