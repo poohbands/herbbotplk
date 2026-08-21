@@ -463,7 +463,25 @@ const ChatPage = () => {
                   >
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none text-foreground">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <ReactMarkdown
+                          components={{
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (href) openExternal(href);
+                                }}
+                              >
+                                {children}
+                              </a>
+                            ),
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
                       </div>
                     ) : (
                       <p className="text-sm">{msg.content}</p>
