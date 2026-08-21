@@ -603,9 +603,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { herbs, formulas } = await findRelevantHerbs(supabase, question);
-    const knowledge = await findRelevantKnowledge(supabase, question);
     const isCommonDisease = isCommonDiseaseQuestion(question);
+
+    // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
+    const [{ herbs, formulas }, knowledge] = await Promise.all([
+      findRelevantHerbs(supabase, question),
+      findRelevantKnowledge(supabase, question),
+    ]);
+
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
     // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
     const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
@@ -623,11 +628,17 @@ serve(async (req) => {
     // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
     let aiFallback: AiFallback = { summary: "", used: false };
     const noInternal = herbs.length === 0 && formulas.length === 0 && knowledge.length === 0;
-    if (noInternal && pubmed.length === 0 && !isCommonDisease) {
+    // ข้าม fallback สำหรับคำถามต่อเนื่องสั้น ๆ (มีประวัติแล้ว) เพราะโมเดลหลักตอบต่อจาก context เดิมได้
+    const hasHistory = Array.isArray(messages) && messages.filter((m: any) => m.role === "assistant").length > 0;
+    const isShortFollowUp = hasHistory && question.trim().length <= 40;
+    if (noInternal && pubmed.length === 0 && !isCommonDisease && !isShortFollowUp) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
       aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
+    } else if (isShortFollowUp) {
+      console.log("[herbal-chat] skip AI fallback (short follow-up question)");
     }
+
 
     const internalSources: InternalSource[] = [
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
