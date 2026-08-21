@@ -314,8 +314,11 @@ const ChatPage = () => {
       console.error("Chat error:", e);
       toast.error(e.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
+      clearStageTimers();
       setIsLoading(false);
+      setLoadingStage(0);
     }
+
   };
 
   const getCategoryLabel = (cat?: string) => {
