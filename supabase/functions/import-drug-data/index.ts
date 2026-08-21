@@ -95,57 +95,87 @@ const extractionSchema = {
   required: ["herbs", "formulas", "knowledge"],
 } as const;
 
+const nameListSchema = {
+  type: "object",
+  properties: {
+    herb_names: { type: "array", items: { type: "string" }, description: "ชื่อสมุนไพรเดี่ยวทุกตัวที่ปรากฏในเอกสาร" },
+    formula_names: { type: "array", items: { type: "string" }, description: "ชื่อตำรับยาแผนไทยทุกตำรับที่ปรากฏในเอกสาร" },
+  },
+  required: ["herb_names", "formula_names"],
+} as const;
+
 const SYSTEM_PROMPT = `คุณเป็นผู้ช่วยจัดระเบียบข้อมูลยาสมุนไพรไทยของกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
 หน้าที่: อ่านเอกสารที่ได้รับ แล้วแยกข้อมูลออกเป็นโครงสร้าง JSON ตาม tool ที่กำหนด
 กติกา:
 - ห้ามแต่งข้อมูลที่ไม่มีในเอกสาร ถ้าไม่มีข้อมูลในช่องใดให้เว้นว่างหรือไม่ต้องใส่
+- ห้ามสรุปย่อ ห้ามข้ามรายการ ต้องดึงยา/สมุนไพร "ทุกรายการ" ที่ปรากฏในเอกสาร แม้จะมีจำนวนมาก
 - สมุนไพรตัวเดียว (เช่น ฟ้าทะลายโจร ขมิ้นชัน) ให้ลงใน herbs
 - ตำรับยาที่มีหลายตัวยา (เช่น ยาจันทน์ลีลา ยาหอมเทพจิตร) ให้ลงใน formulas
 - เนื้อหาที่เป็นบทความ แนวทาง หรือความรู้ทั่วไป ให้ลงใน knowledge (คงเนื้อหาสำคัญให้ครบ)
 - ใช้ภาษาไทยตามต้นฉบับ`;
 
-async function callAI(content: unknown[], signal?: AbortSignal) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-    },
-    signal,
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        { role: "user", content },
-      ],
-      tools: [
-        {
-          type: "function",
-          function: {
-            name: "save_extracted_data",
-            description: "บันทึกข้อมูลยา/สมุนไพร/ความรู้ที่แยกได้จากเอกสาร",
-            parameters: extractionSchema,
-          },
-        },
-      ],
-      tool_choice: { type: "function", function: { name: "save_extracted_data" } },
-    }),
-  });
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-  if (!res.ok) {
-    const text = await res.text();
-    if (res.status === 429) throw new Error("ระบบ AI มีคำขอมากเกินไป กรุณาลองใหม่ในอีกสักครู่");
-    if (res.status === 402) throw new Error("เครดิต AI ของ workspace หมด กรุณาเติมเครดิตก่อนใช้งาน");
-    throw new Error(`AI_${res.status}: ${text.slice(0, 500)}`);
+type ToolKind = "extract" | "list";
+
+async function callAI(content: unknown[], kind: ToolKind = "extract"): Promise<any> {
+  const tool =
+    kind === "list"
+      ? {
+          name: "list_drug_names",
+          description: "ทำรายชื่อยา/สมุนไพรทั้งหมดที่พบในเอกสาร (เฉพาะชื่อ ไม่ต้องมีรายละเอียด)",
+          parameters: nameListSchema,
+        }
+      : {
+          name: "save_extracted_data",
+          description: "บันทึกข้อมูลยา/สมุนไพร/ความรู้ที่แยกได้จากเอกสาร",
+          parameters: extractionSchema,
+        };
+
+  let lastErr = "";
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 32000,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content },
+        ],
+        tools: [{ type: "function", function: tool }],
+        tool_choice: { type: "function", function: { name: tool.name } },
+      }),
+    });
+
+    if (res.status === 429 || res.status >= 500) {
+      const retryAfter = Number(res.headers.get("retry-after") || 0);
+      lastErr = res.status === 429 ? "ระบบ AI มีคำขอมากเกินไป" : `AI_${res.status}`;
+      await res.text().catch(() => "");
+      if (attempt === 3) break;
+      await sleep(retryAfter > 0 ? retryAfter * 1000 : 1500 * 2 ** attempt + Math.random() * 500);
+      continue;
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      if (res.status === 402) throw new Error("เครดิต AI ของ workspace หมด กรุณาเติมเครดิตก่อนใช้งาน");
+      throw new Error(`AI_${res.status}: ${text.slice(0, 500)}`);
+    }
+
+    const data = await res.json();
+    const call = data?.choices?.[0]?.message?.tool_calls?.[0];
+    if (!call) throw new Error("AI ไม่ได้ส่งข้อมูลที่แยกได้กลับมา");
+    try {
+      return JSON.parse(call.function.arguments);
+    } catch {
+      throw new Error("ไม่สามารถอ่านผลลัพธ์จาก AI ได้");
+    }
   }
-  const data = await res.json();
-  const call = data?.choices?.[0]?.message?.tool_calls?.[0];
-  if (!call) throw new Error("AI ไม่ได้ส่งข้อมูลที่แยกได้กลับมา");
-  try {
-    return JSON.parse(call.function.arguments);
-  } catch {
-    throw new Error("ไม่สามารถอ่านผลลัพธ์จาก AI ได้");
-  }
+  throw new Error(`${lastErr} — กรุณาลองใหม่อีกครั้ง`);
 }
 
 function b64(bytes: Uint8Array) {
@@ -157,29 +187,187 @@ function b64(bytes: Uint8Array) {
   return btoa(bin);
 }
 
-function chunkText(text: string, size = 24000): string[] {
+const MAX_CHUNKS = 40;
+
+/** แบ่งข้อความตามขอบเขตบรรทัด พร้อมซ้อนทับท้ายชิ้นก่อนหน้า */
+function chunkText(text: string, size = 12000, overlap = 800): string[] {
+  const clean = text.trim();
+  if (!clean) return [];
+  if (clean.length <= size) return [clean];
   const out: string[] = [];
-  for (let i = 0; i < text.length; i += size) out.push(text.slice(i, i + size));
-  return out.slice(0, 6);
+  let i = 0;
+  while (i < clean.length && out.length < MAX_CHUNKS) {
+    let end = Math.min(i + size, clean.length);
+    if (end < clean.length) {
+      const nl = clean.lastIndexOf("\n", end);
+      if (nl > i + size * 0.5) end = nl;
+    }
+    out.push(clean.slice(i, end));
+    if (end >= clean.length) break;
+    i = Math.max(end - overlap, i + 1);
+  }
+  return out;
+}
+
+const norm = (s: unknown) =>
+  String(s ?? "")
+    .replace(/\s+/g, "")
+    .replace(/^ยา/, "")
+    .trim()
+    .toLowerCase();
+
+function mergeRow(a: any, b: any) {
+  const out = { ...a };
+  for (const [k, v] of Object.entries(b || {})) {
+    const cur = out[k];
+    if (Array.isArray(v)) {
+      const merged = [...(Array.isArray(cur) ? cur : []), ...v];
+      out[k] = Array.from(new Set(merged.filter((x) => String(x || "").trim())));
+    } else if (v !== undefined && v !== null && String(v).trim() !== "") {
+      if (cur === undefined || cur === null || String(cur).trim() === "" || String(v).length > String(cur).length) {
+        out[k] = v;
+      }
+    }
+  }
+  return out;
+}
+
+function dedupe(rows: any[], key: string) {
+  const map = new Map<string, any>();
+  for (const r of rows) {
+    const k = norm(r?.[key]);
+    if (!k) continue;
+    map.set(k, map.has(k) ? mergeRow(map.get(k), r) : r);
+  }
+  return [...map.values()];
 }
 
 function mergeResults(list: any[]) {
-  const merged = { herbs: [] as any[], formulas: [] as any[], knowledge: [] as any[] };
+  const all = { herbs: [] as any[], formulas: [] as any[], knowledge: [] as any[] };
   for (const r of list) {
-    merged.herbs.push(...(r?.herbs || []));
-    merged.formulas.push(...(r?.formulas || []));
-    merged.knowledge.push(...(r?.knowledge || []));
+    all.herbs.push(...(r?.herbs || []));
+    all.formulas.push(...(r?.formulas || []));
+    all.knowledge.push(...(r?.knowledge || []));
   }
-  return merged;
+  return {
+    herbs: dedupe(all.herbs, "name_thai"),
+    formulas: dedupe(all.formulas, "name_thai"),
+    knowledge: dedupe(all.knowledge, "title"),
+  };
+}
+
+/** รันงานแบบขนานจำกัดจำนวน */
+async function runPool<T, R>(items: T[], limit: number, fn: (item: T, i: number) => Promise<R>) {
+  const results: R[] = [];
+  let idx = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (idx < items.length) {
+      const my = idx++;
+      results[my] = await fn(items[my], my);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
+const GROUP_SIZE = 8;
+
+type Stats = {
+  chunks: number;
+  names_found: number;
+  names_extracted: number;
+  missing: string[];
+  truncated?: boolean;
+};
+
+/**
+ * อ่านเอกสารหนึ่งชุด (ข้อความหนึ่งชิ้น หรือ PDF/รูปภาพ):
+ * 1) ให้ AI ทำรายชื่อยาทั้งหมดก่อน 2) ดึงรายละเอียดทีละกลุ่ม 3) ตรวจรายการที่ขาดแล้วขอซ้ำ
+ */
+async function extractDoc(parts: unknown[], label: string) {
+  let names: string[] = [];
+  try {
+    const listed = await callAI(
+      [...parts, { type: "text", text: "ขั้นตอนที่ 1: ทำรายชื่อ 'ทุก' ชื่อยา/สมุนไพร/ตำรับที่ปรากฏในเอกสารนี้ ห้ามตกหล่น ห้ามใส่ชื่อที่ไม่มีในเอกสาร" }],
+      "list",
+    );
+    names = [...(listed?.herb_names || []), ...(listed?.formula_names || [])]
+      .map((n: string) => String(n || "").trim())
+      .filter(Boolean);
+    names = Array.from(new Map(names.map((n) => [norm(n), n])).values());
+  } catch (_e) {
+    names = [];
+  }
+
+  const results: any[] = [];
+
+  if (names.length === 0) {
+    results.push(await callAI([...parts, { type: "text", text: `แยกข้อมูลยา/สมุนไพร/ความรู้ทั้งหมดจาก${label}` }]));
+  } else {
+    const groups: string[][] = [];
+    for (let i = 0; i < names.length; i += GROUP_SIZE) groups.push(names.slice(i, i + GROUP_SIZE));
+    const partials = await runPool(groups, 3, async (g, gi) =>
+      callAI([
+        ...parts,
+        {
+          type: "text",
+          text:
+            `ขั้นตอนที่ 2: ดึงรายละเอียดเฉพาะรายการต่อไปนี้จากเอกสารให้ครบทุกช่องที่มีข้อมูล:\n- ${g.join("\n- ")}\n` +
+            (gi === 0 ? "และถ้ามีเนื้อหาบทความ/แนวทาง/ความรู้ทั่วไป ให้ใส่ใน knowledge ด้วย" : "ไม่ต้องใส่ knowledge ในรอบนี้"),
+        },
+      ]),
+    );
+    results.push(...partials);
+  }
+
+  let merged = mergeResults(results);
+  const got = () =>
+    new Set([...merged.herbs.map((h) => norm(h.name_thai)), ...merged.formulas.map((f) => norm(f.name_thai))]);
+
+  let missing = names.filter((n) => !got().has(norm(n)));
+  if (missing.length) {
+    const retryGroups: string[][] = [];
+    for (let i = 0; i < missing.length; i += GROUP_SIZE) retryGroups.push(missing.slice(i, i + GROUP_SIZE));
+    const retried = await runPool(retryGroups.slice(0, 5), 2, async (g) =>
+      callAI([
+        ...parts,
+        { type: "text", text: `รายการเหล่านี้ยังไม่ถูกดึงออกมา กรุณาดึงรายละเอียดให้ครบ:\n- ${g.join("\n- ")}` },
+      ]).catch(() => ({})),
+    );
+    merged = mergeResults([merged, ...retried]);
+    missing = names.filter((n) => !got().has(norm(n)));
+  }
+
+  const stats: Stats = {
+    chunks: 1,
+    names_found: names.length,
+    names_extracted: merged.herbs.length + merged.formulas.length,
+    missing,
+  };
+  return { ...merged, stats };
 }
 
 async function extractFromText(text: string) {
   const parts = chunkText(text);
-  const results = [];
-  for (const p of parts) {
-    results.push(await callAI([{ type: "text", text: `เอกสาร:\n\n${p}` }]));
-  }
-  return mergeResults(results);
+  if (!parts.length) throw new Error("ไม่พบข้อความในเอกสาร");
+  const perChunk = await runPool(parts, 3, (p, i) =>
+    extractDoc([{ type: "text", text: `เอกสาร (ส่วนที่ ${i + 1}/${parts.length}):\n\n${p}` }], "ข้อความนี้"),
+  );
+  const merged = mergeResults(perChunk);
+  const namesFound = perChunk.reduce((s, r: any) => s + (r.stats?.names_found || 0), 0);
+  const missing = Array.from(
+    new Set(perChunk.flatMap((r: any) => r.stats?.missing || [])),
+  ).filter((n) => !merged.herbs.some((h) => norm(h.name_thai) === norm(n)) && !merged.formulas.some((f) => norm(f.name_thai) === norm(n)));
+  return {
+    ...merged,
+    stats: {
+      chunks: parts.length,
+      names_found: namesFound,
+      names_extracted: merged.herbs.length + merged.formulas.length,
+      missing,
+      truncated: parts.length >= MAX_CHUNKS,
+    } as Stats,
+  };
 }
 
 async function readDocx(bytes: Uint8Array): Promise<string> {
@@ -205,20 +393,22 @@ async function extractFromFile(filePath: string, fileName: string) {
   const mime = data.type || "application/octet-stream";
 
   if (lower.endsWith(".pdf")) {
-    return await callAI([
-      { type: "text", text: "อ่านเอกสาร PDF นี้แล้วแยกข้อมูลยา/สมุนไพร" },
-      {
-        type: "file",
-        file: { filename: fileName, file_data: `data:application/pdf;base64,${b64(bytes)}` },
-      },
-    ]);
+    return await extractDoc(
+      [
+        {
+          type: "file",
+          file: { filename: fileName, file_data: `data:application/pdf;base64,${b64(bytes)}` },
+        },
+      ],
+      "เอกสาร PDF นี้",
+    );
   }
   if (/\.(png|jpg|jpeg|webp)$/.test(lower)) {
     const imgMime = mime.startsWith("image/") ? mime : "image/png";
-    return await callAI([
-      { type: "text", text: "อ่านข้อความจากภาพเอกสารนี้แล้วแยกข้อมูลยา/สมุนไพร" },
-      { type: "image_url", image_url: { url: `data:${imgMime};base64,${b64(bytes)}` } },
-    ]);
+    return await extractDoc(
+      [{ type: "image_url", image_url: { url: `data:${imgMime};base64,${b64(bytes)}` } }],
+      "ภาพเอกสารนี้",
+    );
   }
   if (lower.endsWith(".docx")) return await extractFromText(await readDocx(bytes));
   if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
@@ -227,6 +417,7 @@ async function extractFromFile(filePath: string, fileName: string) {
   // txt / md / csv / อื่น ๆ
   return await extractFromText(new TextDecoder().decode(bytes));
 }
+
 
 // ---------- Commit ----------
 
