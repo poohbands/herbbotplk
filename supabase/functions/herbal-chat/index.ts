@@ -346,7 +346,7 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   if (!query.trim()) return [];
   try {
     const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=5&retmode=json&sort=relevance`;
-    const searchResp = await fetch(searchUrl);
+    const searchResp = await fetch(searchUrl, { signal: AbortSignal.timeout(4000) });
     if (!searchResp.ok) return [];
     const searchData = await searchResp.json();
     const pmids: string[] = searchData?.esearchresult?.idlist || [];
