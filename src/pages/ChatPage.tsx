@@ -112,6 +112,8 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [suggestedCategories, setSuggestedCategories] = useState(DEFAULT_CATEGORIES);
   const messagesEndRef = useRef<HTMLDivElement>(null);
