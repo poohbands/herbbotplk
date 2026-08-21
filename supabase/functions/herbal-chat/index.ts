@@ -206,17 +206,34 @@ function isCommonDiseaseQuestion(q: string): boolean {
 
 // ---------- Helpers ----------
 
+/** cache ข้อมูลตารางไว้ใน memory ของ instance (TTL 5 นาที) เพื่อลดเวลา query ซ้ำ */
+let _catalogCache: { at: number; herbs: HerbRow[]; formulas: FormulaRow[] } | null = null;
+const CATALOG_TTL_MS = 5 * 60 * 1000;
+
+async function loadCatalog(supabase: any): Promise<{ herbs: HerbRow[]; formulas: FormulaRow[] }> {
+  if (_catalogCache && Date.now() - _catalogCache.at < CATALOG_TTL_MS) {
+    return { herbs: _catalogCache.herbs, formulas: _catalogCache.formulas };
+  }
+  const [{ data: allHerbs }, { data: allFormulas }] = await Promise.all([
+    supabase
+      .from("herbs")
+      .select("id, name_thai, name_english, name_scientific, local_names, description, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions"),
+    supabase
+      .from("thai_formulas")
+      .select("id, name_thai, name_english, formula_code, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions"),
+  ]);
+  const herbs = (allHerbs || []) as HerbRow[];
+  const formulas = (allFormulas || []) as FormulaRow[];
+  _catalogCache = { at: Date.now(), herbs, formulas };
+  return { herbs, formulas };
+}
+
 /** ค้นหาสมุนไพร/ตำรับที่ชื่อปรากฏในคำถาม */
 async function findRelevantHerbs(supabase: any, question: string) {
   const q = question.toLowerCase();
 
-  const { data: allHerbs } = await supabase
-    .from("herbs")
-    .select("id, name_thai, name_english, name_scientific, local_names, description, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions");
+  const { herbs: allHerbs, formulas: allFormulas } = await loadCatalog(supabase);
 
-  const { data: allFormulas } = await supabase
-    .from("thai_formulas")
-    .select("id, name_thai, name_english, formula_code, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions");
 
   const matchedHerbs: HerbRow[] = [];
   const matchedFormulas: FormulaRow[] = [];
