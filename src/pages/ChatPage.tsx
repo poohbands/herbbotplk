@@ -22,6 +22,31 @@ type Message = {
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`;
 
+/** เปิดลิงก์ภายนอกให้หลุดออกจากกรอบ preview (iframe) เสมอ */
+function openExternal(url: string) {
+  try {
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (win) return;
+  } catch {
+    /* ignore */
+  }
+  try {
+    // fallback: พาหน้าบนสุดไปยังลิงก์แทนการโหลดใน iframe
+    (window.top ?? window).location.href = url;
+  } catch {
+    window.location.href = url;
+  }
+}
+
+async function copyLink(url: string) {
+  try {
+    await navigator.clipboard.writeText(url);
+    toast.success("คัดลอกลิงก์แล้ว");
+  } catch {
+    toast.error("คัดลอกลิงก์ไม่สำเร็จ");
+  }
+}
+
 const DEFAULT_CATEGORIES = [
   {
     icon: "🌿",
