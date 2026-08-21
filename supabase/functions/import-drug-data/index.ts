@@ -134,6 +134,8 @@ async function callAI(content: unknown[], signal?: AbortSignal) {
 
   if (!res.ok) {
     const text = await res.text();
+    if (res.status === 429) throw new Error("ระบบ AI มีคำขอมากเกินไป กรุณาลองใหม่ในอีกสักครู่");
+    if (res.status === 402) throw new Error("เครดิต AI ของ workspace หมด กรุณาเติมเครดิตก่อนใช้งาน");
     throw new Error(`AI_${res.status}: ${text.slice(0, 500)}`);
   }
   const data = await res.json();
