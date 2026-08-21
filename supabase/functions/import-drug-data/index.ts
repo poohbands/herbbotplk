@@ -284,9 +284,10 @@ type Stats = {
  * อ่านเอกสารหนึ่งชุด (ข้อความหนึ่งชิ้น หรือ PDF/รูปภาพ):
  * 1) ให้ AI ทำรายชื่อยาทั้งหมดก่อน 2) ดึงรายละเอียดทีละกลุ่ม 3) ตรวจรายการที่ขาดแล้วขอซ้ำ
  */
-async function extractDoc(parts: unknown[], label: string) {
-  let names: string[] = [];
+async function extractDoc(parts: unknown[], label: string, presetNames?: string[]) {
+  let names: string[] = presetNames?.filter(Boolean) || [];
   try {
+    if (names.length) throw { skip: true };
     const listed = await callAI(
       [...parts, { type: "text", text: "ขั้นตอนที่ 1: ทำรายชื่อ 'ทุก' ชื่อยา/สมุนไพร/ตำรับที่ปรากฏในเอกสารนี้ ห้ามตกหล่น ห้ามใส่ชื่อที่ไม่มีในเอกสาร" }],
       "list",
@@ -296,7 +297,7 @@ async function extractDoc(parts: unknown[], label: string) {
       .filter(Boolean);
     names = Array.from(new Map(names.map((n) => [norm(n), n])).values());
   } catch (_e) {
-    names = [];
+    if (!(_e as any)?.skip) names = presetNames || [];
   }
 
   const results: any[] = [];
@@ -347,11 +348,11 @@ async function extractDoc(parts: unknown[], label: string) {
   return { ...merged, stats };
 }
 
-async function extractFromText(text: string) {
+async function extractFromText(text: string, presetNames?: string[]) {
   const parts = chunkText(text);
   if (!parts.length) throw new Error("ไม่พบข้อความในเอกสาร");
   const perChunk = await runPool(parts, 3, (p, i) =>
-    extractDoc([{ type: "text", text: `เอกสาร (ส่วนที่ ${i + 1}/${parts.length}):\n\n${p}` }], "ข้อความนี้"),
+    extractDoc([{ type: "text", text: `เอกสาร (ส่วนที่ ${i + 1}/${parts.length}):\n\n${p}` }], "ข้อความนี้", presetNames),
   );
   const merged = mergeResults(perChunk);
   const namesFound = perChunk.reduce((s, r: any) => s + (r.stats?.names_found || 0), 0);
@@ -384,7 +385,7 @@ async function readSheet(bytes: Uint8Array): Promise<string> {
   ).join("\n\n");
 }
 
-async function extractFromFile(filePath: string, fileName: string) {
+async function extractFromFile(filePath: string, fileName: string, presetNames?: string[]) {
   const { data, error } = await admin.storage.from("imports").download(filePath);
   if (error || !data) throw new Error(`ดาวน์โหลดไฟล์ไม่สำเร็จ: ${error?.message || "ไม่พบไฟล์"}`);
   const bytes = new Uint8Array(await data.arrayBuffer());
@@ -401,6 +402,7 @@ async function extractFromFile(filePath: string, fileName: string) {
         },
       ],
       "เอกสาร PDF นี้",
+      presetNames,
     );
   }
   if (/\.(png|jpg|jpeg|webp)$/.test(lower)) {
@@ -408,14 +410,15 @@ async function extractFromFile(filePath: string, fileName: string) {
     return await extractDoc(
       [{ type: "image_url", image_url: { url: `data:${imgMime};base64,${b64(bytes)}` } }],
       "ภาพเอกสารนี้",
+      presetNames,
     );
   }
-  if (lower.endsWith(".docx")) return await extractFromText(await readDocx(bytes));
+  if (lower.endsWith(".docx")) return await extractFromText(await readDocx(bytes), presetNames);
   if (lower.endsWith(".xlsx") || lower.endsWith(".xls")) {
-    return await extractFromText(await readSheet(bytes));
+    return await extractFromText(await readSheet(bytes), presetNames);
   }
   // txt / md / csv / อื่น ๆ
-  return await extractFromText(new TextDecoder().decode(bytes));
+  return await extractFromText(new TextDecoder().decode(bytes), presetNames);
 }
 
 
@@ -519,7 +522,9 @@ serve(async (req) => {
     const action = body?.action;
 
     if (action === "extract") {
-      const { file_path, file_name, text, job_id } = body;
+      const { file_path, file_name, text, job_id, only_names } = body;
+      const presetNames: string[] | undefined =
+        Array.isArray(only_names) && only_names.length ? only_names.map(String) : undefined;
       let jobId = job_id as string | undefined;
       if (!jobId) {
         const { data, error } = await admin
@@ -538,8 +543,8 @@ serve(async (req) => {
 
       try {
         const result = file_path
-          ? await extractFromFile(file_path, file_name || file_path)
-          : await extractFromText(String(text || ""));
+          ? await extractFromFile(file_path, file_name || file_path, presetNames)
+          : await extractFromText(String(text || ""), presetNames);
         await admin
           .from("import_jobs")
           .update({ status: "extracted", extracted: result, error: null })
