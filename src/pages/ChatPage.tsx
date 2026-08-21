@@ -112,6 +112,8 @@ const ChatPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStage, setLoadingStage] = useState(0);
+
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [suggestedCategories, setSuggestedCategories] = useState(DEFAULT_CATEGORIES);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -198,6 +200,14 @@ const ChatPage = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+    setLoadingStage(0);
+    const stageTimers = [
+      window.setTimeout(() => setLoadingStage(1), 2500),
+      window.setTimeout(() => setLoadingStage(2), 6000),
+    ];
+    const clearStageTimers = () => stageTimers.forEach((t) => window.clearTimeout(t));
+
+
 
     const sid = await createSession();
     if (sid) {
@@ -304,8 +314,11 @@ const ChatPage = () => {
       console.error("Chat error:", e);
       toast.error(e.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
+      clearStageTimers();
       setIsLoading(false);
+      setLoadingStage(0);
     }
+
   };
 
   const getCategoryLabel = (cat?: string) => {
@@ -500,7 +513,14 @@ const ChatPage = () => {
                 <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3">
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Leaf className="w-4 h-4 animate-pulse-soft text-primary" />
-                    <span className="text-sm">กำลังค้นหาข้อมูลจากฐานข้อมูลสมุนไพร...</span>
+                    <span className="text-sm">
+                      {loadingStage === 0
+                        ? "กำลังค้นฐานข้อมูลสมุนไพร..."
+                        : loadingStage === 1
+                        ? "กำลังค้นงานวิจัยที่เกี่ยวข้อง..."
+                        : "กำลังเรียบเรียงคำตอบ..."}
+                    </span>
+
                     <div className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <motion.div

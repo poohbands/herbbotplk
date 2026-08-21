@@ -206,17 +206,34 @@ function isCommonDiseaseQuestion(q: string): boolean {
 
 // ---------- Helpers ----------
 
+/** cache ข้อมูลตารางไว้ใน memory ของ instance (TTL 5 นาที) เพื่อลดเวลา query ซ้ำ */
+let _catalogCache: { at: number; herbs: HerbRow[]; formulas: FormulaRow[] } | null = null;
+const CATALOG_TTL_MS = 5 * 60 * 1000;
+
+async function loadCatalog(supabase: any): Promise<{ herbs: HerbRow[]; formulas: FormulaRow[] }> {
+  if (_catalogCache && Date.now() - _catalogCache.at < CATALOG_TTL_MS) {
+    return { herbs: _catalogCache.herbs, formulas: _catalogCache.formulas };
+  }
+  const [{ data: allHerbs }, { data: allFormulas }] = await Promise.all([
+    supabase
+      .from("herbs")
+      .select("id, name_thai, name_english, name_scientific, local_names, description, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions"),
+    supabase
+      .from("thai_formulas")
+      .select("id, name_thai, name_english, formula_code, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions"),
+  ]);
+  const herbs = (allHerbs || []) as HerbRow[];
+  const formulas = (allFormulas || []) as FormulaRow[];
+  _catalogCache = { at: Date.now(), herbs, formulas };
+  return { herbs, formulas };
+}
+
 /** ค้นหาสมุนไพร/ตำรับที่ชื่อปรากฏในคำถาม */
 async function findRelevantHerbs(supabase: any, question: string) {
   const q = question.toLowerCase();
 
-  const { data: allHerbs } = await supabase
-    .from("herbs")
-    .select("id, name_thai, name_english, name_scientific, local_names, description, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions");
+  const { herbs: allHerbs, formulas: allFormulas } = await loadCatalog(supabase);
 
-  const { data: allFormulas } = await supabase
-    .from("thai_formulas")
-    .select("id, name_thai, name_english, formula_code, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions");
 
   const matchedHerbs: HerbRow[] = [];
   const matchedFormulas: FormulaRow[] = [];
@@ -329,14 +346,14 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   if (!query.trim()) return [];
   try {
     const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=5&retmode=json&sort=relevance`;
-    const searchResp = await fetch(searchUrl);
+    const searchResp = await fetch(searchUrl, { signal: AbortSignal.timeout(4000) });
     if (!searchResp.ok) return [];
     const searchData = await searchResp.json();
     const pmids: string[] = searchData?.esearchresult?.idlist || [];
     if (pmids.length === 0) return [];
 
     const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(",")}&retmode=json`;
-    const summaryResp = await fetch(summaryUrl);
+    const summaryResp = await fetch(summaryUrl, { signal: AbortSignal.timeout(4000) });
     if (!summaryResp.ok) return [];
     const summaryData = await summaryResp.json();
 
@@ -390,7 +407,7 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
 **สำคัญ:**
 - ตอบเฉพาะสิ่งที่มั่นใจ ถ้าไม่ทราบให้ระบุ "ไม่มีข้อมูลที่ยืนยันได้"
 - ห้ามแต่งชื่องานวิจัย, PMID, หรือ URL
-- ตอบเป็นภาษาไทย รูปแบบ markdown สั้น กระชับ (ไม่เกิน 400 คำ)
+- ตอบเป็นภาษาไทย รูปแบบ markdown สั้น กระชับ (ไม่เกิน 250 คำ)
 - ห้ามใส่คำเตือน/disclaimer ท้ายคำตอบ (ระบบจะเพิ่มให้เอง)
 
 ถ้าคำถามไม่ได้เกี่ยวกับสมุนไพร ยาแผนไทย หรือยาใดๆ เลย ให้ตอบเพียง: "NO_RELEVANT_INFO"`;
@@ -402,11 +419,14 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [{ role: "user", content: prompt }],
         stream: false,
+        max_tokens: 700,
       }),
+      signal: AbortSignal.timeout(8000),
     });
+
     if (!resp.ok) {
       console.error("[herbal-chat] fallback ai failed:", resp.status);
       return { summary: "", used: false };
@@ -432,7 +452,7 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
     for (const k of knowledge) {
       parts.push(`
 **${k.title}** [${k.category}]
-${k.content}
+${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(ตัดเนื้อหาบางส่วน)" : k.content}
 - แหล่งอ้างอิง: ${k.source || "-"}${k.source_url ? ` (${k.source_url})` : ""}
 - knowledge id: ${k.id}`);
     }
@@ -583,9 +603,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { herbs, formulas } = await findRelevantHerbs(supabase, question);
-    const knowledge = await findRelevantKnowledge(supabase, question);
     const isCommonDisease = isCommonDiseaseQuestion(question);
+
+    // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
+    const [{ herbs, formulas }, knowledge] = await Promise.all([
+      findRelevantHerbs(supabase, question),
+      findRelevantKnowledge(supabase, question),
+    ]);
+
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
     // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
     const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
@@ -603,11 +628,17 @@ serve(async (req) => {
     // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
     let aiFallback: AiFallback = { summary: "", used: false };
     const noInternal = herbs.length === 0 && formulas.length === 0 && knowledge.length === 0;
-    if (noInternal && pubmed.length === 0 && !isCommonDisease) {
+    // ข้าม fallback สำหรับคำถามต่อเนื่องสั้น ๆ (มีประวัติแล้ว) เพราะโมเดลหลักตอบต่อจาก context เดิมได้
+    const hasHistory = Array.isArray(messages) && messages.filter((m: any) => m.role === "assistant").length > 0;
+    const isShortFollowUp = hasHistory && question.trim().length <= 40;
+    if (noInternal && pubmed.length === 0 && !isCommonDisease && !isShortFollowUp) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
       aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
+    } else if (isShortFollowUp) {
+      console.log("[herbal-chat] skip AI fallback (short follow-up question)");
     }
+
 
     const internalSources: InternalSource[] = [
       ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
@@ -653,7 +684,7 @@ ${sourcesJson}
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           contextMessage,
-          ...messages,
+          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
         ],
         stream: true,
       }),
