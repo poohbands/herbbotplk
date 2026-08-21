@@ -684,7 +684,7 @@ ${sourcesJson}
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           contextMessage,
-          ...messages,
+          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
         ],
         stream: true,
       }),
