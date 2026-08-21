@@ -79,6 +79,45 @@ export type Database = {
         }
         Relationships: []
       }
+      data_versions: {
+        Row: {
+          created_at: string
+          formulas_count: number
+          herbs: Json
+          herbs_count: number
+          id: string
+          knowledge_count: number
+          knowledge_documents: Json
+          label: string
+          note: string | null
+          thai_formulas: Json
+        }
+        Insert: {
+          created_at?: string
+          formulas_count?: number
+          herbs?: Json
+          herbs_count?: number
+          id?: string
+          knowledge_count?: number
+          knowledge_documents?: Json
+          label: string
+          note?: string | null
+          thai_formulas?: Json
+        }
+        Update: {
+          created_at?: string
+          formulas_count?: number
+          herbs?: Json
+          herbs_count?: number
+          id?: string
+          knowledge_count?: number
+          knowledge_documents?: Json
+          label?: string
+          note?: string | null
+          thai_formulas?: Json
+        }
+        Relationships: []
+      }
       herbs: {
         Row: {
           category: string | null
@@ -142,6 +181,45 @@ export type Database = {
           search_vector?: unknown
           updated_at?: string
           usage_instructions?: string | null
+        }
+        Relationships: []
+      }
+      import_jobs: {
+        Row: {
+          committed_count: number
+          created_at: string
+          error: string | null
+          extracted: Json
+          file_name: string
+          file_path: string | null
+          id: string
+          source_type: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          committed_count?: number
+          created_at?: string
+          error?: string | null
+          extracted?: Json
+          file_name: string
+          file_path?: string | null
+          id?: string
+          source_type?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          committed_count?: number
+          created_at?: string
+          error?: string | null
+          extracted?: Json
+          file_name?: string
+          file_path?: string | null
+          id?: string
+          source_type?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
