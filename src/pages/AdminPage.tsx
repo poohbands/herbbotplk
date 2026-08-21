@@ -310,6 +310,11 @@ const AdminPage = () => {
             {/* Knowledge Base Manager */}
             <KnowledgeManager />
 
+            {/* Data Importer */}
+            <DataImporter />
+
+
+
 
             {/* Policy Insight */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }} className="bg-card rounded-xl border border-primary/20 p-5 shadow-herbal">
