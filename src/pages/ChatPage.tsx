@@ -198,6 +198,14 @@ const ChatPage = () => {
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsLoading(true);
+    setLoadingStage(0);
+    const stageTimers = [
+      window.setTimeout(() => setLoadingStage(1), 2500),
+      window.setTimeout(() => setLoadingStage(2), 6000),
+    ];
+    const clearStageTimers = () => stageTimers.forEach((t) => window.clearTimeout(t));
+
+
 
     const sid = await createSession();
     if (sid) {
