@@ -463,7 +463,25 @@ const ChatPage = () => {
                   >
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none text-foreground">
-                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                        <ReactMarkdown
+                          components={{
+                            a: ({ href, children }) => (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  if (href) openExternal(href);
+                                }}
+                              >
+                                {children}
+                              </a>
+                            ),
+                          }}
+                        >
+                          {msg.content}
+                        </ReactMarkdown>
                       </div>
                     ) : (
                       <p className="text-sm">{msg.content}</p>
@@ -485,22 +503,31 @@ const ChatPage = () => {
                           </div>
                           {msg.sources.internal?.length > 0 && (
                             <div className="space-y-1">
-                              {msg.sources.internal.map((s) => (
-                                <a
-                                  key={`${s.type}-${s.id}`}
-                                  href={`/herbs?${s.type}=${s.id}`}
-                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
-                                >
-                                  <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                                  <span className="flex-1">
-                                    <span className="font-medium text-foreground">{s.name}</span>
-                                    <span className="text-muted-foreground ml-1">
-                                      — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูลภายใน)
+                              {msg.sources.internal.map((s) => {
+                                const url = `${window.location.origin}/herbs?${s.type}=${s.id}`;
+                                return (
+                                  <a
+                                    key={`${s.type}-${s.id}`}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openExternal(url);
+                                    }}
+                                    className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                  >
+                                    <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                    <span className="flex-1">
+                                      <span className="font-medium text-foreground">{s.name}</span>
+                                      <span className="text-muted-foreground ml-1">
+                                        — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูลภายใน)
+                                      </span>
                                     </span>
-                                  </span>
-                                  <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                                </a>
-                              ))}
+                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                  </a>
+                                );
+                              })}
                             </div>
                           )}
                           {msg.sources.pubmed?.length > 0 && (
