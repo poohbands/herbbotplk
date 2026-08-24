@@ -7,8 +7,9 @@ import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
+type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[] };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
 
 type Message = {
   id: string;
