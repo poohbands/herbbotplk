@@ -386,6 +386,125 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
+// ---------- ThaiJO (งานวิจัยไทย) ----------
+
+/** วารสารไทยกลุ่มการแพทย์/เภสัช/สมุนไพร บน ThaiJO (OJS) */
+const THAIJO_JOURNALS = [
+  { host: "he01", code: "JTTAM", name: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก" },
+  { host: "he01", code: "TJPP", name: "วารสารเภสัชกรรมไทย" },
+  { host: "he01", code: "IJPS", name: "วารสารเภสัชศาสตร์อีสาน" },
+  { host: "he01", code: "JHR", name: "Journal of Health Research" },
+];
+
+const thaijoCache = new Map<string, { at: number; data: ThaiJoSource[] }>();
+const THAIJO_TTL = 10 * 60 * 1000;
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'");
+}
+
+function stripTags(s: string): string {
+  return decodeEntities(s.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+}
+
+async function searchThaiJoJournal(
+  journal: { host: string; code: string; name: string },
+  query: string,
+  limit: number,
+): Promise<ThaiJoSource[]> {
+  const url = `https://${journal.host}.tci-thaijo.org/index.php/${journal.code}/search/search?query=${encodeURIComponent(query)}`;
+  const resp = await fetch(url, {
+    signal: AbortSignal.timeout(4500),
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; PLK-HerbBot/1.0)" },
+  });
+  if (!resp.ok) return [];
+  const html = await resp.text();
+
+  const results: ThaiJoSource[] = [];
+  const blocks = html.split('class="article-summary').slice(1);
+  for (const block of blocks) {
+    const linkMatch = block.match(/<a[^>]+href="([^"]+article\/view\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/);
+    if (!linkMatch) continue;
+    const title = stripTags(linkMatch[2]);
+    if (!title) continue;
+    const authorsMatch = block.match(/class="authors"\s*>([\s\S]*?)<\/div>/);
+    results.push({
+      title,
+      authors: authorsMatch ? stripTags(authorsMatch[1]).slice(0, 120) : "",
+      journal: journal.name,
+      url: linkMatch[1],
+    });
+    if (results.length >= limit) break;
+  }
+  return results;
+}
+
+/** ค้นงานวิจัยไทยสดจาก ThaiJO ด้วยคำไทย (ขนานทุกวารสารเป้าหมาย) */
+async function fetchThaiJo(query: string): Promise<ThaiJoSource[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const cached = thaijoCache.get(q);
+  if (cached && Date.now() - cached.at < THAIJO_TTL) return cached.data;
+
+  const settled = await Promise.allSettled(
+    THAIJO_JOURNALS.map((j) => searchThaiJoJournal(j, q, 2)),
+  );
+
+  const seen = new Set<string>();
+  const merged: ThaiJoSource[] = [];
+  for (const r of settled) {
+    if (r.status !== "fulfilled") {
+      console.error("[herbal-chat] thaijo journal failed:", r.reason);
+      continue;
+    }
+    for (const item of r.value) {
+      if (seen.has(item.url)) continue;
+      seen.add(item.url);
+      merged.push(item);
+    }
+  }
+  const data = merged.slice(0, 5);
+  thaijoCache.set(q, { at: Date.now(), data });
+  return data;
+}
+
+/** สร้างคำค้นภาษาไทยสำหรับ ThaiJO จากชื่อสมุนไพร/ตำรับที่ตรวจพบในคำถาม */
+function buildThaiJoQuery(question: string, herbs: HerbRow[], formulas: FormulaRow[]): string {
+  const q = question.toLowerCase();
+  const terms: string[] = [];
+
+  for (const h of herbs.slice(0, 2)) if (h.name_thai) terms.push(h.name_thai);
+  for (const f of formulas.slice(0, 2)) if (f.name_thai) terms.push(f.name_thai);
+
+  if (terms.length === 0) {
+    for (const thai of Object.keys(HERB_THAI_TO_SCI)) {
+      if (q.includes(thai.toLowerCase())) {
+        terms.push(thai);
+        if (terms.length >= 2) break;
+      }
+    }
+  }
+
+  if (terms.length === 0) {
+    // ดึงคำไทยยาว ๆ จากคำถามเป็นคำค้นสำรอง
+    const thaiWords = (question.match(/[\u0E00-\u0E7F]{4,}/g) || [])
+      .filter((w) => !/^(สมุนไพร|สามารถ|อย่างไร|เท่าไร|คืออะไร|ข้อมูล|คำถาม)$/.test(w))
+      .slice(0, 2);
+    terms.push(...thaiWords);
+  }
+
+  return terms.slice(0, 2).join(" ");
+}
+
+
+
 /**
  * AI Fallback: เมื่อไม่พบข้อมูลใน DB ภายใน / knowledge / PubMed
  * เรียก Gemini เพื่อสรุปความรู้ทั่วไปเกี่ยวกับสมุนไพร/ตำรับที่ถูกถาม
