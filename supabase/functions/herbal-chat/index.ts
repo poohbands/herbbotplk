@@ -764,6 +764,8 @@ serve(async (req) => {
     console.log("[herbal-chat] matched drug terms:", drugTerms);
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
+    console.log("[herbal-chat] thaijo query:", thaijoQuery, "results:", thaijo.length);
+
 
     // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
     let aiFallback: AiFallback = { summary: "", used: false };
