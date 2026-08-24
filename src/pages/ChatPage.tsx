@@ -7,8 +7,9 @@ import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
+type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[] };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
 
 type Message = {
   id: string;
@@ -340,6 +341,7 @@ const ChatPage = () => {
         const flatSources = [
           ...(sources?.pubmed || []).map((p) => `PMID:${p.pmid}`),
           ...(sources?.internal || []).map((i) => `${i.type}:${i.id}`),
+          ...(sources?.thaijo || []).map((t) => `thaijo:${t.url}`),
         ];
         saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs, sources: flatSources });
       }
@@ -503,7 +505,7 @@ const ChatPage = () => {
                       </div>
                     )}
                     {msg.role === "assistant" && msg.sources && (
-                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0) && (
+                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0) && (
                         <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <BookOpen className="w-3.5 h-3.5" />
@@ -584,6 +586,51 @@ const ChatPage = () => {
                                   </div>
                                 );
                               })}
+                            </div>
+                          )}
+                          {msg.sources.thaijo?.length > 0 && (
+                            <div className="space-y-1">
+                              {msg.sources.thaijo.map((t) => (
+                                <div
+                                  key={t.url}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-herb-gold/10 hover:bg-herb-gold/20 transition-colors group"
+                                >
+                                  <BookOpen className="w-3.5 h-3.5 text-herb-gold mt-0.5 shrink-0" />
+                                  <a
+                                    href={t.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openExternal(t.url);
+                                    }}
+                                    className="flex-1 min-w-0 text-left"
+                                  >
+                                    <span className="font-medium text-foreground line-clamp-2">{t.title}</span>
+                                    <span className="text-muted-foreground block mt-0.5">
+                                      {t.authors ? `${t.authors} · ` : ""}{t.journal} · งานวิจัยไทย (ThaiJO)
+                                    </span>
+                                  </a>
+                                  <button
+                                    type="button"
+                                    aria-label="คัดลอกลิงก์"
+                                    title="คัดลอกลิงก์"
+                                    onClick={() => copyLink(t.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="เปิดลิงก์ในแท็บใหม่"
+                                    title="เปิดลิงก์ในแท็บใหม่"
+                                    onClick={() => openExternal(t.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>

@@ -45,6 +45,14 @@ type PubMedSource = {
   journal: string;
 };
 
+type ThaiJoSource = {
+  title: string;
+  authors: string;
+  journal: string;
+  url: string;
+};
+
+
 type InternalSource = {
   type: "herb" | "formula";
   id: string;
@@ -378,6 +386,125 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
   }
 }
 
+// ---------- ThaiJO (งานวิจัยไทย) ----------
+
+/** วารสารไทยกลุ่มการแพทย์/เภสัช/สมุนไพร บน ThaiJO (OJS) */
+const THAIJO_JOURNALS = [
+  { host: "he01", code: "JTTAM", name: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก" },
+  { host: "he01", code: "TJPP", name: "วารสารเภสัชกรรมไทย" },
+  { host: "he01", code: "IJPS", name: "วารสารเภสัชศาสตร์อีสาน" },
+  { host: "he01", code: "JHR", name: "Journal of Health Research" },
+];
+
+const thaijoCache = new Map<string, { at: number; data: ThaiJoSource[] }>();
+const THAIJO_TTL = 10 * 60 * 1000;
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'");
+}
+
+function stripTags(s: string): string {
+  return decodeEntities(s.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ").trim();
+}
+
+async function searchThaiJoJournal(
+  journal: { host: string; code: string; name: string },
+  query: string,
+  limit: number,
+): Promise<ThaiJoSource[]> {
+  const url = `https://${journal.host}.tci-thaijo.org/index.php/${journal.code}/search/search?query=${encodeURIComponent(query)}`;
+  const resp = await fetch(url, {
+    signal: AbortSignal.timeout(4500),
+    headers: { "User-Agent": "Mozilla/5.0 (compatible; PLK-HerbBot/1.0)" },
+  });
+  if (!resp.ok) return [];
+  const html = await resp.text();
+
+  const results: ThaiJoSource[] = [];
+  const blocks = html.split('class="article-summary').slice(1);
+  for (const block of blocks) {
+    const linkMatch = block.match(/<a[^>]+href="([^"]+article\/view\/[^"]+)"[^>]*>([\s\S]*?)<\/a>/);
+    if (!linkMatch) continue;
+    const title = stripTags(linkMatch[2]);
+    if (!title) continue;
+    const authorsMatch = block.match(/class="authors"\s*>([\s\S]*?)<\/div>/);
+    results.push({
+      title,
+      authors: authorsMatch ? stripTags(authorsMatch[1]).slice(0, 120) : "",
+      journal: journal.name,
+      url: linkMatch[1],
+    });
+    if (results.length >= limit) break;
+  }
+  return results;
+}
+
+/** ค้นงานวิจัยไทยสดจาก ThaiJO ด้วยคำไทย (ขนานทุกวารสารเป้าหมาย) */
+async function fetchThaiJo(query: string): Promise<ThaiJoSource[]> {
+  const q = query.trim();
+  if (!q) return [];
+
+  const cached = thaijoCache.get(q);
+  if (cached && Date.now() - cached.at < THAIJO_TTL) return cached.data;
+
+  const settled = await Promise.allSettled(
+    THAIJO_JOURNALS.map((j) => searchThaiJoJournal(j, q, 2)),
+  );
+
+  const seen = new Set<string>();
+  const merged: ThaiJoSource[] = [];
+  for (const r of settled) {
+    if (r.status !== "fulfilled") {
+      console.error("[herbal-chat] thaijo journal failed:", r.reason);
+      continue;
+    }
+    for (const item of r.value) {
+      if (seen.has(item.url)) continue;
+      seen.add(item.url);
+      merged.push(item);
+    }
+  }
+  const data = merged.slice(0, 5);
+  thaijoCache.set(q, { at: Date.now(), data });
+  return data;
+}
+
+/** สร้างคำค้นภาษาไทยสำหรับ ThaiJO จากชื่อสมุนไพร/ตำรับที่ตรวจพบในคำถาม */
+function buildThaiJoQuery(question: string, herbs: HerbRow[], formulas: FormulaRow[]): string {
+  const q = question.toLowerCase();
+  const terms: string[] = [];
+
+  for (const h of herbs.slice(0, 2)) if (h.name_thai) terms.push(h.name_thai);
+  for (const f of formulas.slice(0, 2)) if (f.name_thai) terms.push(f.name_thai);
+
+  if (terms.length === 0) {
+    for (const thai of Object.keys(HERB_THAI_TO_SCI)) {
+      if (q.includes(thai.toLowerCase())) {
+        terms.push(thai);
+        if (terms.length >= 2) break;
+      }
+    }
+  }
+
+  if (terms.length === 0) {
+    // ดึงคำไทยยาว ๆ จากคำถามเป็นคำค้นสำรอง
+    const thaiWords = (question.match(/[\u0E00-\u0E7F]{4,}/g) || [])
+      .filter((w) => !/^(สมุนไพร|สามารถ|อย่างไร|เท่าไร|คืออะไร|ข้อมูล|คำถาม)$/.test(w))
+      .slice(0, 2);
+    terms.push(...thaiWords);
+  }
+
+  return terms.slice(0, 2).join(" ");
+}
+
+
+
 /**
  * AI Fallback: เมื่อไม่พบข้อมูลใน DB ภายใน / knowledge / PubMed
  * เรียก Gemini เพื่อสรุปความรู้ทั่วไปเกี่ยวกับสมุนไพร/ตำรับที่ถูกถาม
@@ -443,7 +570,7 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false, aiFallback: AiFallback = { summary: "", used: false }): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false, aiFallback: AiFallback = { summary: "", used: false }, thaijo: ThaiJoSource[] = []): string {
 
   const parts: string[] = [];
 
@@ -507,6 +634,15 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
     }
   }
 
+  if (thaijo.length > 0) {
+    parts.push("\n### งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO (ดึงมาสด ๆ จากวารสารกลุ่มการแพทย์/เภสัช)");
+    for (const t of thaijo) {
+      parts.push(`- ${t.title} | ${t.authors || "-"} — ${t.journal} | ลิงก์: ${t.url}`);
+    }
+  }
+
+
+
   if (aiFallback.used && aiFallback.summary) {
     parts.push(`
 ### ข้อมูลเสริมจาก AI (ยังไม่ยืนยันจากฐานข้อมูลภายในหรืองานวิจัย — โปรดตรวจสอบซ้ำ)
@@ -562,6 +698,7 @@ const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด
 
    - **ถ้า CONTEXT มีข้อมูลแนวทาง/นโยบายกระทรวงสาธารณสุข (เช่น 10 กลุ่มอาการ common disease, บัญชียาหลักแห่งชาติด้านสมุนไพร) → ตอบได้เต็มที่ตามเนื้อหาที่ให้มา โดยอ้างอิงว่า "อ้างอิงจากกรมการแพทย์แผนไทยฯ/บัญชียาหลักแห่งชาติด้านสมุนไพร"**
 4. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** เวลาอ้าง PubMed ให้ใส่แค่ "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง
+5. **งานวิจัยไทยจาก ThaiJO** ถ้า CONTEXT มีหัวข้อ "งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO" ให้ใช้อ้างอิงได้ โดยระบุชื่อบทความและชื่อวารสารไทย (เช่น "(วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก)") — ห้ามใส่ URL เอง ระบบจะทำลิงก์ให้
 
 ## รูปแบบคำตอบ
 - ตอบเป็น Markdown ภาษาไทย มีโครงสร้างชัดเจน
@@ -612,8 +749,12 @@ serve(async (req) => {
     ]);
 
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
-    // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
-    const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
+    const thaijoQuery = isCommonDisease ? "" : buildThaiJoQuery(question, herbs, formulas);
+    // ข้าม PubMed/ThaiJO สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
+    const [pubmed, thaijo] = await Promise.all([
+      isCommonDisease ? Promise.resolve([] as PubMedSource[]) : fetchPubMed(pubmedQuery),
+      thaijoQuery ? fetchThaiJo(thaijoQuery) : Promise.resolve([] as ThaiJoSource[]),
+    ]);
 
     console.log("[herbal-chat] question:", question);
     console.log("[herbal-chat] common disease intent:", isCommonDisease);
@@ -624,6 +765,8 @@ serve(async (req) => {
     console.log("[herbal-chat] matched drug terms:", drugTerms);
     console.log("[herbal-chat] pubmed query:", pubmedQuery);
     console.log("[herbal-chat] pubmed results:", pubmed.length);
+    console.log("[herbal-chat] thaijo query:", thaijoQuery, "results:", thaijo.length);
+
 
     // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
     let aiFallback: AiFallback = { summary: "", used: false };
@@ -631,7 +774,7 @@ serve(async (req) => {
     // ข้าม fallback สำหรับคำถามต่อเนื่องสั้น ๆ (มีประวัติแล้ว) เพราะโมเดลหลักตอบต่อจาก context เดิมได้
     const hasHistory = Array.isArray(messages) && messages.filter((m: any) => m.role === "assistant").length > 0;
     const isShortFollowUp = hasHistory && question.trim().length <= 40;
-    if (noInternal && pubmed.length === 0 && !isCommonDisease && !isShortFollowUp) {
+    if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isShortFollowUp) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
       aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
@@ -648,9 +791,10 @@ serve(async (req) => {
       id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
     }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease, aiFallback);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease, aiFallback, thaijo);
     const sourcesJson = JSON.stringify({
       pubmed,
+      thaijo,
       internal: internalSources,
       knowledge: knowledgeSources,
       ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
