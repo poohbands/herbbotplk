@@ -570,7 +570,7 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
   }
 }
 
-function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false, aiFallback: AiFallback = { summary: "", used: false }): string {
+function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSource[], extraHerbNames: string[], knowledge: KnowledgeDoc[] = [], includeCommonDisease = false, aiFallback: AiFallback = { summary: "", used: false }, thaijo: ThaiJoSource[] = []): string {
 
   const parts: string[] = [];
 
