@@ -45,6 +45,14 @@ type PubMedSource = {
   journal: string;
 };
 
+type ThaiJoSource = {
+  title: string;
+  authors: string;
+  journal: string;
+  url: string;
+};
+
+
 type InternalSource = {
   type: "herb" | "formula";
   id: string;
