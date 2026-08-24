@@ -748,8 +748,12 @@ serve(async (req) => {
     ]);
 
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
-    // ข้าม PubMed สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
-    const pubmed = isCommonDisease ? [] : await fetchPubMed(pubmedQuery);
+    const thaijoQuery = isCommonDisease ? "" : buildThaiJoQuery(question, herbs, formulas);
+    // ข้าม PubMed/ThaiJO สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
+    const [pubmed, thaijo] = await Promise.all([
+      isCommonDisease ? Promise.resolve([] as PubMedSource[]) : fetchPubMed(pubmedQuery),
+      thaijoQuery ? fetchThaiJo(thaijoQuery) : Promise.resolve([] as ThaiJoSource[]),
+    ]);
 
     console.log("[herbal-chat] question:", question);
     console.log("[herbal-chat] common disease intent:", isCommonDisease);
