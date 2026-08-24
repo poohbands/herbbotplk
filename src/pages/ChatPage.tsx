@@ -341,6 +341,7 @@ const ChatPage = () => {
         const flatSources = [
           ...(sources?.pubmed || []).map((p) => `PMID:${p.pmid}`),
           ...(sources?.internal || []).map((i) => `${i.type}:${i.id}`),
+          ...(sources?.thaijo || []).map((t) => `thaijo:${t.url}`),
         ];
         saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs, sources: flatSources });
       }
