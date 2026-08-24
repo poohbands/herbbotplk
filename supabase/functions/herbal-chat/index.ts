@@ -634,6 +634,15 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
     }
   }
 
+  if (thaijo.length > 0) {
+    parts.push("\n### งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO (ดึงมาสด ๆ จากวารสารกลุ่มการแพทย์/เภสัช)");
+    for (const t of thaijo) {
+      parts.push(`- ${t.title} | ${t.authors || "-"} — ${t.journal} | ลิงก์: ${t.url}`);
+    }
+  }
+
+
+
   if (aiFallback.used && aiFallback.summary) {
     parts.push(`
 ### ข้อมูลเสริมจาก AI (ยังไม่ยืนยันจากฐานข้อมูลภายในหรืองานวิจัย — โปรดตรวจสอบซ้ำ)
