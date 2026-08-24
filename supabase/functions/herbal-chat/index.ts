@@ -773,7 +773,7 @@ serve(async (req) => {
     // ข้าม fallback สำหรับคำถามต่อเนื่องสั้น ๆ (มีประวัติแล้ว) เพราะโมเดลหลักตอบต่อจาก context เดิมได้
     const hasHistory = Array.isArray(messages) && messages.filter((m: any) => m.role === "assistant").length > 0;
     const isShortFollowUp = hasHistory && question.trim().length <= 40;
-    if (noInternal && pubmed.length === 0 && !isCommonDisease && !isShortFollowUp) {
+    if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isShortFollowUp) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
       aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
