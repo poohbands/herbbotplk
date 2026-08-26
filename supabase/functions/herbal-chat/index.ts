@@ -1072,8 +1072,34 @@ ${sourcesJson}
     const draftData = await response.json();
     let finalAnswer: string = draftData?.choices?.[0]?.message?.content || "";
 
+    // ---- ขั้นที่ 1.5: ถ้าปฏิเสธทั้งที่คำถามอยู่ในขอบเขต → ร่างใหม่ทันที ----
+    const looksRefusal = (t: string) => t.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
+    if (intent.in_scope && looksRefusal(finalAnswer)) {
+      console.log("[herbal-chat] wrong refusal detected → regenerating");
+      const retryResp = await callGateway({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          contextMessage,
+          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
+          {
+            role: 'system',
+            content: `คำตอบก่อนหน้าปฏิเสธคำถามนี้ ซึ่ง**ผิด** — คำถามนี้อยู่ในขอบเขตด้านสุขภาพ/สมุนไพร (${intent.type}${intent.symptoms.length ? `: ${intent.symptoms.join(", ")}` : ""})
+ให้ตอบใหม่แบบเป็นประโยชน์ทันที: แนะนำสมุนไพร/ตำรับที่เหมาะกับอาการตาม CONTEXT และแนวทาง 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ พร้อมขนาดยา ข้อควรระวัง คำเตือนให้ปรึกษาแพทย์/เภสัชกร และบล็อก [METADATA]/[SOURCES] ตามรูปแบบ ห้ามปฏิเสธ`,
+          },
+        ],
+      });
+      if (retryResp.ok) {
+        const retryData = await retryResp.json();
+        const retryText: string = retryData?.choices?.[0]?.message?.content || "";
+        if (retryText.trim().length > 40 && !looksRefusal(retryText)) finalAnswer = retryText;
+      } else {
+        console.error("[herbal-chat] regenerate failed:", retryResp.status);
+      }
+    }
+
     // ---- ขั้นที่ 2: ตรวจสอบคำตอบก่อนส่งให้ผู้ใช้ (Answer Verification) ----
-    const isRefusal = finalAnswer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
+    const isRefusal = looksRefusal(finalAnswer);
     if (finalAnswer.trim().length > 0 && !isRefusal) {
       try {
         const verifyResp = await callGateway({
