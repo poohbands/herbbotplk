@@ -939,10 +939,15 @@ serve(async (req) => {
 
     const isCommonDisease = isCommonDiseaseQuestion(question);
 
+    // ขั้นที่ 0: ให้ AI จำแนกเจตนา + สกัดคำอาการ/ชื่อยา ก่อนค้นข้อมูล
+    const intent = await classifyIntent(question, messages, LOVABLE_API_KEY);
+    console.log("[herbal-chat] intent:", JSON.stringify(intent));
+
     // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
+    const knowledgeQuery = [question, ...intent.symptoms, ...intent.herbs].join(" ");
     const [{ herbs, formulas, listMode }, knowledge] = await Promise.all([
-      findRelevantHerbs(supabase, question),
-      findRelevantKnowledge(supabase, question),
+      findRelevantHerbs(supabase, question, intent),
+      findRelevantKnowledge(supabase, knowledgeQuery),
     ]);
 
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
