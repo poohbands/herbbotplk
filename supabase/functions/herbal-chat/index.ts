@@ -850,7 +850,7 @@ serve(async (req) => {
     const isCommonDisease = isCommonDiseaseQuestion(question);
 
     // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
-    const [{ herbs, formulas }, knowledge] = await Promise.all([
+    const [{ herbs, formulas, listMode }, knowledge] = await Promise.all([
       findRelevantHerbs(supabase, question),
       findRelevantKnowledge(supabase, question),
     ]);
