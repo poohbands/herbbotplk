@@ -1141,6 +1141,9 @@ ${sourcesJson}
       }
     }
 
+    // ตัด code fence ที่โมเดลบางครั้งครอบคำตอบมา (```markdown ... ```)
+    finalAnswer = finalAnswer.trim().replace(/^```(?:markdown|md)?\s*\n?/i, "").replace(/\n?```\s*$/i, "");
+
     // ---- ส่งคำตอบกลับเป็น SSE (รูปแบบเดิมที่หน้าเว็บรองรับ) ----
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
