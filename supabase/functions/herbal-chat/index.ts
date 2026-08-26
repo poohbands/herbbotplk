@@ -993,22 +993,27 @@ serve(async (req) => {
       id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
     }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease, aiFallback, thaijo);
+    // ใส่แนวทาง 10 กลุ่มอาการของกระทรวงฯ ให้ด้วย เมื่อเป็นคำถามอาการที่ค้นภายในไม่เจอ
+    const includeCommonDisease = isCommonDisease || (intent.type === "symptom" && noInternal);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, includeCommonDisease, aiFallback, thaijo);
     const sourcesJson = JSON.stringify({
       pubmed,
       thaijo,
       internal: internalSources,
       knowledge: knowledgeSources,
-      ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
+      ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
-
-
-
 
     const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
       ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`
       : "";
+
+    // ผลการจำแนกเจตนาเป็นตัวตัดสินว่าจะปฏิเสธหรือไม่ (โมเดลหลักไม่ต้องตัดสินเอง)
+    const scopeInstruction = intent.in_scope
+      ? `\n\n**ระบบได้ตรวจสอบแล้วว่าคำถามนี้อยู่ในขอบเขต (${intent.type}) — ห้ามปฏิเสธคำถามนี้เด็ดขาด ห้ามตอบว่า "ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้"**
+ถ้าไม่มีข้อมูลตรง ๆ ใน CONTEXT ให้ตอบด้วยแนวทางการใช้ยาสมุนไพรใน 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ ที่ให้ไว้ พร้อมระบุว่ายังไม่มีรายละเอียดในฐานข้อมูลภายใน และแนะนำให้ปรึกษาแพทย์แผนไทย/เภสัชกร — ห้ามตอบว่าอยู่นอกขอบเขต`
+      : `\n\nระบบประเมินว่าคำถามนี้อาจอยู่นอกขอบเขต — ถ้าไม่เกี่ยวกับสุขภาพ ยา หรือสมุนไพรจริง ให้ปฏิเสธด้วยข้อความมาตรฐาน`;
 
     const contextMessage = {
       role: "system" as const,
@@ -1020,7 +1025,7 @@ ${contextBlock}
 ${sourcesJson}
 </แหล่งอ้างอิงที่ใช้จริง>
 
-จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}`,
+จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}${scopeInstruction}`,
     };
 
     const callGateway = async (body: Record<string, unknown>) =>
