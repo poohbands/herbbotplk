@@ -911,6 +911,10 @@ serve(async (req) => {
 
 
 
+    const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
+      ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`
+      : "";
+
     const contextMessage = {
       role: "system" as const,
       content: `<CONTEXT>
@@ -921,24 +925,27 @@ ${contextBlock}
 ${sourcesJson}
 </แหล่งอ้างอิงที่ใช้จริง>
 
-จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข`,
+จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}`,
     };
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          contextMessage,
-          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
-        ],
-        stream: true,
-      }),
+    const callGateway = async (body: Record<string, unknown>) =>
+      await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+    // ---- ขั้นที่ 1: ร่างคำตอบ ----
+    const response = await callGateway({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        contextMessage,
+        ...(Array.isArray(messages) ? messages.slice(-10) : messages),
+      ],
     });
 
     if (!response.ok) {
@@ -962,7 +969,69 @@ ${sourcesJson}
       });
     }
 
-    return new Response(response.body, {
+    const draftData = await response.json();
+    let finalAnswer: string = draftData?.choices?.[0]?.message?.content || "";
+
+    // ---- ขั้นที่ 2: ตรวจสอบคำตอบก่อนส่งให้ผู้ใช้ (Answer Verification) ----
+    const isRefusal = finalAnswer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
+    if (finalAnswer.trim().length > 0 && !isRefusal) {
+      try {
+        const verifyResp = await callGateway({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: `คุณคือผู้ตรวจสอบความถูกต้องของคำตอบด้านยาสมุนไพรไทย ตรวจ "ร่างคำตอบ" เทียบกับ CONTEXT ตามเกณฑ์:
+1. ชื่อสมุนไพร/ตำรับที่ตอบต้องมีอยู่จริงใน CONTEXT (ห้ามแต่งชื่อขึ้นเอง หรือเอา "ข้อบ่งใช้" มาใช้เป็นชื่อยา)
+2. ข้อบ่งใช้ ขนาดยา ข้อห้าม ข้อควรระวัง ต้องตรงกับ CONTEXT
+3. ถ้าคำถามขอ "รายชื่อ" ต้องระบุชื่อรายการที่มีใน CONTEXT ให้ครบ ห้ามตอบว่าไม่ได้ระบุชื่อทั้งที่ CONTEXT มี
+4. PMID/ลิงก์/แหล่งอ้างอิง ต้องมาจาก CONTEXT เท่านั้น
+5. ต้องคงรูปแบบเดิมไว้ทั้งหมด รวมถึงบล็อก [METADATA] และ [SOURCES] ห้ามแก้ไขเนื้อหาในบล็อกเหล่านั้น
+
+ผลลัพธ์:
+- ถ้าถูกต้องครบถ้วน ตอบกลับคำเดียวว่า: PASS
+- ถ้าไม่ถูกต้อง ให้ส่ง "คำตอบฉบับแก้ไข" ฉบับเต็ม (ภาษาไทย Markdown พร้อมบล็อก [METADATA] และ [SOURCES]) โดยไม่ต้องอธิบายเหตุผลใด ๆ`,
+            },
+            {
+              role: 'user',
+              content: `<CONTEXT>\n${contextBlock}\n</CONTEXT>\n\n<แหล่งอ้างอิงที่ใช้จริง>\n${sourcesJson}\n</แหล่งอ้างอิงที่ใช้จริง>\n\n<คำถามผู้ใช้>\n${question}\n</คำถามผู้ใช้>\n\n<ร่างคำตอบ>\n${finalAnswer}\n</ร่างคำตอบ>`,
+            },
+          ],
+        });
+        if (verifyResp.ok) {
+          const vData = await verifyResp.json();
+          const verdict: string = (vData?.choices?.[0]?.message?.content || "").trim();
+          if (verdict && !/^pass\b/i.test(verdict) && verdict.length > 80) {
+            console.log("[herbal-chat] verification: corrected answer");
+            finalAnswer = verdict;
+          } else {
+            console.log("[herbal-chat] verification: PASS");
+          }
+        } else {
+          console.error("[herbal-chat] verification failed:", verifyResp.status);
+        }
+      } catch (e) {
+        console.error("[herbal-chat] verification exception:", e);
+      }
+    }
+
+    // ---- ส่งคำตอบกลับเป็น SSE (รูปแบบเดิมที่หน้าเว็บรองรับ) ----
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        const CHUNK = 60;
+        for (let i = 0; i < finalAnswer.length; i += CHUNK) {
+          const piece = finalAnswer.slice(i, i + CHUNK);
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: piece } }] })}\n\n`),
+          );
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
   } catch (e) {
