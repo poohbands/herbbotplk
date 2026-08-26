@@ -236,30 +236,137 @@ async function loadCatalog(supabase: any): Promise<{ herbs: HerbRow[]; formulas:
   return { herbs, formulas };
 }
 
-/** ค้นหาสมุนไพร/ตำรับที่ชื่อปรากฏในคำถาม */
+/** normalize ชื่อยาไทยเพื่อเทียบแบบยืดหยุ่น (ตัดคำนำหน้า/เว้นวรรค/ไม้ทัณฑฆาต/ศ-ษ→ส) */
+function normalizeThaiName(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[\s\u0E4C().,\-–—/]/g, "")
+    .replace(/^(ยาตำรับ|ตำรับยา|ตำรับ|ยา)/, "")
+    .replace(/[ศษ]/g, "ส")
+    .replace(/ณ/g, "น");
+}
+
+/** คำถามแบบขอ "รายชื่อ" เช่น มีอะไรบ้าง / มีกี่ตำรับ / รายการ */
+function isListQuestion(q: string): boolean {
+  return /มีอะไรบ้าง|มีอะไร|มีกี่|รายชื่อ|รายการ|ทั้งหมด|บ้าง\s*$|ประกอบด้วยอะไร/.test(q);
+}
+
+/** ตารางอาการ → คำที่ใช้ค้นในข้อบ่งใช้/สรรพคุณของฐานข้อมูล */
+const SYMPTOM_MAP: { match: RegExp; terms: string[] }[] = [
+  { match: /นอนไม่หลับ|หลับยาก|นอนหลับ|insomnia|เครียด|วิตกกังวล/, terms: ["นอนหลับ", "นอนไม่หลับ", "หลับ", "คลายเครียด", "กล่อมประสาท"] },
+  { match: /เบื่ออาหาร|ไม่อยากอาหาร|กินข้าวไม่ลง|เจริญอาหาร/, terms: ["เจริญอาหาร", "เบื่ออาหาร", "บำรุงร่างกาย"] },
+  { match: /ท้องอืด|ท้องเฟ้อ|จุกเสียด|แน่นท้อง|ขับลม/, terms: ["ท้องอืด", "ท้องเฟ้อ", "ขับลม", "จุกเสียด"] },
+  { match: /ท้องผูก|ถ่ายยาก|ระบาย/, terms: ["ระบาย", "ท้องผูก", "ถ่าย"] },
+  { match: /ท้องเสีย|ท้องร่วง|ถ่ายเหลว/, terms: ["ท้องเสีย", "ท้องร่วง", "บรรเทาอาการท้องเสีย"] },
+  { match: /ไข้|ตัวร้อน|fever/, terms: ["ไข้", "ลดไข้", "แก้ไข้"] },
+  { match: /ไอ|เจ็บคอ|ขับเสมหะ|เสมหะ|หวัด/, terms: ["ไอ", "เจ็บคอ", "เสมหะ", "หวัด"] },
+  { match: /ปวดเมื่อย|เคล็ด|ขัดยอก|ปวดหลัง|ปวดกล้ามเนื้อ|ปวดข้อ|ข้อเข่า/, terms: ["ปวดเมื่อย", "ปวด", "เคล็ด", "ข้อ", "กล้ามเนื้อ"] },
+  { match: /คลื่นไส้|อาเจียน|เมารถ|แพ้ท้อง/, terms: ["คลื่นไส้", "อาเจียน"] },
+  { match: /ริดสีดวง/, terms: ["ริดสีดวง"] },
+  { match: /ผื่น|คัน|กลาก|เกลื้อน|แผล|ผิวหนัง|เริม|งูสวัด/, terms: ["ผิวหนัง", "แผล", "ผื่น", "คัน", "กลาก", "เกลื้อน", "เริม", "งูสวัด"] },
+  { match: /ประจำเดือน|ขับน้ำคาวปลา|หลังคลอด/, terms: ["ประจำเดือน", "น้ำคาวปลา", "หลังคลอด"] },
+  { match: /เบาหวาน|น้ำตาลในเลือด/, terms: ["เบาหวาน", "น้ำตาล"] },
+  { match: /ความดัน/, terms: ["ความดัน"] },
+  { match: /มะเร็ง|เคมีบำบัด|ประคับประคอง/, terms: ["มะเร็ง", "ประคับประคอง", "เคมีบำบัด"] },
+  { match: /อัมพฤกษ์|อัมพาต|เส้นตึง|ลมปลายปัตคาต/, terms: ["อัมพฤกษ์", "อัมพาต", "เส้น", "ลม"] },
+];
+
+function symptomTermsFor(question: string): string[] {
+  const q = question.toLowerCase();
+  const terms = new Set<string>();
+  for (const s of SYMPTOM_MAP) {
+    if (s.match.test(q)) s.terms.forEach((t) => terms.add(t));
+  }
+  return [...terms];
+}
+
+const MAX_LIST_RESULTS = 30;
+
+/** ค้นหาสมุนไพร/ตำรับ: (1) ชื่อในคำถาม (2) อาการ/ข้อบ่งใช้ (3) ส่วนประกอบ */
 async function findRelevantHerbs(supabase: any, question: string) {
   const q = question.toLowerCase();
+  const nq = normalizeThaiName(question);
+  const listMode = isListQuestion(question);
 
   const { herbs: allHerbs, formulas: allFormulas } = await loadCatalog(supabase);
 
-
+  const herbIds = new Set<string>();
+  const formulaIds = new Set<string>();
   const matchedHerbs: HerbRow[] = [];
   const matchedFormulas: FormulaRow[] = [];
 
+  const addHerb = (h: HerbRow) => {
+    if (!herbIds.has(h.id)) { herbIds.add(h.id); matchedHerbs.push(h); }
+  };
+  const addFormula = (f: FormulaRow) => {
+    if (!formulaIds.has(f.id)) { formulaIds.add(f.id); matchedFormulas.push(f); }
+  };
+
+  // (1) ชื่อปรากฏในคำถาม (เทียบทั้งแบบตรงและแบบ normalize)
+  const nameMatchedHerbNames: string[] = [];
   for (const h of (allHerbs || []) as HerbRow[]) {
     const names = [h.name_thai, h.name_english, h.name_scientific, ...(h.local_names || [])]
       .filter(Boolean)
       .map((s) => (s as string).toLowerCase());
-    if (names.some((n) => n && q.includes(n))) matchedHerbs.push(h);
+    const hit = names.some((n) => {
+      if (!n || n.length < 2) return false;
+      if (q.includes(n)) return true;
+      const nn = normalizeThaiName(n);
+      return nn.length >= 3 && nq.includes(nn);
+    });
+    if (hit) { addHerb(h); nameMatchedHerbNames.push(h.name_thai); }
   }
 
   for (const f of (allFormulas || []) as FormulaRow[]) {
     const names = [f.name_thai, f.name_english].filter(Boolean).map((s) => (s as string).toLowerCase());
-    if (names.some((n) => n && q.includes(n))) matchedFormulas.push(f);
+    const hit = names.some((n) => {
+      if (!n || n.length < 3) return false;
+      if (q.includes(n)) return true;
+      const nn = normalizeThaiName(n);
+      return nn.length >= 4 && nq.includes(nn);
+    });
+    if (hit) addFormula(f);
   }
 
-  return { herbs: matchedHerbs, formulas: matchedFormulas };
+  // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ
+  const symptomTerms = symptomTermsFor(question);
+  if (symptomTerms.length > 0) {
+    const limit = listMode ? MAX_LIST_RESULTS : 6;
+    let count = 0;
+    for (const f of (allFormulas || []) as FormulaRow[]) {
+      if (count >= limit) break;
+      const text = `${f.indication || ""} ${f.name_thai}`.toLowerCase();
+      if (symptomTerms.some((t) => text.includes(t.toLowerCase()))) { addFormula(f); count++; }
+    }
+    let hcount = 0;
+    for (const h of (allHerbs || []) as HerbRow[]) {
+      if (hcount >= limit) break;
+      const text = `${(h.properties || []).join(" ")} ${h.description || ""}`.toLowerCase();
+      if (symptomTerms.some((t) => text.includes(t.toLowerCase()))) { addHerb(h); hcount++; }
+    }
+  }
+
+  // (3) ค้นตำรับจาก "ส่วนประกอบ" เมื่อคำถามพูดถึงสมุนไพรตัวหนึ่ง (เช่น ตำรับกัญชามีอะไรบ้าง)
+  const ingredientTargets = new Set<string>(nameMatchedHerbNames);
+  const ingredientHint = q.match(/ตำรับ(?:ยา)?\s*([\u0E00-\u0E7F]{2,20})/);
+  if (ingredientHint?.[1]) ingredientTargets.add(ingredientHint[1]);
+  if (ingredientTargets.size > 0) {
+    const limit = listMode ? MAX_LIST_RESULTS : 12;
+    let count = 0;
+    for (const f of (allFormulas || []) as FormulaRow[]) {
+      if (count >= limit) break;
+      const ing = (f.ingredients || []).join(" ").toLowerCase();
+      if (!ing) continue;
+      for (const target of ingredientTargets) {
+        const t = target.toLowerCase();
+        if (t.length >= 2 && ing.includes(t)) { addFormula(f); count++; break; }
+      }
+    }
+  }
+
+  return { herbs: matchedHerbs.slice(0, MAX_LIST_RESULTS), formulas: matchedFormulas.slice(0, MAX_LIST_RESULTS), listMode };
 }
+
 
 /** ค้นหาเอกสารความรู้จากตาราง knowledge_documents ด้วย full-text search */
 async function findRelevantKnowledge(supabase: any, question: string): Promise<KnowledgeDoc[]> {
