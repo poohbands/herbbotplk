@@ -15,7 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+
+const IMPORT_STEPS = ["ตรวจไฟล์", "แยกรายชื่อยา", "ดึงรายละเอียด", "สรุปผล"] as const;
 
 type AnyRow = Record<string, any>;
 type Extracted = { herbs: AnyRow[]; formulas: AnyRow[]; knowledge: AnyRow[] };
