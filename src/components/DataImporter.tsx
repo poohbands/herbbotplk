@@ -74,6 +74,16 @@ const CSV_TEMPLATE =
   "name_thai,name_english,name_scientific,category,description,properties,dosage,usage_instructions,precautions,contraindications,drug_interactions\n" +
   "ฟ้าทะลายโจร,Andrographis,Andrographis paniculata,สมุนไพรเดี่ยว,ใช้บรรเทาอาการหวัด,\"แก้ไข้|แก้เจ็บคอ\",1500 mg/วัน,รับประทานหลังอาหาร,\"ห้ามใช้เกิน 7 วัน\",\"หญิงตั้งครรภ์\",\"warfarin|ยาลดความดัน\"\n";
 
+const getSafeFileExtension = (fileName: string) => {
+  const match = fileName.match(/\.([a-zA-Z0-9]{1,12})$/);
+  return match ? `.${match[1].toLowerCase()}` : "";
+};
+
+const createImportStoragePath = (fileName: string) => {
+  const randomId = Math.random().toString(36).slice(2, 10);
+  return `imports/${Date.now()}-${randomId}${getSafeFileExtension(fileName)}`;
+};
+
 const DataImporter = () => {
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -142,9 +152,9 @@ const DataImporter = () => {
     try {
       for (const file of Array.from(files)) {
         setProgress(`กำลังอัปโหลด ${file.name}...`);
-        const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name}`;
+        const path = createImportStoragePath(file.name);
         const { error: upErr } = await supabase.storage.from("imports").upload(path, file);
-        if (upErr) throw new Error(`อัปโหลดไม่สำเร็จ: ${upErr.message}`);
+        if (upErr) throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${upErr.message}`);
         setProgress(`AI กำลังอ่าน ${file.name}...`);
         const res = await callFn({ action: "extract", file_path: path, file_name: file.name });
         lastJob = res.job_id;
