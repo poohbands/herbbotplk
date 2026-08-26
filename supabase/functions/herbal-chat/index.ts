@@ -198,8 +198,8 @@ const COMMON_DISEASE_GROUPS = `
    - สมุนไพร/ตำรับ: เพชรสังฆาต (แคปซูล), ยาริดสีดวงมหากาฬ
    - สรรพคุณ: บรรเทาอาการริดสีดวงทวารระยะแรก
 10. **นอนไม่หลับ เครียด วิตกกังวล**
-    - สมุนไพร/ตำรับ: ขี้เหล็ก (ใบขี้เหล็ก), ยาหอมเทพจิตร, ยาหอมนวโกฐ
-    - สรรพคุณ: ช่วยให้นอนหลับ คลายเครียด บำรุงหัวใจ
+    - สมุนไพร/ตำรับ: ยาศุขไสยาศน์ (ตำรับกัญชา — ช่วยให้นอนหลับ เจริญอาหาร), ยาประสะกัญชา, ขี้เหล็ก (ใบขี้เหล็ก), ยาหอมเทพจิตร, ยาหอมนวโกฐ
+    - สรรพคุณ: ช่วยให้นอนหลับ คลายเครียด บำรุงหัวใจ (ตำรับกัญชาต้องสั่งจ่ายโดยผู้ประกอบวิชาชีพที่ได้รับอนุญาต)
 
 **แหล่งอ้างอิงหลัก:**
 - กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข — คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น
@@ -236,30 +236,137 @@ async function loadCatalog(supabase: any): Promise<{ herbs: HerbRow[]; formulas:
   return { herbs, formulas };
 }
 
-/** ค้นหาสมุนไพร/ตำรับที่ชื่อปรากฏในคำถาม */
+/** normalize ชื่อยาไทยเพื่อเทียบแบบยืดหยุ่น (ตัดคำนำหน้า/เว้นวรรค/ไม้ทัณฑฆาต/ศ-ษ→ส) */
+function normalizeThaiName(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[\s\u0E4C().,\-–—/]/g, "")
+    .replace(/^(ยาตำรับ|ตำรับยา|ตำรับ|ยา)/, "")
+    .replace(/[ศษ]/g, "ส")
+    .replace(/ณ/g, "น");
+}
+
+/** คำถามแบบขอ "รายชื่อ" เช่น มีอะไรบ้าง / มีกี่ตำรับ / รายการ */
+function isListQuestion(q: string): boolean {
+  return /มีอะไรบ้าง|มีอะไร|มีกี่|รายชื่อ|รายการ|ทั้งหมด|บ้าง\s*$|ประกอบด้วยอะไร/.test(q);
+}
+
+/** ตารางอาการ → คำที่ใช้ค้นในข้อบ่งใช้/สรรพคุณของฐานข้อมูล */
+const SYMPTOM_MAP: { match: RegExp; terms: string[] }[] = [
+  { match: /นอนไม่หลับ|หลับยาก|นอนหลับ|insomnia|เครียด|วิตกกังวล/, terms: ["นอนหลับ", "นอนไม่หลับ", "หลับ", "คลายเครียด", "กล่อมประสาท"] },
+  { match: /เบื่ออาหาร|ไม่อยากอาหาร|กินข้าวไม่ลง|เจริญอาหาร/, terms: ["เจริญอาหาร", "เบื่ออาหาร", "บำรุงร่างกาย"] },
+  { match: /ท้องอืด|ท้องเฟ้อ|จุกเสียด|แน่นท้อง|ขับลม/, terms: ["ท้องอืด", "ท้องเฟ้อ", "ขับลม", "จุกเสียด"] },
+  { match: /ท้องผูก|ถ่ายยาก|ระบาย/, terms: ["ระบาย", "ท้องผูก", "ถ่าย"] },
+  { match: /ท้องเสีย|ท้องร่วง|ถ่ายเหลว/, terms: ["ท้องเสีย", "ท้องร่วง", "บรรเทาอาการท้องเสีย"] },
+  { match: /ไข้|ตัวร้อน|fever/, terms: ["ไข้", "ลดไข้", "แก้ไข้"] },
+  { match: /ไอ|เจ็บคอ|ขับเสมหะ|เสมหะ|หวัด/, terms: ["ไอ", "เจ็บคอ", "เสมหะ", "หวัด"] },
+  { match: /ปวดเมื่อย|เคล็ด|ขัดยอก|ปวดหลัง|ปวดกล้ามเนื้อ|ปวดข้อ|ข้อเข่า/, terms: ["ปวดเมื่อย", "ปวด", "เคล็ด", "ข้อ", "กล้ามเนื้อ"] },
+  { match: /คลื่นไส้|อาเจียน|เมารถ|แพ้ท้อง/, terms: ["คลื่นไส้", "อาเจียน"] },
+  { match: /ริดสีดวง/, terms: ["ริดสีดวง"] },
+  { match: /ผื่น|คัน|กลาก|เกลื้อน|แผล|ผิวหนัง|เริม|งูสวัด/, terms: ["ผิวหนัง", "แผล", "ผื่น", "คัน", "กลาก", "เกลื้อน", "เริม", "งูสวัด"] },
+  { match: /ประจำเดือน|ขับน้ำคาวปลา|หลังคลอด/, terms: ["ประจำเดือน", "น้ำคาวปลา", "หลังคลอด"] },
+  { match: /เบาหวาน|น้ำตาลในเลือด/, terms: ["เบาหวาน", "น้ำตาล"] },
+  { match: /ความดัน/, terms: ["ความดัน"] },
+  { match: /มะเร็ง|เคมีบำบัด|ประคับประคอง/, terms: ["มะเร็ง", "ประคับประคอง", "เคมีบำบัด"] },
+  { match: /อัมพฤกษ์|อัมพาต|เส้นตึง|ลมปลายปัตคาต/, terms: ["อัมพฤกษ์", "อัมพาต", "เส้น", "ลม"] },
+];
+
+function symptomTermsFor(question: string): string[] {
+  const q = question.toLowerCase();
+  const terms = new Set<string>();
+  for (const s of SYMPTOM_MAP) {
+    if (s.match.test(q)) s.terms.forEach((t) => terms.add(t));
+  }
+  return [...terms];
+}
+
+const MAX_LIST_RESULTS = 30;
+
+/** ค้นหาสมุนไพร/ตำรับ: (1) ชื่อในคำถาม (2) อาการ/ข้อบ่งใช้ (3) ส่วนประกอบ */
 async function findRelevantHerbs(supabase: any, question: string) {
   const q = question.toLowerCase();
+  const nq = normalizeThaiName(question);
+  const listMode = isListQuestion(question);
 
   const { herbs: allHerbs, formulas: allFormulas } = await loadCatalog(supabase);
 
-
+  const herbIds = new Set<string>();
+  const formulaIds = new Set<string>();
   const matchedHerbs: HerbRow[] = [];
   const matchedFormulas: FormulaRow[] = [];
 
+  const addHerb = (h: HerbRow) => {
+    if (!herbIds.has(h.id)) { herbIds.add(h.id); matchedHerbs.push(h); }
+  };
+  const addFormula = (f: FormulaRow) => {
+    if (!formulaIds.has(f.id)) { formulaIds.add(f.id); matchedFormulas.push(f); }
+  };
+
+  // (1) ชื่อปรากฏในคำถาม (เทียบทั้งแบบตรงและแบบ normalize)
+  const nameMatchedHerbNames: string[] = [];
   for (const h of (allHerbs || []) as HerbRow[]) {
     const names = [h.name_thai, h.name_english, h.name_scientific, ...(h.local_names || [])]
       .filter(Boolean)
       .map((s) => (s as string).toLowerCase());
-    if (names.some((n) => n && q.includes(n))) matchedHerbs.push(h);
+    const hit = names.some((n) => {
+      if (!n || n.length < 2) return false;
+      if (q.includes(n)) return true;
+      const nn = normalizeThaiName(n);
+      return nn.length >= 3 && nq.includes(nn);
+    });
+    if (hit) { addHerb(h); nameMatchedHerbNames.push(h.name_thai); }
   }
 
   for (const f of (allFormulas || []) as FormulaRow[]) {
     const names = [f.name_thai, f.name_english].filter(Boolean).map((s) => (s as string).toLowerCase());
-    if (names.some((n) => n && q.includes(n))) matchedFormulas.push(f);
+    const hit = names.some((n) => {
+      if (!n || n.length < 3) return false;
+      if (q.includes(n)) return true;
+      const nn = normalizeThaiName(n);
+      return nn.length >= 4 && nq.includes(nn);
+    });
+    if (hit) addFormula(f);
   }
 
-  return { herbs: matchedHerbs, formulas: matchedFormulas };
+  // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ
+  const symptomTerms = symptomTermsFor(question);
+  if (symptomTerms.length > 0) {
+    const limit = listMode ? MAX_LIST_RESULTS : 6;
+    let count = 0;
+    for (const f of (allFormulas || []) as FormulaRow[]) {
+      if (count >= limit) break;
+      const text = `${f.indication || ""} ${f.name_thai}`.toLowerCase();
+      if (symptomTerms.some((t) => text.includes(t.toLowerCase()))) { addFormula(f); count++; }
+    }
+    let hcount = 0;
+    for (const h of (allHerbs || []) as HerbRow[]) {
+      if (hcount >= limit) break;
+      const text = `${(h.properties || []).join(" ")} ${h.description || ""}`.toLowerCase();
+      if (symptomTerms.some((t) => text.includes(t.toLowerCase()))) { addHerb(h); hcount++; }
+    }
+  }
+
+  // (3) ค้นตำรับจาก "ส่วนประกอบ" เมื่อคำถามพูดถึงสมุนไพรตัวหนึ่ง (เช่น ตำรับกัญชามีอะไรบ้าง)
+  const ingredientTargets = new Set<string>(nameMatchedHerbNames);
+  const ingredientHint = q.match(/ตำรับ(?:ยา)?\s*([\u0E00-\u0E7F]{2,20})/);
+  if (ingredientHint?.[1]) ingredientTargets.add(ingredientHint[1]);
+  if (ingredientTargets.size > 0) {
+    const limit = listMode ? MAX_LIST_RESULTS : 12;
+    let count = 0;
+    for (const f of (allFormulas || []) as FormulaRow[]) {
+      if (count >= limit) break;
+      const ing = (f.ingredients || []).join(" ").toLowerCase();
+      if (!ing) continue;
+      for (const target of ingredientTargets) {
+        const t = target.toLowerCase();
+        if (t.length >= 2 && ing.includes(t)) { addFormula(f); count++; break; }
+      }
+    }
+  }
+
+  return { herbs: matchedHerbs.slice(0, MAX_LIST_RESULTS), formulas: matchedFormulas.slice(0, MAX_LIST_RESULTS), listMode };
 }
+
 
 /** ค้นหาเอกสารความรู้จากตาราง knowledge_documents ด้วย full-text search */
 async function findRelevantKnowledge(supabase: any, question: string): Promise<KnowledgeDoc[]> {
@@ -743,7 +850,7 @@ serve(async (req) => {
     const isCommonDisease = isCommonDiseaseQuestion(question);
 
     // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
-    const [{ herbs, formulas }, knowledge] = await Promise.all([
+    const [{ herbs, formulas, listMode }, knowledge] = await Promise.all([
       findRelevantHerbs(supabase, question),
       findRelevantKnowledge(supabase, question),
     ]);
@@ -804,6 +911,10 @@ serve(async (req) => {
 
 
 
+    const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
+      ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`
+      : "";
+
     const contextMessage = {
       role: "system" as const,
       content: `<CONTEXT>
@@ -814,24 +925,27 @@ ${contextBlock}
 ${sourcesJson}
 </แหล่งอ้างอิงที่ใช้จริง>
 
-จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข`,
+จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}`,
     };
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          contextMessage,
-          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
-        ],
-        stream: true,
-      }),
+    const callGateway = async (body: Record<string, unknown>) =>
+      await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+    // ---- ขั้นที่ 1: ร่างคำตอบ ----
+    const response = await callGateway({
+      model: 'google/gemini-2.5-flash',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        contextMessage,
+        ...(Array.isArray(messages) ? messages.slice(-10) : messages),
+      ],
     });
 
     if (!response.ok) {
@@ -855,7 +969,69 @@ ${sourcesJson}
       });
     }
 
-    return new Response(response.body, {
+    const draftData = await response.json();
+    let finalAnswer: string = draftData?.choices?.[0]?.message?.content || "";
+
+    // ---- ขั้นที่ 2: ตรวจสอบคำตอบก่อนส่งให้ผู้ใช้ (Answer Verification) ----
+    const isRefusal = finalAnswer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
+    if (finalAnswer.trim().length > 0 && !isRefusal) {
+      try {
+        const verifyResp = await callGateway({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            {
+              role: 'system',
+              content: `คุณคือผู้ตรวจสอบความถูกต้องของคำตอบด้านยาสมุนไพรไทย ตรวจ "ร่างคำตอบ" เทียบกับ CONTEXT ตามเกณฑ์:
+1. ชื่อสมุนไพร/ตำรับที่ตอบต้องมีอยู่จริงใน CONTEXT (ห้ามแต่งชื่อขึ้นเอง หรือเอา "ข้อบ่งใช้" มาใช้เป็นชื่อยา)
+2. ข้อบ่งใช้ ขนาดยา ข้อห้าม ข้อควรระวัง ต้องตรงกับ CONTEXT
+3. ถ้าคำถามขอ "รายชื่อ" ต้องระบุชื่อรายการที่มีใน CONTEXT ให้ครบ ห้ามตอบว่าไม่ได้ระบุชื่อทั้งที่ CONTEXT มี
+4. PMID/ลิงก์/แหล่งอ้างอิง ต้องมาจาก CONTEXT เท่านั้น
+5. ต้องคงรูปแบบเดิมไว้ทั้งหมด รวมถึงบล็อก [METADATA] และ [SOURCES] ห้ามแก้ไขเนื้อหาในบล็อกเหล่านั้น
+
+ผลลัพธ์:
+- ถ้าถูกต้องครบถ้วน ตอบกลับคำเดียวว่า: PASS
+- ถ้าไม่ถูกต้อง ให้ส่ง "คำตอบฉบับแก้ไข" ฉบับเต็ม (ภาษาไทย Markdown พร้อมบล็อก [METADATA] และ [SOURCES]) โดยไม่ต้องอธิบายเหตุผลใด ๆ`,
+            },
+            {
+              role: 'user',
+              content: `<CONTEXT>\n${contextBlock}\n</CONTEXT>\n\n<แหล่งอ้างอิงที่ใช้จริง>\n${sourcesJson}\n</แหล่งอ้างอิงที่ใช้จริง>\n\n<คำถามผู้ใช้>\n${question}\n</คำถามผู้ใช้>\n\n<ร่างคำตอบ>\n${finalAnswer}\n</ร่างคำตอบ>`,
+            },
+          ],
+        });
+        if (verifyResp.ok) {
+          const vData = await verifyResp.json();
+          const verdict: string = (vData?.choices?.[0]?.message?.content || "").trim();
+          if (verdict && !/^pass\b/i.test(verdict) && verdict.length > 80) {
+            console.log("[herbal-chat] verification: corrected answer");
+            finalAnswer = verdict;
+          } else {
+            console.log("[herbal-chat] verification: PASS");
+          }
+        } else {
+          console.error("[herbal-chat] verification failed:", verifyResp.status);
+        }
+      } catch (e) {
+        console.error("[herbal-chat] verification exception:", e);
+      }
+    }
+
+    // ---- ส่งคำตอบกลับเป็น SSE (รูปแบบเดิมที่หน้าเว็บรองรับ) ----
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      start(controller) {
+        const CHUNK = 60;
+        for (let i = 0; i < finalAnswer.length; i += CHUNK) {
+          const piece = finalAnswer.slice(i, i + CHUNK);
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ choices: [{ delta: { content: piece } }] })}\n\n`),
+          );
+        }
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
       headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' },
     });
   } catch (e) {

@@ -238,6 +238,7 @@ const ChatPage = () => {
     const stageTimers = [
       window.setTimeout(() => setLoadingStage(1), 2500),
       window.setTimeout(() => setLoadingStage(2), 6000),
+      window.setTimeout(() => setLoadingStage(3), 11000),
     ];
     const clearStageTimers = () => stageTimers.forEach((t) => window.clearTimeout(t));
 
@@ -651,7 +652,9 @@ const ChatPage = () => {
                         ? "กำลังค้นฐานข้อมูลสมุนไพร..."
                         : loadingStage === 1
                         ? "กำลังค้นงานวิจัยที่เกี่ยวข้อง..."
-                        : "กำลังเรียบเรียงคำตอบ..."}
+                        : loadingStage === 2
+                        ? "กำลังเรียบเรียงคำตอบ..."
+                        : "กำลังตรวจสอบความถูกต้องของคำตอบ..."}
                     </span>
 
                     <div className="flex gap-1">
