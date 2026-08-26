@@ -89,6 +89,8 @@ const DataImporter = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
+  const [step, setStep] = useState(0); // 0 = ยังไม่เริ่ม, 1..4 = ขั้นตอนที่กำลังทำ
+  const stepTimers = useRef<number[]>([]);
   const [pasted, setPasted] = useState("");
   const [jobId, setJobId] = useState<string | null>(null);
   const [data, setData] = useState<Extracted | null>(null);
@@ -97,6 +99,24 @@ const DataImporter = () => {
   const [sources, setSources] = useState<Source[]>([]);
   const [jobs, setJobs] = useState<ImportJob[]>([]);
   const [versions, setVersions] = useState<DataVersion[]>([]);
+
+  const clearStepTimers = () => {
+    stepTimers.current.forEach((t) => window.clearTimeout(t));
+    stepTimers.current = [];
+  };
+
+  // ระหว่างรอ AI ประมวลผล ให้ไล่ขั้นตอนตามเวลาโดยประมาณ
+  const runStepSequence = () => {
+    clearStepTimers();
+    setStep(2);
+    stepTimers.current.push(window.setTimeout(() => setStep(3), 6000));
+  };
+
+  const finishSteps = () => { clearStepTimers(); setStep(4); };
+  const resetSteps = () => { clearStepTimers(); setStep(0); };
+
+  useEffect(() => () => clearStepTimers(), []);
+
 
   const loadMeta = async () => {
     const [j, v] = await Promise.all([
