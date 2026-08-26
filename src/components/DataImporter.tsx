@@ -225,7 +225,7 @@ const DataImporter = () => {
 
   const retryMissing = async () => {
     if (!stats?.missing?.length || !sources.length) return;
-    setBusy(true); setProgress(`กำลังดึงรายการที่ขาด ${stats.missing.length} รายการ...`);
+    setBusy(true); setStep(3); setProgress(`กำลังดึงรายละเอียดรายการที่ขาด ${stats.missing.length} รายการ...`);
     try {
       const merged: Extracted = {
         herbs: [...(data?.herbs || [])],
