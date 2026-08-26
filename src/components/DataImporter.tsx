@@ -252,8 +252,10 @@ const DataImporter = () => {
         names_extracted: merged.herbs.length + merged.formulas.length,
         missing: stats.missing.filter((n) => !gotNames.has(n.replace(/\s+/g, ""))),
       });
+      finishSteps();
       toast({ title: "ดึงข้อมูลรอบเพิ่มเติมเสร็จแล้ว" });
     } catch (e: any) {
+      resetSteps();
       toast({ title: "ดึงข้อมูลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally { setBusy(false); setProgress(""); }
   };
