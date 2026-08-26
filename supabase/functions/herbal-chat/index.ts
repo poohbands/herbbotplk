@@ -355,8 +355,8 @@ async function findRelevantHerbs(supabase: any, question: string, intent?: Quest
     if (hit) addFormula(f);
   }
 
-  // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ
-  const symptomTerms = symptomTermsFor(question);
+  // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ (รวมคำอาการที่ AI สกัดมาจากคำถาม)
+  const symptomTerms = symptomTermsFor(`${question} ${(intent?.symptoms || []).join(" ")}`, intent?.symptoms || []);
   if (symptomTerms.length > 0) {
     const limit = listMode ? MAX_LIST_RESULTS : 6;
     let count = 0;
