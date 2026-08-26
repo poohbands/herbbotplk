@@ -238,6 +238,7 @@ const ChatPage = () => {
     const stageTimers = [
       window.setTimeout(() => setLoadingStage(1), 2500),
       window.setTimeout(() => setLoadingStage(2), 6000),
+      window.setTimeout(() => setLoadingStage(3), 11000),
     ];
     const clearStageTimers = () => stageTimers.forEach((t) => window.clearTimeout(t));
 
