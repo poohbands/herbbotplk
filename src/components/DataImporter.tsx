@@ -165,17 +165,20 @@ const DataImporter = () => {
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
     setBusy(true);
+    setStep(1);
     const all: Extracted = { herbs: [], formulas: [], knowledge: [] };
     const srcs: Source[] = [];
     const statList: (Stats | undefined)[] = [];
     let lastJob: string | null = null;
     try {
       for (const file of Array.from(files)) {
-        setProgress(`กำลังอัปโหลด ${file.name}...`);
+        setStep(1);
+        setProgress(`กำลังตรวจไฟล์และอัปโหลด ${file.name}...`);
         const path = createImportStoragePath(file.name);
         const { error: upErr } = await supabase.storage.from("imports").upload(path, file);
         if (upErr) throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${upErr.message}`);
-        setProgress(`AI กำลังอ่าน ${file.name}...`);
+        setProgress(`AI กำลังอ่านและแยกรายชื่อยาจาก ${file.name}...`);
+        runStepSequence();
         const res = await callFn({ action: "extract", file_path: path, file_name: file.name });
         lastJob = res.job_id;
         srcs.push({ file_path: path, file_name: file.name });
@@ -184,11 +187,14 @@ const DataImporter = () => {
         all.formulas.push(...(res.extracted?.formulas || []));
         all.knowledge.push(...(res.extracted?.knowledge || []));
       }
+      setProgress("กำลังสรุปผลการนำเข้า...");
+      finishSteps();
       setSources(srcs);
       setStats(mergeStats(statList));
       setResult(lastJob, all);
       toast({ title: "อ่านเอกสารสำเร็จ", description: `พบ ${all.herbs.length + all.formulas.length + all.knowledge.length} รายการ — กรุณาตรวจทานก่อนบันทึก` });
     } catch (e: any) {
+      resetSteps();
       toast({ title: "ประมวลผลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally {
       setBusy(false); setProgress(""); loadMeta();
@@ -198,17 +204,24 @@ const DataImporter = () => {
 
   const handlePaste = async () => {
     if (!pasted.trim()) return toast({ title: "กรุณาวางข้อความก่อน", variant: "destructive" });
-    setBusy(true); setProgress("AI กำลังแยกข้อมูลจากข้อความ...");
+    setBusy(true); setProgress("กำลังตรวจข้อความที่วาง...");
+    setStep(1);
     try {
+      setProgress("AI กำลังแยกรายชื่อยาจากข้อความ...");
+      runStepSequence();
       const res = await callFn({ action: "extract", text: pasted, file_name: "ข้อความที่วาง" });
+      setProgress("กำลังสรุปผล...");
+      finishSteps();
       setSources([{ text: pasted }]);
       setStats(res.extracted?.stats || null);
       setResult(res.job_id, res.extracted);
       toast({ title: "แยกข้อมูลสำเร็จ", description: "กรุณาตรวจทานก่อนบันทึก" });
     } catch (e: any) {
+      resetSteps();
       toast({ title: "ประมวลผลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally { setBusy(false); setProgress(""); loadMeta(); }
   };
+
 
   const retryMissing = async () => {
     if (!stats?.missing?.length || !sources.length) return;
