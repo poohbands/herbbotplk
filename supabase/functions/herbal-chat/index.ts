@@ -970,18 +970,18 @@ serve(async (req) => {
     console.log("[herbal-chat] thaijo query:", thaijoQuery, "results:", thaijo.length);
 
 
-    // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
+    // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
+    // ใช้ผลจากตัวจำแนกเจตนา (is_follow_up) แทนเกณฑ์ "คำถามสั้นกว่า 40 ตัวอักษร"
     let aiFallback: AiFallback = { summary: "", used: false };
     const noInternal = herbs.length === 0 && formulas.length === 0 && knowledge.length === 0;
-    // ข้าม fallback สำหรับคำถามต่อเนื่องสั้น ๆ (มีประวัติแล้ว) เพราะโมเดลหลักตอบต่อจาก context เดิมได้
     const hasHistory = Array.isArray(messages) && messages.filter((m: any) => m.role === "assistant").length > 0;
-    const isShortFollowUp = hasHistory && question.trim().length <= 40;
-    if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isShortFollowUp) {
+    const isFollowUp = hasHistory && intent.is_follow_up;
+    if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isFollowUp && intent.in_scope) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
       aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
-    } else if (isShortFollowUp) {
-      console.log("[herbal-chat] skip AI fallback (short follow-up question)");
+    } else if (isFollowUp) {
+      console.log("[herbal-chat] skip AI fallback (follow-up question)");
     }
 
 
