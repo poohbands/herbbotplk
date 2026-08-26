@@ -298,11 +298,22 @@ function symptomTermsFor(question: string, extraTerms: string[] = []): string[] 
 
 const MAX_LIST_RESULTS = 30;
 
+type QuestionIntent = {
+  in_scope: boolean;
+  type: string;
+  symptoms: string[];
+  herbs: string[];
+  drugs: string[];
+  is_follow_up: boolean;
+  wants_list: boolean;
+};
+
 /** ค้นหาสมุนไพร/ตำรับ: (1) ชื่อในคำถาม (2) อาการ/ข้อบ่งใช้ (3) ส่วนประกอบ */
-async function findRelevantHerbs(supabase: any, question: string) {
-  const q = question.toLowerCase();
-  const nq = normalizeThaiName(question);
-  const listMode = isListQuestion(question);
+async function findRelevantHerbs(supabase: any, question: string, intent?: QuestionIntent) {
+  const extraNames = (intent?.herbs || []).join(" ");
+  const q = `${question} ${extraNames}`.toLowerCase();
+  const nq = normalizeThaiName(`${question} ${extraNames}`);
+  const listMode = isListQuestion(question) || !!intent?.wants_list;
 
   const { herbs: allHerbs, formulas: allFormulas } = await loadCatalog(supabase);
 
