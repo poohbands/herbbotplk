@@ -640,6 +640,69 @@ function buildThaiJoQuery(question: string, herbs: HerbRow[], formulas: FormulaR
 
 
 /**
+ * จำแนกเจตนาคำถามด้วยโมเดลเร็ว — ใช้ตัดสินว่าอยู่ในขอบเขตหรือไม่
+ * และสกัด "อาการ / ชื่อสมุนไพร / ชื่อยา" เพื่อใช้เป็นคำค้นเข้าฐานข้อมูล
+ */
+async function classifyIntent(question: string, history: any[], apiKey: string): Promise<QuestionIntent> {
+  const fallbackIntent: QuestionIntent = {
+    in_scope: true, type: "unknown", symptoms: [], herbs: [], drugs: [], is_follow_up: false, wants_list: false,
+  };
+  try {
+    const recent = (Array.isArray(history) ? history : [])
+      .slice(-4)
+      .map((m: any) => `${m.role}: ${String(m.content || "").slice(0, 300)}`)
+      .join("\n");
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content: `คุณคือตัวจำแนกเจตนาคำถามของระบบให้คำปรึกษาด้านยาสมุนไพรไทยและ Drug Interaction
+ตอบกลับเป็น JSON เท่านั้น รูปแบบ:
+{"in_scope":true|false,"type":"symptom|herb|formula|drug_interaction|dosage|policy|other","symptoms":["..."],"herbs":["..."],"drugs":["..."],"is_follow_up":true|false,"wants_list":true|false}
+
+กติกา:
+- in_scope = true สำหรับทุกคำถามที่เกี่ยวกับ: อาการเจ็บป่วยและการดูแลตนเอง (เช่น "ปวดท้องกินไรดี", "นอนไม่หลับ", "ปวดหัว"), สมุนไพร, ตำรับยาแผนไทย, ยาแผนปัจจุบัน, ขนาดยา ข้อห้าม ผลข้างเคียง, drug interaction, คำถามต่อเนื่องจากบทสนทนาเดิม
+- in_scope = false เฉพาะเมื่อไม่เกี่ยวข้องชัดเจน เช่น การเมือง กีฬา อากาศ เขียนโค้ด ดูดวง แปลภาษา เรื่องส่วนตัวของ AI
+- symptoms: คำอาการภาษาไทยแบบมาตรฐาน พร้อมคำพ้องที่ใช้ค้นฐานข้อมูล (เช่น "ปวดท้อง" → ["ปวดท้อง","จุกเสียด","แน่นท้อง","ขับลม"]) สูงสุด 6 คำ
+- herbs / drugs: ชื่อสมุนไพร ตำรับ หรือยาที่กล่าวถึง (รวมจากบทสนทนาก่อนหน้าถ้าคำถามเป็นคำถามต่อเนื่อง)
+- is_follow_up = true เมื่อคำถามอ้างถึงหัวข้อในบทสนทนาก่อนหน้าโดยไม่ระบุชื่อใหม่
+- wants_list = true เมื่อผู้ใช้ขอรายชื่อ/รายการ`,
+          },
+          { role: "user", content: `บทสนทนาก่อนหน้า:\n${recent || "(ไม่มี)"}\n\nคำถามล่าสุด: "${question}"` },
+        ],
+        response_format: { type: "json_object" },
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!resp.ok) {
+      console.error("[herbal-chat] intent classify failed:", resp.status);
+      return fallbackIntent;
+    }
+    const data = await resp.json();
+    const raw = data?.choices?.[0]?.message?.content || "{}";
+    const parsed = JSON.parse(raw.replace(/^```json\s*|```$/g, "").trim());
+    return {
+      in_scope: parsed.in_scope !== false,
+      type: String(parsed.type || "other"),
+      symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms.map(String).slice(0, 8) : [],
+      herbs: Array.isArray(parsed.herbs) ? parsed.herbs.map(String).slice(0, 8) : [],
+      drugs: Array.isArray(parsed.drugs) ? parsed.drugs.map(String).slice(0, 8) : [],
+      is_follow_up: parsed.is_follow_up === true,
+      wants_list: parsed.wants_list === true,
+    };
+  } catch (e) {
+    console.error("[herbal-chat] intent classify exception:", e);
+    return fallbackIntent;
+  }
+}
+
+
+/**
  * AI Fallback: เมื่อไม่พบข้อมูลใน DB ภายใน / knowledge / PubMed
  * เรียก Gemini เพื่อสรุปความรู้ทั่วไปเกี่ยวกับสมุนไพร/ตำรับที่ถูกถาม
  * (จากข้อมูลที่โมเดลได้รับการฝึกมา — ไม่ใช่ค้นเว็บสด)
