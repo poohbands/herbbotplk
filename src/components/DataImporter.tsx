@@ -15,7 +15,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+
+const IMPORT_STEPS = ["ตรวจไฟล์", "แยกรายชื่อยา", "ดึงรายละเอียด", "สรุปผล"] as const;
 
 type AnyRow = Record<string, any>;
 type Extracted = { herbs: AnyRow[]; formulas: AnyRow[]; knowledge: AnyRow[] };
@@ -89,6 +92,8 @@ const DataImporter = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState("");
+  const [step, setStep] = useState(0); // 0 = ยังไม่เริ่ม, 1..4 = ขั้นตอนที่กำลังทำ
+  const stepTimers = useRef<number[]>([]);
   const [pasted, setPasted] = useState("");
   const [jobId, setJobId] = useState<string | null>(null);
   const [data, setData] = useState<Extracted | null>(null);
@@ -97,6 +102,24 @@ const DataImporter = () => {
   const [sources, setSources] = useState<Source[]>([]);
   const [jobs, setJobs] = useState<ImportJob[]>([]);
   const [versions, setVersions] = useState<DataVersion[]>([]);
+
+  const clearStepTimers = () => {
+    stepTimers.current.forEach((t) => window.clearTimeout(t));
+    stepTimers.current = [];
+  };
+
+  // ระหว่างรอ AI ประมวลผล ให้ไล่ขั้นตอนตามเวลาโดยประมาณ
+  const runStepSequence = () => {
+    clearStepTimers();
+    setStep(2);
+    stepTimers.current.push(window.setTimeout(() => setStep(3), 6000));
+  };
+
+  const finishSteps = () => { clearStepTimers(); setStep(4); };
+  const resetSteps = () => { clearStepTimers(); setStep(0); };
+
+  useEffect(() => () => clearStepTimers(), []);
+
 
   const loadMeta = async () => {
     const [j, v] = await Promise.all([
@@ -145,17 +168,20 @@ const DataImporter = () => {
   const handleFiles = async (files: FileList | null) => {
     if (!files?.length) return;
     setBusy(true);
+    setStep(1);
     const all: Extracted = { herbs: [], formulas: [], knowledge: [] };
     const srcs: Source[] = [];
     const statList: (Stats | undefined)[] = [];
     let lastJob: string | null = null;
     try {
       for (const file of Array.from(files)) {
-        setProgress(`กำลังอัปโหลด ${file.name}...`);
+        setStep(1);
+        setProgress(`กำลังตรวจไฟล์และอัปโหลด ${file.name}...`);
         const path = createImportStoragePath(file.name);
         const { error: upErr } = await supabase.storage.from("imports").upload(path, file);
         if (upErr) throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${upErr.message}`);
-        setProgress(`AI กำลังอ่าน ${file.name}...`);
+        setProgress(`AI กำลังอ่านและแยกรายชื่อยาจาก ${file.name}...`);
+        runStepSequence();
         const res = await callFn({ action: "extract", file_path: path, file_name: file.name });
         lastJob = res.job_id;
         srcs.push({ file_path: path, file_name: file.name });
@@ -164,11 +190,14 @@ const DataImporter = () => {
         all.formulas.push(...(res.extracted?.formulas || []));
         all.knowledge.push(...(res.extracted?.knowledge || []));
       }
+      setProgress("กำลังสรุปผลการนำเข้า...");
+      finishSteps();
       setSources(srcs);
       setStats(mergeStats(statList));
       setResult(lastJob, all);
       toast({ title: "อ่านเอกสารสำเร็จ", description: `พบ ${all.herbs.length + all.formulas.length + all.knowledge.length} รายการ — กรุณาตรวจทานก่อนบันทึก` });
     } catch (e: any) {
+      resetSteps();
       toast({ title: "ประมวลผลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally {
       setBusy(false); setProgress(""); loadMeta();
@@ -178,21 +207,28 @@ const DataImporter = () => {
 
   const handlePaste = async () => {
     if (!pasted.trim()) return toast({ title: "กรุณาวางข้อความก่อน", variant: "destructive" });
-    setBusy(true); setProgress("AI กำลังแยกข้อมูลจากข้อความ...");
+    setBusy(true); setProgress("กำลังตรวจข้อความที่วาง...");
+    setStep(1);
     try {
+      setProgress("AI กำลังแยกรายชื่อยาจากข้อความ...");
+      runStepSequence();
       const res = await callFn({ action: "extract", text: pasted, file_name: "ข้อความที่วาง" });
+      setProgress("กำลังสรุปผล...");
+      finishSteps();
       setSources([{ text: pasted }]);
       setStats(res.extracted?.stats || null);
       setResult(res.job_id, res.extracted);
       toast({ title: "แยกข้อมูลสำเร็จ", description: "กรุณาตรวจทานก่อนบันทึก" });
     } catch (e: any) {
+      resetSteps();
       toast({ title: "ประมวลผลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally { setBusy(false); setProgress(""); loadMeta(); }
   };
 
+
   const retryMissing = async () => {
     if (!stats?.missing?.length || !sources.length) return;
-    setBusy(true); setProgress(`กำลังดึงรายการที่ขาด ${stats.missing.length} รายการ...`);
+    setBusy(true); setStep(3); setProgress(`กำลังดึงรายละเอียดรายการที่ขาด ${stats.missing.length} รายการ...`);
     try {
       const merged: Extracted = {
         herbs: [...(data?.herbs || [])],
@@ -219,8 +255,10 @@ const DataImporter = () => {
         names_extracted: merged.herbs.length + merged.formulas.length,
         missing: stats.missing.filter((n) => !gotNames.has(n.replace(/\s+/g, ""))),
       });
+      finishSteps();
       toast({ title: "ดึงข้อมูลรอบเพิ่มเติมเสร็จแล้ว" });
     } catch (e: any) {
+      resetSteps();
       toast({ title: "ดึงข้อมูลไม่สำเร็จ", description: e.message, variant: "destructive" });
     } finally { setBusy(false); setProgress(""); }
   };
@@ -463,11 +501,51 @@ const DataImporter = () => {
         </TabsContent>
       </Tabs>
 
-      {busy && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-          <Loader2 className="w-4 h-4 animate-spin" /> {progress || "กำลังทำงาน..."}
+      {(busy || step === 4) && (
+        <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-thai">
+              {busy ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <CheckCircle2 className="w-4 h-4 text-primary" />}
+              <span className="text-foreground">{progress || (busy ? "กำลังทำงาน..." : "ประมวลผลเสร็จสิ้น")}</span>
+            </div>
+            <Badge variant="secondary" className="font-thai">
+              ขั้นที่ {Math.min(step, IMPORT_STEPS.length)}/{IMPORT_STEPS.length}
+            </Badge>
+          </div>
+
+          <Progress value={(Math.min(step, IMPORT_STEPS.length) / IMPORT_STEPS.length) * 100} className="h-2" />
+
+          <div className="grid gap-2 sm:grid-cols-4 mt-4">
+            {IMPORT_STEPS.map((label, i) => {
+              const n = i + 1;
+              const done = step > n || (step === IMPORT_STEPS.length && n === IMPORT_STEPS.length && !busy);
+              const active = step === n;
+              return (
+                <div
+                  key={label}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-thai transition-colors ${
+                    done
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : active
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {done ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                  ) : active ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                  ) : (
+                    <span className="w-3.5 h-3.5 rounded-full border border-current shrink-0" />
+                  )}
+                  <span>{n}. {label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
+
 
       {data && (
         <div className="mt-6 border-t border-border pt-5">
