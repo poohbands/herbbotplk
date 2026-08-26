@@ -498,11 +498,51 @@ const DataImporter = () => {
         </TabsContent>
       </Tabs>
 
-      {busy && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
-          <Loader2 className="w-4 h-4 animate-spin" /> {progress || "กำลังทำงาน..."}
+      {(busy || step === 4) && (
+        <div className="mt-5 rounded-xl border border-border bg-muted/30 p-4">
+          <div className="flex items-center justify-between gap-3 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 text-sm font-thai">
+              {busy ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <CheckCircle2 className="w-4 h-4 text-primary" />}
+              <span className="text-foreground">{progress || (busy ? "กำลังทำงาน..." : "ประมวลผลเสร็จสิ้น")}</span>
+            </div>
+            <Badge variant="secondary" className="font-thai">
+              ขั้นที่ {Math.min(step, IMPORT_STEPS.length)}/{IMPORT_STEPS.length}
+            </Badge>
+          </div>
+
+          <Progress value={(Math.min(step, IMPORT_STEPS.length) / IMPORT_STEPS.length) * 100} className="h-2" />
+
+          <div className="grid gap-2 sm:grid-cols-4 mt-4">
+            {IMPORT_STEPS.map((label, i) => {
+              const n = i + 1;
+              const done = step > n || (step === IMPORT_STEPS.length && n === IMPORT_STEPS.length && !busy);
+              const active = step === n;
+              return (
+                <div
+                  key={label}
+                  className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-thai transition-colors ${
+                    done
+                      ? "border-primary/40 bg-primary/10 text-foreground"
+                      : active
+                        ? "border-primary bg-primary/5 text-foreground"
+                        : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {done ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                  ) : active ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-primary shrink-0" />
+                  ) : (
+                    <span className="w-3.5 h-3.5 rounded-full border border-current shrink-0" />
+                  )}
+                  <span>{n}. {label}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
+
 
       {data && (
         <div className="mt-6 border-t border-border pt-5">
