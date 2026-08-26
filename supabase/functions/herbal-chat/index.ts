@@ -269,24 +269,51 @@ const SYMPTOM_MAP: { match: RegExp; terms: string[] }[] = [
   { match: /ความดัน/, terms: ["ความดัน"] },
   { match: /มะเร็ง|เคมีบำบัด|ประคับประคอง/, terms: ["มะเร็ง", "ประคับประคอง", "เคมีบำบัด"] },
   { match: /อัมพฤกษ์|อัมพาต|เส้นตึง|ลมปลายปัตคาต/, terms: ["อัมพฤกษ์", "อัมพาต", "เส้น", "ลม"] },
+  { match: /ปวดท้อง|ปวดเกร็งท้อง|ปวดกระเพาะ|โรคกระเพาะ|แสบท้อง/, terms: ["ปวดท้อง", "ท้องอืด", "ขับลม", "จุกเสียด", "กระเพาะ", "แน่นท้อง"] },
+  { match: /กรดไหลย้อน|แสบร้อนกลางอก/, terms: ["กรดไหลย้อน", "กระเพาะ", "แสบร้อน"] },
+  { match: /ปวดหัว|ปวดศีรษะ|ไมเกรน|มึนหัว/, terms: ["ปวดศีรษะ", "ปวดหัว", "ไมเกรน", "มึน"] },
+  { match: /เวียนหัว|เวียนศีรษะ|หน้ามืด|วิงเวียน|เป็นลม/, terms: ["วิงเวียน", "หน้ามืด", "เป็นลม", "บำรุงหัวใจ"] },
+  { match: /ปวดฟัน|รำมะนาด|เหงือก/, terms: ["ปวดฟัน", "เหงือก", "ช่องปาก"] },
+  { match: /ปวดประจำเดือน|ประจำเดือนมาไม่ปกติ/, terms: ["ประจำเดือน", "ปวดประจำเดือน", "ขับประจำเดือน"] },
+  { match: /ภูมิแพ้|คัดจมูก|น้ำมูก|ไซนัส|จาม/, terms: ["ภูมิแพ้", "คัดจมูก", "น้ำมูก", "หวัด"] },
+  { match: /ตาแดง|เจ็บตา|ตาอักเสบ/, terms: ["ตา", "อักเสบ"] },
+  { match: /ผมร่วง|รังแค|หนังศีรษะ/, terms: ["ผม", "หนังศีรษะ", "รังแค"] },
+  { match: /ไขมัน|คอเลสเตอรอล/, terms: ["ไขมัน", "คอเลสเตอรอล"] },
+  { match: /บำรุงน้ำนม|น้ำนมน้อย/, terms: ["น้ำนม", "บำรุงน้ำนม"] },
+  { match: /ริดสีดวงจมูก|โรคผิวหนัง|สิว|ฝ้า/, terms: ["ผิวหนัง", "สิว", "ฝ้า"] },
 ];
 
-function symptomTermsFor(question: string): string[] {
+function symptomTermsFor(question: string, extraTerms: string[] = []): string[] {
   const q = question.toLowerCase();
   const terms = new Set<string>();
   for (const s of SYMPTOM_MAP) {
     if (s.match.test(q)) s.terms.forEach((t) => terms.add(t));
+  }
+  for (const t of extraTerms) {
+    const v = (t || "").trim();
+    if (v.length >= 2) terms.add(v);
   }
   return [...terms];
 }
 
 const MAX_LIST_RESULTS = 30;
 
+type QuestionIntent = {
+  in_scope: boolean;
+  type: string;
+  symptoms: string[];
+  herbs: string[];
+  drugs: string[];
+  is_follow_up: boolean;
+  wants_list: boolean;
+};
+
 /** ค้นหาสมุนไพร/ตำรับ: (1) ชื่อในคำถาม (2) อาการ/ข้อบ่งใช้ (3) ส่วนประกอบ */
-async function findRelevantHerbs(supabase: any, question: string) {
-  const q = question.toLowerCase();
-  const nq = normalizeThaiName(question);
-  const listMode = isListQuestion(question);
+async function findRelevantHerbs(supabase: any, question: string, intent?: QuestionIntent) {
+  const extraNames = (intent?.herbs || []).join(" ");
+  const q = `${question} ${extraNames}`.toLowerCase();
+  const nq = normalizeThaiName(`${question} ${extraNames}`);
+  const listMode = isListQuestion(question) || !!intent?.wants_list;
 
   const { herbs: allHerbs, formulas: allFormulas } = await loadCatalog(supabase);
 
@@ -328,8 +355,8 @@ async function findRelevantHerbs(supabase: any, question: string) {
     if (hit) addFormula(f);
   }
 
-  // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ
-  const symptomTerms = symptomTermsFor(question);
+  // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ (รวมคำอาการที่ AI สกัดมาจากคำถาม)
+  const symptomTerms = symptomTermsFor(`${question} ${(intent?.symptoms || []).join(" ")}`, intent?.symptoms || []);
   if (symptomTerms.length > 0) {
     const limit = listMode ? MAX_LIST_RESULTS : 6;
     let count = 0;
@@ -613,6 +640,69 @@ function buildThaiJoQuery(question: string, herbs: HerbRow[], formulas: FormulaR
 
 
 /**
+ * จำแนกเจตนาคำถามด้วยโมเดลเร็ว — ใช้ตัดสินว่าอยู่ในขอบเขตหรือไม่
+ * และสกัด "อาการ / ชื่อสมุนไพร / ชื่อยา" เพื่อใช้เป็นคำค้นเข้าฐานข้อมูล
+ */
+async function classifyIntent(question: string, history: any[], apiKey: string): Promise<QuestionIntent> {
+  const fallbackIntent: QuestionIntent = {
+    in_scope: true, type: "unknown", symptoms: [], herbs: [], drugs: [], is_follow_up: false, wants_list: false,
+  };
+  try {
+    const recent = (Array.isArray(history) ? history : [])
+      .slice(-4)
+      .map((m: any) => `${m.role}: ${String(m.content || "").slice(0, 300)}`)
+      .join("\n");
+
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content: `คุณคือตัวจำแนกเจตนาคำถามของระบบให้คำปรึกษาด้านยาสมุนไพรไทยและ Drug Interaction
+ตอบกลับเป็น JSON เท่านั้น รูปแบบ:
+{"in_scope":true|false,"type":"symptom|herb|formula|drug_interaction|dosage|policy|other","symptoms":["..."],"herbs":["..."],"drugs":["..."],"is_follow_up":true|false,"wants_list":true|false}
+
+กติกา:
+- in_scope = true สำหรับทุกคำถามที่เกี่ยวกับ: อาการเจ็บป่วยและการดูแลตนเอง (เช่น "ปวดท้องกินไรดี", "นอนไม่หลับ", "ปวดหัว"), สมุนไพร, ตำรับยาแผนไทย, ยาแผนปัจจุบัน, ขนาดยา ข้อห้าม ผลข้างเคียง, drug interaction, คำถามต่อเนื่องจากบทสนทนาเดิม
+- in_scope = false เฉพาะเมื่อไม่เกี่ยวข้องชัดเจน เช่น การเมือง กีฬา อากาศ เขียนโค้ด ดูดวง แปลภาษา เรื่องส่วนตัวของ AI
+- symptoms: คำอาการภาษาไทยแบบมาตรฐาน พร้อมคำพ้องที่ใช้ค้นฐานข้อมูล (เช่น "ปวดท้อง" → ["ปวดท้อง","จุกเสียด","แน่นท้อง","ขับลม"]) สูงสุด 6 คำ
+- herbs / drugs: ชื่อสมุนไพร ตำรับ หรือยาที่กล่าวถึง (รวมจากบทสนทนาก่อนหน้าถ้าคำถามเป็นคำถามต่อเนื่อง)
+- is_follow_up = true เมื่อคำถามอ้างถึงหัวข้อในบทสนทนาก่อนหน้าโดยไม่ระบุชื่อใหม่
+- wants_list = true เมื่อผู้ใช้ขอรายชื่อ/รายการ`,
+          },
+          { role: "user", content: `บทสนทนาก่อนหน้า:\n${recent || "(ไม่มี)"}\n\nคำถามล่าสุด: "${question}"` },
+        ],
+        response_format: { type: "json_object" },
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!resp.ok) {
+      console.error("[herbal-chat] intent classify failed:", resp.status);
+      return fallbackIntent;
+    }
+    const data = await resp.json();
+    const raw = data?.choices?.[0]?.message?.content || "{}";
+    const parsed = JSON.parse(raw.replace(/^```json\s*|```$/g, "").trim());
+    return {
+      in_scope: parsed.in_scope !== false,
+      type: String(parsed.type || "other"),
+      symptoms: Array.isArray(parsed.symptoms) ? parsed.symptoms.map(String).slice(0, 8) : [],
+      herbs: Array.isArray(parsed.herbs) ? parsed.herbs.map(String).slice(0, 8) : [],
+      drugs: Array.isArray(parsed.drugs) ? parsed.drugs.map(String).slice(0, 8) : [],
+      is_follow_up: parsed.is_follow_up === true,
+      wants_list: parsed.wants_list === true,
+    };
+  } catch (e) {
+    console.error("[herbal-chat] intent classify exception:", e);
+    return fallbackIntent;
+  }
+}
+
+
+/**
  * AI Fallback: เมื่อไม่พบข้อมูลใน DB ภายใน / knowledge / PubMed
  * เรียก Gemini เพื่อสรุปความรู้ทั่วไปเกี่ยวกับสมุนไพร/ตำรับที่ถูกถาม
  * (จากข้อมูลที่โมเดลได้รับการฝึกมา — ไม่ใช่ค้นเว็บสด)
@@ -849,10 +939,15 @@ serve(async (req) => {
 
     const isCommonDisease = isCommonDiseaseQuestion(question);
 
+    // ขั้นที่ 0: ให้ AI จำแนกเจตนา + สกัดคำอาการ/ชื่อยา ก่อนค้นข้อมูล
+    const intent = await classifyIntent(question, messages, LOVABLE_API_KEY);
+    console.log("[herbal-chat] intent:", JSON.stringify(intent));
+
     // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
+    const knowledgeQuery = [question, ...intent.symptoms, ...intent.herbs].join(" ");
     const [{ herbs, formulas, listMode }, knowledge] = await Promise.all([
-      findRelevantHerbs(supabase, question),
-      findRelevantKnowledge(supabase, question),
+      findRelevantHerbs(supabase, question, intent),
+      findRelevantKnowledge(supabase, knowledgeQuery),
     ]);
 
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
@@ -875,18 +970,18 @@ serve(async (req) => {
     console.log("[herbal-chat] thaijo query:", thaijoQuery, "results:", thaijo.length);
 
 
-    // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง และไม่ใช่คำถามนโยบาย → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
+    // AI Fallback: ถ้าไม่มีข้อมูลจากทุกแหล่ง → ให้ Gemini สรุปความรู้ทั่วไปมาเป็น context
+    // ใช้ผลจากตัวจำแนกเจตนา (is_follow_up) แทนเกณฑ์ "คำถามสั้นกว่า 40 ตัวอักษร"
     let aiFallback: AiFallback = { summary: "", used: false };
     const noInternal = herbs.length === 0 && formulas.length === 0 && knowledge.length === 0;
-    // ข้าม fallback สำหรับคำถามต่อเนื่องสั้น ๆ (มีประวัติแล้ว) เพราะโมเดลหลักตอบต่อจาก context เดิมได้
     const hasHistory = Array.isArray(messages) && messages.filter((m: any) => m.role === "assistant").length > 0;
-    const isShortFollowUp = hasHistory && question.trim().length <= 40;
-    if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isShortFollowUp) {
+    const isFollowUp = hasHistory && intent.is_follow_up;
+    if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isFollowUp && intent.in_scope) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
       aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
-    } else if (isShortFollowUp) {
-      console.log("[herbal-chat] skip AI fallback (short follow-up question)");
+    } else if (isFollowUp) {
+      console.log("[herbal-chat] skip AI fallback (follow-up question)");
     }
 
 
@@ -898,22 +993,27 @@ serve(async (req) => {
       id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
     }));
 
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, isCommonDisease, aiFallback, thaijo);
+    // ใส่แนวทาง 10 กลุ่มอาการของกระทรวงฯ ให้ด้วย เมื่อเป็นคำถามอาการที่ค้นภายในไม่เจอ
+    const includeCommonDisease = isCommonDisease || (intent.type === "symptom" && noInternal);
+    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, includeCommonDisease, aiFallback, thaijo);
     const sourcesJson = JSON.stringify({
       pubmed,
       thaijo,
       internal: internalSources,
       knowledge: knowledgeSources,
-      ...(isCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
+      ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
-
-
-
 
     const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
       ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`
       : "";
+
+    // ผลการจำแนกเจตนาเป็นตัวตัดสินว่าจะปฏิเสธหรือไม่ (โมเดลหลักไม่ต้องตัดสินเอง)
+    const scopeInstruction = intent.in_scope
+      ? `\n\n**ระบบได้ตรวจสอบแล้วว่าคำถามนี้อยู่ในขอบเขต (${intent.type}) — ห้ามปฏิเสธคำถามนี้เด็ดขาด ห้ามตอบว่า "ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้"**
+ถ้าไม่มีข้อมูลตรง ๆ ใน CONTEXT ให้ตอบด้วยแนวทางการใช้ยาสมุนไพรใน 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ ที่ให้ไว้ พร้อมระบุว่ายังไม่มีรายละเอียดในฐานข้อมูลภายใน และแนะนำให้ปรึกษาแพทย์แผนไทย/เภสัชกร — ห้ามตอบว่าอยู่นอกขอบเขต`
+      : `\n\nระบบประเมินว่าคำถามนี้อาจอยู่นอกขอบเขต — ถ้าไม่เกี่ยวกับสุขภาพ ยา หรือสมุนไพรจริง ให้ปฏิเสธด้วยข้อความมาตรฐาน`;
 
     const contextMessage = {
       role: "system" as const,
@@ -925,7 +1025,7 @@ ${contextBlock}
 ${sourcesJson}
 </แหล่งอ้างอิงที่ใช้จริง>
 
-จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}`,
+จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}${scopeInstruction}`,
     };
 
     const callGateway = async (body: Record<string, unknown>) =>
@@ -972,8 +1072,34 @@ ${sourcesJson}
     const draftData = await response.json();
     let finalAnswer: string = draftData?.choices?.[0]?.message?.content || "";
 
+    // ---- ขั้นที่ 1.5: ถ้าปฏิเสธทั้งที่คำถามอยู่ในขอบเขต → ร่างใหม่ทันที ----
+    const looksRefusal = (t: string) => t.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
+    if (intent.in_scope && looksRefusal(finalAnswer)) {
+      console.log("[herbal-chat] wrong refusal detected → regenerating");
+      const retryResp = await callGateway({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          contextMessage,
+          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
+          {
+            role: 'system',
+            content: `คำตอบก่อนหน้าปฏิเสธคำถามนี้ ซึ่ง**ผิด** — คำถามนี้อยู่ในขอบเขตด้านสุขภาพ/สมุนไพร (${intent.type}${intent.symptoms.length ? `: ${intent.symptoms.join(", ")}` : ""})
+ให้ตอบใหม่แบบเป็นประโยชน์ทันที: แนะนำสมุนไพร/ตำรับที่เหมาะกับอาการตาม CONTEXT และแนวทาง 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ พร้อมขนาดยา ข้อควรระวัง คำเตือนให้ปรึกษาแพทย์/เภสัชกร และบล็อก [METADATA]/[SOURCES] ตามรูปแบบ ห้ามปฏิเสธ`,
+          },
+        ],
+      });
+      if (retryResp.ok) {
+        const retryData = await retryResp.json();
+        const retryText: string = retryData?.choices?.[0]?.message?.content || "";
+        if (retryText.trim().length > 40 && !looksRefusal(retryText)) finalAnswer = retryText;
+      } else {
+        console.error("[herbal-chat] regenerate failed:", retryResp.status);
+      }
+    }
+
     // ---- ขั้นที่ 2: ตรวจสอบคำตอบก่อนส่งให้ผู้ใช้ (Answer Verification) ----
-    const isRefusal = finalAnswer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
+    const isRefusal = looksRefusal(finalAnswer);
     if (finalAnswer.trim().length > 0 && !isRefusal) {
       try {
         const verifyResp = await callGateway({
@@ -1014,6 +1140,9 @@ ${sourcesJson}
         console.error("[herbal-chat] verification exception:", e);
       }
     }
+
+    // ตัด code fence ที่โมเดลบางครั้งครอบคำตอบมา (```markdown ... ```)
+    finalAnswer = finalAnswer.trim().replace(/^```(?:markdown|md)?\s*\n?/i, "").replace(/\n?```\s*$/i, "");
 
     // ---- ส่งคำตอบกลับเป็น SSE (รูปแบบเดิมที่หน้าเว็บรองรับ) ----
     const encoder = new TextEncoder();
