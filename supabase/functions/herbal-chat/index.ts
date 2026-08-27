@@ -792,7 +792,8 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 
   if (herbs.length > 0) {
     parts.push("### ข้อมูลสมุนไพรจากฐานข้อมูลภายใน (กลุ่มงานการแพทย์แผนไทยและสมุนไพร สสจ.พิษณุโลก)");
-    for (const h of herbs) {
+    herbs.forEach((h, i) => {
+      const ref = `H-${i + 1}`;
       parts.push(`
 **${h.name_thai}** (${h.name_scientific || h.name_english || "-"})
 - คำอธิบาย: ${h.description || "-"}
@@ -802,8 +803,8 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 - ข้อควรระวัง: ${(h.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(h.contraindications || []).join("; ") || "-"}
 - Drug interactions: ${(h.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${h.id}`);
-    }
+- อ้างอิงภายใน: ${ref}`);
+    });
   }
 
   if (formulas.length > 0) {
