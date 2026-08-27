@@ -809,7 +809,8 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 
   if (formulas.length > 0) {
     parts.push("\n### ตำรับยาแผนไทยจากฐานข้อมูลภายใน");
-    for (const f of formulas) {
+    formulas.forEach((f, i) => {
+      const ref = `F-${i + 1}`;
       parts.push(`
 **${f.name_thai}** ${f.formula_code ? `(${f.formula_code})` : ""}
 - ข้อบ่งใช้: ${f.indication || "-"}
@@ -818,8 +819,8 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 - ข้อควรระวัง: ${(f.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(f.contraindications || []).join("; ") || "-"}
 - Drug interactions: ${(f.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${f.id}`);
-    }
+- อ้างอิงภายใน: ${ref}`);
+    });
   }
 
   if (extraHerbNames.length > 0) {
