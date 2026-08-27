@@ -773,13 +773,14 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
 
   if (knowledge.length > 0) {
     parts.push("### ความรู้จากคลังเอกสารภายใน (Knowledge Base — จัดการโดยแอดมิน)");
-    for (const k of knowledge) {
+    knowledge.forEach((k, i) => {
+      const ref = `K-${i + 1}`;
       parts.push(`
 **${k.title}** [${k.category}]
 ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(ตัดเนื้อหาบางส่วน)" : k.content}
 - แหล่งอ้างอิง: ${k.source || "-"}${k.source_url ? ` (${k.source_url})` : ""}
-- knowledge id: ${k.id}`);
-    }
+- อ้างอิงภายใน: ${ref}`);
+    });
   }
 
   if (includeCommonDisease && knowledge.length === 0) {
