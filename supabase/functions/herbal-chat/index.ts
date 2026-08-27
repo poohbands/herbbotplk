@@ -773,13 +773,14 @@ function buildContext(herbs: HerbRow[], formulas: FormulaRow[], pubmed: PubMedSo
 
   if (knowledge.length > 0) {
     parts.push("### ความรู้จากคลังเอกสารภายใน (Knowledge Base — จัดการโดยแอดมิน)");
-    for (const k of knowledge) {
+    knowledge.forEach((k, i) => {
+      const ref = `K-${i + 1}`;
       parts.push(`
 **${k.title}** [${k.category}]
 ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(ตัดเนื้อหาบางส่วน)" : k.content}
 - แหล่งอ้างอิง: ${k.source || "-"}${k.source_url ? ` (${k.source_url})` : ""}
-- knowledge id: ${k.id}`);
-    }
+- อ้างอิงภายใน: ${ref}`);
+    });
   }
 
   if (includeCommonDisease && knowledge.length === 0) {
@@ -791,7 +792,8 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 
   if (herbs.length > 0) {
     parts.push("### ข้อมูลสมุนไพรจากฐานข้อมูลภายใน (กลุ่มงานการแพทย์แผนไทยและสมุนไพร สสจ.พิษณุโลก)");
-    for (const h of herbs) {
+    herbs.forEach((h, i) => {
+      const ref = `H-${i + 1}`;
       parts.push(`
 **${h.name_thai}** (${h.name_scientific || h.name_english || "-"})
 - คำอธิบาย: ${h.description || "-"}
@@ -801,13 +803,14 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 - ข้อควรระวัง: ${(h.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(h.contraindications || []).join("; ") || "-"}
 - Drug interactions: ${(h.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${h.id}`);
-    }
+- อ้างอิงภายใน: ${ref}`);
+    });
   }
 
   if (formulas.length > 0) {
     parts.push("\n### ตำรับยาแผนไทยจากฐานข้อมูลภายใน");
-    for (const f of formulas) {
+    formulas.forEach((f, i) => {
+      const ref = `F-${i + 1}`;
       parts.push(`
 **${f.name_thai}** ${f.formula_code ? `(${f.formula_code})` : ""}
 - ข้อบ่งใช้: ${f.indication || "-"}
@@ -816,8 +819,8 @@ ${(k.content || "").length > 1500 ? (k.content || "").slice(0, 1500) + "\n…(�
 - ข้อควรระวัง: ${(f.precautions || []).join("; ") || "-"}
 - ข้อห้ามใช้: ${(f.contraindications || []).join("; ") || "-"}
 - Drug interactions: ${(f.drug_interactions || []).join("; ") || "-"}
-- แหล่งอ้างอิงภายใน id: ${f.id}`);
-    }
+- อ้างอิงภายใน: ${ref}`);
+    });
   }
 
   if (extraHerbNames.length > 0) {
@@ -896,6 +899,7 @@ const SYSTEM_PROMPT = `คุณคือผู้เชี่ยวชาญด
    - **ถ้า CONTEXT มีข้อมูลแนวทาง/นโยบายกระทรวงสาธารณสุข (เช่น 10 กลุ่มอาการ common disease, บัญชียาหลักแห่งชาติด้านสมุนไพร) → ตอบได้เต็มที่ตามเนื้อหาที่ให้มา โดยอ้างอิงว่า "อ้างอิงจากกรมการแพทย์แผนไทยฯ/บัญชียาหลักแห่งชาติด้านสมุนไพร"**
 4. **ห้ามใส่ URL หรือ PMID ที่ไม่ได้อยู่ใน CONTEXT** เวลาอ้าง PubMed ให้ใส่แค่ "(PMID: 12345678)" — ระบบจะทำลิงก์ให้เอง
 5. **งานวิจัยไทยจาก ThaiJO** ถ้า CONTEXT มีหัวข้อ "งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO" ให้ใช้อ้างอิงได้ โดยระบุชื่อบทความและชื่อวารสารไทย (เช่น "(วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก)") — ห้ามใส่ URL เอง ระบบจะทำลิงก์ให้
+6. **ข้อมูลภายในจากฐานข้อมูล** ถ้าต้องอ้างอิง ให้ใช้รหัสย่อที่ปรากฏใน CONTEXT เช่น "(H-1)", "(F-1)" หรือ "(K-1)" — ห้ามเขียน UUID ยาว ๆ ในคำตอบ
 
 ## รูปแบบคำตอบ
 - ตอบเป็น Markdown ภาษาไทย มีโครงสร้างชัดเจน
