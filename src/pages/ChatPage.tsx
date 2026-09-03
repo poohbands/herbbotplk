@@ -5,10 +5,9 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
-import { formatApaPubMed, formatApaThaiJo, formatApaInternal, pubmedUrl } from "@/lib/apa";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
-type ThaiJoSource = { title: string; authors: string; journal: string; url: string; year?: string };
+type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
 type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
 
@@ -47,26 +46,6 @@ function openExternal(url: string) {
   }
 }
 
-
-async function copyText(text: string, message = "คัดลอกแล้ว") {
-  try {
-    await navigator.clipboard.writeText(text);
-    toast.success(message);
-  } catch {
-    toast.error("คัดลอกไม่สำเร็จ");
-  }
-}
-
-/** รวมรายการอ้างอิงทั้งหมดของข้อความเป็นข้อความ APA 7 */
-function buildApaList(sources: SourcesPayload): string {
-  const lines: string[] = [];
-  for (const s of sources.internal || []) {
-    lines.push(formatApaInternal(s, `${window.location.origin}/herbs?${s.type}=${s.id}`));
-  }
-  for (const p of sources.pubmed || []) lines.push(formatApaPubMed(p));
-  for (const t of sources.thaijo || []) lines.push(formatApaThaiJo(t));
-  return lines.join("\n");
-}
 
 async function copyLink(url: string) {
   try {
@@ -529,53 +508,35 @@ const ChatPage = () => {
                     {msg.role === "assistant" && msg.sources && (
                       (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0) && (
                         <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                              <BookOpen className="w-3.5 h-3.5" />
-                              <span>แหล่งอ้างอิงที่ตรวจสอบได้ (APA 7)</span>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => copyText(buildApaList(msg.sources!), "คัดลอกรายการอ้างอิงแล้ว")}
-                              className="text-[11px] px-2 py-1 rounded-md bg-muted/60 hover:bg-muted text-muted-foreground"
-                            >
-                              คัดลอกทั้งหมด
-                            </button>
+                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span>แหล่งอ้างอิงที่ตรวจสอบได้</span>
                           </div>
                           {msg.sources.internal?.length > 0 && (
                             <div className="space-y-1">
                               {msg.sources.internal.map((s) => {
                                 const url = `${window.location.origin}/herbs?${s.type}=${s.id}`;
-                                const apa = formatApaInternal(s, url);
                                 return (
-                                  <div
+                                  <a
                                     key={`${s.type}-${s.id}`}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openExternal(url);
+                                    }}
                                     className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
                                   >
                                     <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        openExternal(url);
-                                      }}
-                                      className="flex-1 min-w-0 text-left text-foreground pl-4 -indent-4 leading-relaxed"
-                                    >
-                                      {apa}
-                                    </a>
-                                    <button
-                                      type="button"
-                                      aria-label="คัดลอกการอ้างอิง (APA)"
-                                      title="คัดลอกการอ้างอิง (APA)"
-                                      onClick={() => copyText(apa, "คัดลอกการอ้างอิงแล้ว")}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </button>
-                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 mt-1" />
-                                  </div>
+                                    <span className="flex-1">
+                                      <span className="font-medium text-foreground">{s.name}</span>
+                                      <span className="text-muted-foreground ml-1">
+                                        — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูลภายใน)
+                                      </span>
+                                    </span>
+                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                  </a>
                                 );
                               })}
                             </div>
@@ -583,8 +544,7 @@ const ChatPage = () => {
                           {msg.sources.pubmed?.length > 0 && (
                             <div className="space-y-1">
                               {msg.sources.pubmed.map((p) => {
-                                const url = pubmedUrl(p.pmid);
-                                const apa = formatApaPubMed(p);
+                                const url = `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`;
                                 return (
                                   <div
                                     key={p.pmid}
@@ -599,15 +559,18 @@ const ChatPage = () => {
                                         e.preventDefault();
                                         openExternal(url);
                                       }}
-                                      className="flex-1 min-w-0 text-left text-foreground pl-4 -indent-4 leading-relaxed"
+                                      className="flex-1 min-w-0 text-left"
                                     >
-                                      {apa}
+                                      <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
+                                      <span className="text-muted-foreground block mt-0.5">
+                                        {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
+                                      </span>
                                     </a>
                                     <button
                                       type="button"
-                                      aria-label="คัดลอกการอ้างอิง (APA)"
-                                      title="คัดลอกการอ้างอิง (APA)"
-                                      onClick={() => copyText(apa, "คัดลอกการอ้างอิงแล้ว")}
+                                      aria-label="คัดลอกลิงก์"
+                                      title="คัดลอกลิงก์"
+                                      onClick={() => copyLink(url)}
                                       className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
                                     >
                                       <Copy className="w-3 h-3" />
@@ -628,53 +591,52 @@ const ChatPage = () => {
                           )}
                           {msg.sources.thaijo?.length > 0 && (
                             <div className="space-y-1">
-                              {msg.sources.thaijo.map((t) => {
-                                const apa = formatApaThaiJo(t);
-                                return (
-                                  <div
-                                    key={t.url}
-                                    className="flex items-start gap-2 text-xs p-2 rounded-md bg-herb-gold/10 hover:bg-herb-gold/20 transition-colors group"
+                              {msg.sources.thaijo.map((t) => (
+                                <div
+                                  key={t.url}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-herb-gold/10 hover:bg-herb-gold/20 transition-colors group"
+                                >
+                                  <BookOpen className="w-3.5 h-3.5 text-herb-gold mt-0.5 shrink-0" />
+                                  <a
+                                    href={t.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openExternal(t.url);
+                                    }}
+                                    className="flex-1 min-w-0 text-left"
                                   >
-                                    <BookOpen className="w-3.5 h-3.5 text-herb-gold mt-0.5 shrink-0" />
-                                    <a
-                                      href={t.url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        openExternal(t.url);
-                                      }}
-                                      className="flex-1 min-w-0 text-left text-foreground pl-4 -indent-4 leading-relaxed"
-                                    >
-                                      {apa}
-                                    </a>
-                                    <button
-                                      type="button"
-                                      aria-label="คัดลอกการอ้างอิง (APA)"
-                                      title="คัดลอกการอ้างอิง (APA)"
-                                      onClick={() => copyText(apa, "คัดลอกการอ้างอิงแล้ว")}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      aria-label="เปิดลิงก์ในแท็บใหม่"
-                                      title="เปิดลิงก์ในแท็บใหม่"
-                                      onClick={() => openExternal(t.url)}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
+                                    <span className="font-medium text-foreground line-clamp-2">{t.title}</span>
+                                    <span className="text-muted-foreground block mt-0.5">
+                                      {t.authors ? `${t.authors} · ` : ""}{t.journal} · งานวิจัยไทย (ThaiJO)
+                                    </span>
+                                  </a>
+                                  <button
+                                    type="button"
+                                    aria-label="คัดลอกลิงก์"
+                                    title="คัดลอกลิงก์"
+                                    onClick={() => copyLink(t.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="เปิดลิงก์ในแท็บใหม่"
+                                    title="เปิดลิงก์ในแท็บใหม่"
+                                    onClick={() => openExternal(t.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           )}
                         </div>
                       )
                     )}
-
                   </div>
                 </motion.div>
               ))}
