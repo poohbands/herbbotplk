@@ -50,6 +50,7 @@ type ThaiJoSource = {
   authors: string;
   journal: string;
   url: string;
+  year: string;
 };
 
 
@@ -568,11 +569,13 @@ async function searchThaiJoJournal(
     const title = stripTags(linkMatch[2]);
     if (!title) continue;
     const authorsMatch = block.match(/class="authors"\s*>([\s\S]*?)<\/div>/);
+    const yearMatch = stripTags(block).match(/\b(25\d{2}|20\d{2})\b/);
     results.push({
       title,
       authors: authorsMatch ? stripTags(authorsMatch[1]).slice(0, 120) : "",
       journal: journal.name,
       url: linkMatch[1],
+      year: yearMatch ? yearMatch[1] : "",
     });
     if (results.length >= limit) break;
   }

@@ -5,9 +5,10 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
+import { formatApaPubMed, formatApaThaiJo, formatApaInternal, pubmedUrl } from "@/lib/apa";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
-type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
+type ThaiJoSource = { title: string; authors: string; journal: string; url: string; year?: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
 type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
 
@@ -46,6 +47,26 @@ function openExternal(url: string) {
   }
 }
 
+
+async function copyText(text: string, message = "คัดลอกแล้ว") {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success(message);
+  } catch {
+    toast.error("คัดลอกไม่สำเร็จ");
+  }
+}
+
+/** รวมรายการอ้างอิงทั้งหมดของข้อความเป็นข้อความ APA 7 */
+function buildApaList(sources: SourcesPayload): string {
+  const lines: string[] = [];
+  for (const s of sources.internal || []) {
+    lines.push(formatApaInternal(s, `${window.location.origin}/herbs?${s.type}=${s.id}`));
+  }
+  for (const p of sources.pubmed || []) lines.push(formatApaPubMed(p));
+  for (const t of sources.thaijo || []) lines.push(formatApaThaiJo(t));
+  return lines.join("\n");
+}
 
 async function copyLink(url: string) {
   try {
