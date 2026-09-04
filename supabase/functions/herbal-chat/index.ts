@@ -1058,14 +1058,17 @@ serve(async (req) => {
     // ใส่แนวทาง 10 กลุ่มอาการของกระทรวงฯ ให้ด้วย เมื่อเป็นคำถามอาการที่ค้นภายในไม่เจอ
     const includeCommonDisease = isCommonDisease || (intent.type === "symptom" && noInternal);
     const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, includeCommonDisease, aiFallback, thaijo);
+    const thaiRefs = buildThaiRefs(herbs, formulas);
     const sourcesJson = JSON.stringify({
       pubmed,
       thaijo,
+      thai_ref: thaiRefs,
       internal: internalSources,
       knowledge: knowledgeSources,
       ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
+
 
     const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
       ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`
