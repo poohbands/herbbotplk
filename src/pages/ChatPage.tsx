@@ -509,7 +509,7 @@ const ChatPage = () => {
                       </div>
                     )}
                     {msg.role === "assistant" && msg.sources && (
-                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0) && (
+                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0 || msg.sources.thai_ref?.length > 0 || msg.sources.knowledge?.length > 0) && (
                         <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <BookOpen className="w-3.5 h-3.5" />
