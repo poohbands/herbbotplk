@@ -47,6 +47,8 @@ type PubMedSource = {
   authors: string;
   year: string;
   journal: string;
+  pmcid?: string;
+  doi?: string;
 };
 
 type ThaiJoSource = {
@@ -54,7 +56,17 @@ type ThaiJoSource = {
   authors: string;
   journal: string;
   url: string;
+
 };
+
+/** แหล่งอ้างอิงเชิงสถาบันของไทย (ลิงก์ค้นหาไปยังหน่วยงาน/ฐานข้อมูลที่น่าเชื่อถือ) */
+type ThaiRefSource = {
+  name: string;
+  org: string;
+  url: string;
+};
+
+
 
 
 type InternalSource = {
@@ -509,13 +521,19 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
       if (!item) continue;
       const authors = (item.authors || []).slice(0, 3).map((a: any) => a.name).join(", ") + ((item.authors?.length || 0) > 3 ? ", et al." : "");
       const year = (item.pubdate || "").split(" ")[0] || "";
+      const ids: any[] = item.articleids || [];
+      const pmcid = ids.find((a) => a.idtype === "pmc")?.value || "";
+      const doi = ids.find((a) => a.idtype === "doi")?.value || "";
       results.push({
         pmid,
         title: item.title || "",
         authors: authors || "Unknown",
         year,
         journal: item.fulljournalname || item.source || "",
+        ...(pmcid ? { pmcid: String(pmcid) } : {}),
+        ...(doi ? { doi: String(doi) } : {}),
       });
+
     }
     return results;
   } catch (e) {
@@ -526,13 +544,49 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
 
 // ---------- ThaiJO (งานวิจัยไทย) ----------
 
-/** วารสารไทยกลุ่มการแพทย์/เภสัช/สมุนไพร บน ThaiJO (OJS) */
+/** วารสารไทยกลุ่มการแพทย์/เภสัช/สมุนไพร บน ThaiJO (OJS) — ตรวจสอบแล้วว่าค้นได้จริง */
 const THAIJO_JOURNALS = [
   { host: "he01", code: "JTTAM", name: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก" },
   { host: "he01", code: "TJPP", name: "วารสารเภสัชกรรมไทย" },
   { host: "he01", code: "IJPS", name: "วารสารเภสัชศาสตร์อีสาน" },
   { host: "he01", code: "JHR", name: "Journal of Health Research" },
+  { host: "he02", code: "ttm", name: "วารสารหมอยาไทยวิจัย" },
+  { host: "he01", code: "JCHH", name: "วารสารวิชาการกัญชา กัญชง และสมุนไพร" },
 ];
+
+/** แหล่งอ้างอิงเชิงสถาบันของไทย — แสดงเมื่อคำตอบอิงสมุนไพร/ตำรับที่มีในระบบ */
+function buildThaiRefs(herbs: HerbRow[], formulas: FormulaRow[]): ThaiRefSource[] {
+  const names = [
+    ...herbs.slice(0, 2).map((h) => h.name_thai),
+    ...formulas.slice(0, 2).map((f) => f.name_thai),
+  ].filter(Boolean);
+  if (names.length === 0) return [];
+
+  return [
+    {
+      name: "สำนักงานข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
+      org: "ฐานข้อมูลวิชาการสมุนไพรและงานวิจัยที่เกี่ยวข้อง",
+      url: "https://medplant.mahidol.ac.th/",
+    },
+    {
+      name: "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข",
+      org: "แนวทางการใช้ยาสมุนไพรและตำรับยาแผนไทย",
+      url: "https://www.dtam.moph.go.th/",
+    },
+    {
+      name: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+      org: "กระทรวงสาธารณสุข (NLEM)",
+      url: "https://nlem.in.th/",
+    },
+    {
+      name: "ThaiJO — คลังวารสารวิชาการไทย (TCI)",
+      org: "ค้นงานวิจัยไทยฉบับเต็ม",
+      url: "https://www.tci-thaijo.org/",
+    },
+  ];
+
+}
+
 
 const thaijoCache = new Map<string, { at: number; data: ThaiJoSource[] }>();
 const THAIJO_TTL = 10 * 60 * 1000;
@@ -1004,14 +1058,17 @@ serve(async (req) => {
     // ใส่แนวทาง 10 กลุ่มอาการของกระทรวงฯ ให้ด้วย เมื่อเป็นคำถามอาการที่ค้นภายในไม่เจอ
     const includeCommonDisease = isCommonDisease || (intent.type === "symptom" && noInternal);
     const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, includeCommonDisease, aiFallback, thaijo);
+    const thaiRefs = buildThaiRefs(herbs, formulas);
     const sourcesJson = JSON.stringify({
       pubmed,
       thaijo,
+      thai_ref: thaiRefs,
       internal: internalSources,
       knowledge: knowledgeSources,
       ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
+
 
     const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
       ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`

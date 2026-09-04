@@ -6,10 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 
-type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
+type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string; pmcid?: string; doi?: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
+type ThaiRefSource = { name: string; org: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[]; thai_ref?: ThaiRefSource[] };
+
 
 type Message = {
   id: string;
@@ -544,51 +546,77 @@ const ChatPage = () => {
                           {msg.sources.pubmed?.length > 0 && (
                             <div className="space-y-1">
                               {msg.sources.pubmed.map((p) => {
-                                const url = `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`;
+                                const url = `https://europepmc.org/article/MED/${p.pmid}`;
+                                const mirrors = [
+                                  { label: "PubMed", href: `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/` },
+                                  ...(p.pmcid ? [{ label: "ฉบับเต็ม (PMC)", href: `https://www.ncbi.nlm.nih.gov/pmc/articles/${p.pmcid}/` }] : []),
+                                  ...(p.doi ? [{ label: "DOI", href: `https://doi.org/${p.doi}` }] : []),
+                                ];
                                 return (
                                   <div
                                     key={p.pmid}
-                                    className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
+                                    className="text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
                                   >
-                                    <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        openExternal(url);
-                                      }}
-                                      className="flex-1 min-w-0 text-left"
-                                    >
-                                      <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
-                                      <span className="text-muted-foreground block mt-0.5">
-                                        {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
-                                      </span>
-                                    </a>
-                                    <button
-                                      type="button"
-                                      aria-label="คัดลอกลิงก์"
-                                      title="คัดลอกลิงก์"
-                                      onClick={() => copyLink(url)}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      aria-label="เปิดลิงก์ในแท็บใหม่"
-                                      title="เปิดลิงก์ในแท็บใหม่"
-                                      onClick={() => openExternal(url)}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                    </button>
+                                    <div className="flex items-start gap-2">
+                                      <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          openExternal(url);
+                                        }}
+                                        className="flex-1 min-w-0 text-left"
+                                      >
+                                        <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
+                                        <span className="text-muted-foreground block mt-0.5">
+                                          {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
+                                        </span>
+                                      </a>
+                                      <button
+                                        type="button"
+                                        aria-label="คัดลอกลิงก์"
+                                        title="คัดลอกลิงก์"
+                                        onClick={() => copyLink(url)}
+                                        className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        aria-label="เปิดลิงก์ในแท็บใหม่"
+                                        title="เปิดลิงก์ในแท็บใหม่ (Europe PMC)"
+                                        onClick={() => openExternal(url)}
+                                        className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 mt-1 pl-5 text-[11px] text-muted-foreground">
+                                      <span>ลิงก์สำรอง:</span>
+                                      {mirrors.map((m) => (
+                                        <a
+                                          key={m.label}
+                                          href={m.href}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            openExternal(m.href);
+                                          }}
+                                          className="underline underline-offset-2 hover:text-foreground"
+                                        >
+                                          {m.label}
+                                        </a>
+                                      ))}
+                                    </div>
                                   </div>
                                 );
                               })}
                             </div>
                           )}
+
                           {msg.sources.thaijo?.length > 0 && (
                             <div className="space-y-1">
                               {msg.sources.thaijo.map((t) => (
@@ -634,6 +662,51 @@ const ChatPage = () => {
                               ))}
                             </div>
                           )}
+                          {msg.sources.thai_ref?.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-[11px] font-medium text-muted-foreground pt-1">แหล่งอ้างอิงไทยที่น่าเชื่อถือ</p>
+                              {msg.sources.thai_ref.map((r) => (
+                                <div
+                                  key={r.url}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                >
+                                  <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                  <a
+                                    href={r.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openExternal(r.url);
+                                    }}
+                                    className="flex-1 min-w-0 text-left"
+                                  >
+                                    <span className="font-medium text-foreground line-clamp-2">{r.name}</span>
+                                    <span className="text-muted-foreground block mt-0.5">{r.org}</span>
+                                  </a>
+                                  <button
+                                    type="button"
+                                    aria-label="คัดลอกลิงก์"
+                                    title="คัดลอกลิงก์"
+                                    onClick={() => copyLink(r.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="เปิดลิงก์ในแท็บใหม่"
+                                    title="เปิดลิงก์ในแท็บใหม่"
+                                    onClick={() => openExternal(r.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                         </div>
                       )
                     )}
