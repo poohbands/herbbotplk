@@ -6,10 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 
-type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
+type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string; pmcid?: string; doi?: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
+type ThaiRefSource = { name: string; org: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[]; thai_ref?: ThaiRefSource[] };
+
 
 type Message = {
   id: string;
