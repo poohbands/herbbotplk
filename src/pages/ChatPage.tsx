@@ -662,6 +662,51 @@ const ChatPage = () => {
                               ))}
                             </div>
                           )}
+                          {msg.sources.thai_ref?.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-[11px] font-medium text-muted-foreground pt-1">แหล่งอ้างอิงไทยที่น่าเชื่อถือ</p>
+                              {msg.sources.thai_ref.map((r) => (
+                                <div
+                                  key={r.url}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
+                                >
+                                  <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                  <a
+                                    href={r.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      openExternal(r.url);
+                                    }}
+                                    className="flex-1 min-w-0 text-left"
+                                  >
+                                    <span className="font-medium text-foreground line-clamp-2">{r.name}</span>
+                                    <span className="text-muted-foreground block mt-0.5">{r.org}</span>
+                                  </a>
+                                  <button
+                                    type="button"
+                                    aria-label="คัดลอกลิงก์"
+                                    title="คัดลอกลิงก์"
+                                    onClick={() => copyLink(r.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    aria-label="เปิดลิงก์ในแท็บใหม่"
+                                    title="เปิดลิงก์ในแท็บใหม่"
+                                    onClick={() => openExternal(r.url)}
+                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
                         </div>
                       )
                     )}
