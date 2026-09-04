@@ -59,6 +59,15 @@ type ThaiJoSource = {
 
 };
 
+/** แหล่งอ้างอิงเชิงสถาบันของไทย (ลิงก์ค้นหาไปยังหน่วยงาน/ฐานข้อมูลที่น่าเชื่อถือ) */
+type ThaiRefSource = {
+  name: string;
+  org: string;
+  url: string;
+};
+
+
+
 
 type InternalSource = {
   type: "herb" | "formula";
