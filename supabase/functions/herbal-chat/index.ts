@@ -554,25 +554,19 @@ const THAIJO_JOURNALS = [
   { host: "he01", code: "JCHH", name: "วารสารวิชาการกัญชา กัญชง และสมุนไพร" },
 ];
 
-/** แหล่งอ้างอิงเชิงสถาบันของไทย — สร้างลิงก์ค้นหาด้วยชื่อสมุนไพร/ตำรับจริง */
+/** แหล่งอ้างอิงเชิงสถาบันของไทย — แสดงเมื่อคำตอบอิงสมุนไพร/ตำรับที่มีในระบบ */
 function buildThaiRefs(herbs: HerbRow[], formulas: FormulaRow[]): ThaiRefSource[] {
   const names = [
     ...herbs.slice(0, 2).map((h) => h.name_thai),
     ...formulas.slice(0, 2).map((f) => f.name_thai),
   ].filter(Boolean);
   if (names.length === 0) return [];
-  const term = encodeURIComponent(names[0]);
 
   return [
     {
-      name: `ค้น "${names[0]}" ในฐานข้อมูลสำนักงานข้อมูลสมุนไพร`,
-      org: "สำนักงานข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
-      url: `https://medplant.mahidol.ac.th/index.asp?s=${term}`,
-    },
-    {
-      name: `ค้น "${names[0]}" ในฐานข้อมูลเครื่องยาสมุนไพร`,
-      org: "คณะเภสัชศาสตร์ มหาวิทยาลัยอุบลราชธานี",
-      url: `https://www.thaicrudedrug.com/main.php?action=search&keyword=${term}`,
+      name: "สำนักงานข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
+      org: "ฐานข้อมูลวิชาการสมุนไพรและงานวิจัยที่เกี่ยวข้อง",
+      url: "https://medplant.mahidol.ac.th/",
     },
     {
       name: "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข",
@@ -580,16 +574,17 @@ function buildThaiRefs(herbs: HerbRow[], formulas: FormulaRow[]): ThaiRefSource[
       url: "https://www.dtam.moph.go.th/",
     },
     {
-      name: "ตำรามาตรฐานยาสมุนไพรไทย (Thai Herbal Pharmacopoeia)",
-      org: "กรมวิทยาศาสตร์การแพทย์",
-      url: "https://bdn.go.th/thp/",
+      name: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+      org: "กระทรวงสาธารณสุข (NLEM)",
+      url: "https://nlem.in.th/",
     },
     {
-      name: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
-      org: "กระทรวงสาธารณสุข",
-      url: "https://www.nlem.in.th/",
+      name: "ThaiJO — คลังวารสารวิชาการไทย (TCI)",
+      org: "ค้นงานวิจัยไทยฉบับเต็ม",
+      url: "https://www.tci-thaijo.org/",
     },
   ];
+
 }
 
 
