@@ -521,13 +521,19 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
       if (!item) continue;
       const authors = (item.authors || []).slice(0, 3).map((a: any) => a.name).join(", ") + ((item.authors?.length || 0) > 3 ? ", et al." : "");
       const year = (item.pubdate || "").split(" ")[0] || "";
+      const ids: any[] = item.articleids || [];
+      const pmcid = ids.find((a) => a.idtype === "pmc")?.value || "";
+      const doi = ids.find((a) => a.idtype === "doi")?.value || "";
       results.push({
         pmid,
         title: item.title || "",
         authors: authors || "Unknown",
         year,
         journal: item.fulljournalname || item.source || "",
+        ...(pmcid ? { pmcid: String(pmcid) } : {}),
+        ...(doi ? { doi: String(doi) } : {}),
       });
+
     }
     return results;
   } catch (e) {
