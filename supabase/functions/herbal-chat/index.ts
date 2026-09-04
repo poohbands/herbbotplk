@@ -544,13 +544,54 @@ async function fetchPubMed(query: string): Promise<PubMedSource[]> {
 
 // ---------- ThaiJO (งานวิจัยไทย) ----------
 
-/** วารสารไทยกลุ่มการแพทย์/เภสัช/สมุนไพร บน ThaiJO (OJS) */
+/** วารสารไทยกลุ่มการแพทย์/เภสัช/สมุนไพร บน ThaiJO (OJS) — ตรวจสอบแล้วว่าค้นได้จริง */
 const THAIJO_JOURNALS = [
   { host: "he01", code: "JTTAM", name: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก" },
   { host: "he01", code: "TJPP", name: "วารสารเภสัชกรรมไทย" },
   { host: "he01", code: "IJPS", name: "วารสารเภสัชศาสตร์อีสาน" },
   { host: "he01", code: "JHR", name: "Journal of Health Research" },
+  { host: "he02", code: "ttm", name: "วารสารหมอยาไทยวิจัย" },
+  { host: "he01", code: "JCHH", name: "วารสารวิชาการกัญชา กัญชง และสมุนไพร" },
 ];
+
+/** แหล่งอ้างอิงเชิงสถาบันของไทย — สร้างลิงก์ค้นหาด้วยชื่อสมุนไพร/ตำรับจริง */
+function buildThaiRefs(herbs: HerbRow[], formulas: FormulaRow[]): ThaiRefSource[] {
+  const names = [
+    ...herbs.slice(0, 2).map((h) => h.name_thai),
+    ...formulas.slice(0, 2).map((f) => f.name_thai),
+  ].filter(Boolean);
+  if (names.length === 0) return [];
+  const term = encodeURIComponent(names[0]);
+
+  return [
+    {
+      name: `ค้น "${names[0]}" ในฐานข้อมูลสำนักงานข้อมูลสมุนไพร`,
+      org: "สำนักงานข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
+      url: `https://medplant.mahidol.ac.th/index.asp?s=${term}`,
+    },
+    {
+      name: `ค้น "${names[0]}" ในฐานข้อมูลเครื่องยาสมุนไพร`,
+      org: "คณะเภสัชศาสตร์ มหาวิทยาลัยอุบลราชธานี",
+      url: `https://www.thaicrudedrug.com/main.php?action=search&keyword=${term}`,
+    },
+    {
+      name: "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข",
+      org: "แนวทางการใช้ยาสมุนไพรและตำรับยาแผนไทย",
+      url: "https://www.dtam.moph.go.th/",
+    },
+    {
+      name: "ตำรามาตรฐานยาสมุนไพรไทย (Thai Herbal Pharmacopoeia)",
+      org: "กรมวิทยาศาสตร์การแพทย์",
+      url: "https://bdn.go.th/thp/",
+    },
+    {
+      name: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+      org: "กระทรวงสาธารณสุข",
+      url: "https://www.nlem.in.th/",
+    },
+  ];
+}
+
 
 const thaijoCache = new Map<string, { at: number; data: ThaiJoSource[] }>();
 const THAIJO_TTL = 10 * 60 * 1000;
