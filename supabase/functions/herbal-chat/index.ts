@@ -47,6 +47,8 @@ type PubMedSource = {
   authors: string;
   year: string;
   journal: string;
+  pmcid?: string;
+  doi?: string;
 };
 
 type ThaiJoSource = {
@@ -54,6 +56,7 @@ type ThaiJoSource = {
   authors: string;
   journal: string;
   url: string;
+
 };
 
 
