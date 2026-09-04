@@ -707,6 +707,63 @@ const ChatPage = () => {
                               ))}
                             </div>
                           )}
+                          {msg.sources.knowledge?.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-[11px] font-medium text-muted-foreground pt-1">คลังความรู้ในระบบ</p>
+                              {msg.sources.knowledge.map((k) => (
+                                <div
+                                  key={k.id}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 group"
+                                >
+                                  <BookOpen className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    {k.source_url ? (
+                                      <a
+                                        href={k.source_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          openExternal(k.source_url!);
+                                        }}
+                                        className="font-medium text-foreground line-clamp-2 hover:underline"
+                                      >
+                                        {k.title}
+                                      </a>
+                                    ) : (
+                                      <span className="font-medium text-foreground line-clamp-2">{k.title}</span>
+                                    )}
+                                    <span className="text-muted-foreground block mt-0.5">
+                                      {k.source || "เอกสารภายในระบบ"}
+                                    </span>
+                                  </div>
+                                  {k.source_url && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        aria-label="คัดลอกลิงก์"
+                                        title="คัดลอกลิงก์"
+                                        onClick={() => copyLink(k.source_url!)}
+                                        className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        aria-label="เปิดลิงก์ในแท็บใหม่"
+                                        title="เปิดลิงก์ในแท็บใหม่"
+                                        onClick={() => openExternal(k.source_url!)}
+                                        className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
 
                         </div>
                       )
