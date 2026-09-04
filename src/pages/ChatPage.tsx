@@ -665,7 +665,7 @@ const ChatPage = () => {
                           )}
                           {msg.sources.thai_ref?.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-[11px] font-medium text-muted-foreground pt-1">แหล่งอ้างอิงไทยที่น่าเชื่อถือ</p>
+                              <p className="text-[11px] font-medium text-muted-foreground pt-1">ค้นข้อมูลเรื่องนี้เพิ่มเติมจากแหล่งไทยที่น่าเชื่อถือ</p>
                               {msg.sources.thai_ref.map((r) => (
                                 <div
                                   key={r.url}
