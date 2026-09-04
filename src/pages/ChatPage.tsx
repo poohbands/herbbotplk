@@ -9,8 +9,9 @@ import { toast } from "sonner";
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string; pmcid?: string; doi?: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type ThaiRefSource = { name: string; org: string; url: string };
+type KnowledgeSource = { id: string; title: string; category: string; source: string | null; source_url: string | null };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[]; thai_ref?: ThaiRefSource[] };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[]; thai_ref?: ThaiRefSource[]; knowledge?: KnowledgeSource[] };
 
 
 type Message = {
