@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+// ---------- AI Models (เปลี่ยนรุ่นได้ที่นี่จุดเดียว) ----------
+const MODEL_FAST = "google/gemini-3.1-flash-lite";
+const MODEL_MAIN = "google/gemini-3.7-flash";
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -657,7 +661,7 @@ async function classifyIntent(question: string, history: any[], apiKey: string):
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: MODEL_FAST,
         messages: [
           {
             role: "system",
@@ -743,7 +747,7 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: MODEL_MAIN,
         messages: [{ role: "user", content: prompt }],
         stream: false,
         max_tokens: 700,
@@ -1044,7 +1048,7 @@ ${sourcesJson}
 
     // ---- ขั้นที่ 1: ร่างคำตอบ ----
     const response = await callGateway({
-      model: 'google/gemini-2.5-flash',
+      model: MODEL_MAIN,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         contextMessage,
@@ -1081,7 +1085,7 @@ ${sourcesJson}
     if (intent.in_scope && looksRefusal(finalAnswer)) {
       console.log("[herbal-chat] wrong refusal detected → regenerating");
       const retryResp = await callGateway({
-        model: 'google/gemini-2.5-flash',
+        model: MODEL_MAIN,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           contextMessage,
@@ -1107,7 +1111,7 @@ ${sourcesJson}
     if (finalAnswer.trim().length > 0 && !isRefusal) {
       try {
         const verifyResp = await callGateway({
-          model: 'google/gemini-2.5-flash',
+          model: MODEL_MAIN,
           messages: [
             {
               role: 'system',
