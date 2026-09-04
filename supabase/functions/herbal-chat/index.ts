@@ -562,30 +562,30 @@ function buildThaiRefs(herbs: HerbRow[], formulas: FormulaRow[]): ThaiRefSource[
   ].filter(Boolean);
   if (names.length === 0) return [];
 
-  return [
-    {
-      name: "สำนักงานข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
-      org: "ฐานข้อมูลวิชาการสมุนไพรและงานวิจัยที่เกี่ยวข้อง",
-      url: "https://medplant.mahidol.ac.th/",
-    },
-    {
-      name: "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข",
-      org: "แนวทางการใช้ยาสมุนไพรและตำรับยาแผนไทย",
-      url: "https://www.dtam.moph.go.th/",
-    },
-    {
-      name: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
-      org: "กระทรวงสาธารณสุข (NLEM)",
-      url: "https://nlem.in.th/",
-    },
-    {
-      name: "ThaiJO — คลังวารสารวิชาการไทย (TCI)",
-      org: "ค้นงานวิจัยไทยฉบับเต็ม",
-      url: "https://www.tci-thaijo.org/",
-    },
-  ];
+  const refs: ThaiRefSource[] = [];
+  for (const raw of names) {
+    const name = String(raw).trim();
+    const q = encodeURIComponent(name);
+    refs.push({
+      name: `${name} — กรมการแพทย์แผนไทยและการแพทย์ทางเลือก`,
+      org: "เอกสาร/ประกาศของกรมฯ ที่เกี่ยวข้องกับเรื่องนี้",
+      url: `https://www.dtam.moph.go.th/?s=${q}`,
+    });
+    refs.push({
+      name: `${name} — งานวิจัยไทยบน ThaiJO (TCI)`,
+      org: "ผลค้นหาบทความวิชาการไทยฉบับเต็ม",
+      url: `https://he01.tci-thaijo.org/index.php/index/search/search?query=${q}`,
+    });
+    refs.push({
+      name: `${name} — งานวิจัยที่เกี่ยวข้อง (Google Scholar)`,
+      org: "รวมงานวิจัยไทยและต่างประเทศเรื่องนี้",
+      url: `https://scholar.google.com/scholar?q=${q}`,
+    });
+  }
+  return refs;
 
 }
+
 
 
 const thaijoCache = new Map<string, { at: number; data: ThaiJoSource[] }>();

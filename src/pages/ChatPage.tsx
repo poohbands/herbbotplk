@@ -9,8 +9,9 @@ import { toast } from "sonner";
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string; pmcid?: string; doi?: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type ThaiRefSource = { name: string; org: string; url: string };
+type KnowledgeSource = { id: string; title: string; category: string; source: string | null; source_url: string | null };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[]; thai_ref?: ThaiRefSource[] };
+type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[]; thai_ref?: ThaiRefSource[]; knowledge?: KnowledgeSource[] };
 
 
 type Message = {
@@ -508,7 +509,7 @@ const ChatPage = () => {
                       </div>
                     )}
                     {msg.role === "assistant" && msg.sources && (
-                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0) && (
+                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0 || msg.sources.thai_ref?.length > 0 || msg.sources.knowledge?.length > 0) && (
                         <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                             <BookOpen className="w-3.5 h-3.5" />
@@ -664,7 +665,7 @@ const ChatPage = () => {
                           )}
                           {msg.sources.thai_ref?.length > 0 && (
                             <div className="space-y-1">
-                              <p className="text-[11px] font-medium text-muted-foreground pt-1">แหล่งอ้างอิงไทยที่น่าเชื่อถือ</p>
+                              <p className="text-[11px] font-medium text-muted-foreground pt-1">ค้นข้อมูลเรื่องนี้เพิ่มเติมจากแหล่งไทยที่น่าเชื่อถือ</p>
                               {msg.sources.thai_ref.map((r) => (
                                 <div
                                   key={r.url}
@@ -706,6 +707,63 @@ const ChatPage = () => {
                               ))}
                             </div>
                           )}
+                          {msg.sources.knowledge?.length > 0 && (
+                            <div className="space-y-1">
+                              <p className="text-[11px] font-medium text-muted-foreground pt-1">คลังความรู้ในระบบ</p>
+                              {msg.sources.knowledge.map((k) => (
+                                <div
+                                  key={k.id}
+                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 group"
+                                >
+                                  <BookOpen className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    {k.source_url ? (
+                                      <a
+                                        href={k.source_url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          openExternal(k.source_url!);
+                                        }}
+                                        className="font-medium text-foreground line-clamp-2 hover:underline"
+                                      >
+                                        {k.title}
+                                      </a>
+                                    ) : (
+                                      <span className="font-medium text-foreground line-clamp-2">{k.title}</span>
+                                    )}
+                                    <span className="text-muted-foreground block mt-0.5">
+                                      {k.source || "เอกสารภายในระบบ"}
+                                    </span>
+                                  </div>
+                                  {k.source_url && (
+                                    <>
+                                      <button
+                                        type="button"
+                                        aria-label="คัดลอกลิงก์"
+                                        title="คัดลอกลิงก์"
+                                        onClick={() => copyLink(k.source_url!)}
+                                        className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        aria-label="เปิดลิงก์ในแท็บใหม่"
+                                        title="เปิดลิงก์ในแท็บใหม่"
+                                        onClick={() => openExternal(k.source_url!)}
+                                        className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
+                                      >
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
 
                         </div>
                       )
