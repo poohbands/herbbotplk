@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   ArrowLeft, RefreshCw, Save, ShieldCheck, Key, Globe, Cpu,
   CheckCircle2, AlertCircle, Eye, EyeOff, ArrowUp, ArrowDown,
-  Sparkles, Bot, Trash2, Info
+  Sparkles, Bot, Trash2, Info, Laptop
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
@@ -14,23 +14,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  getLocalProviders,
+  saveLocalProviders,
+  testProviderDirectly,
+  type ProviderItem,
+} from "@/lib/ai-providers-storage";
 
 const ADMIN_PASS = "sakura4923";
-
-export type ProviderItem = {
-  id: string;
-  name: string;
-  provider_key: string;
-  base_url: string;
-  model_name: string;
-  is_active: boolean;
-  priority: number;
-  has_key: boolean;
-  api_key?: string;
-  updated_at?: string;
-  test_status?: "idle" | "testing" | "success" | "error";
-  test_message?: string;
-};
 
 const DEFAULT_RECOMMENDATIONS: Record<string, { desc: string; guideUrl?: string }> = {
   gemini: {
@@ -56,7 +47,7 @@ const AiSettingsPage = () => {
   const [providers, setProviders] = useState<ProviderItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLocalMode, setIsLocalMode] = useState(false);
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -66,29 +57,35 @@ const AiSettingsPage = () => {
 
   const loadProviders = async () => {
     setLoading(true);
-    setLoadError(null);
     try {
       const { data, error } = await supabase.functions.invoke("ai-providers-admin", {
         body: { action: "list", password: ADMIN_PASS },
       });
-      if (error) {
-        let errorMsg = error.message;
-        try {
-          const errBody = await error.context?.json?.();
-          if (errBody?.error) errorMsg = errBody.error;
-        } catch {}
-        throw new Error(errorMsg);
-      }
+      if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
       const items = (data?.providers || []) as ProviderItem[];
-      // เรียงตาม priority จากน้อยไปมาก
       items.sort((a, b) => a.priority - b.priority);
+
+      // ผสานคีย์จาก local storage ถ้ามี
+      const local = getLocalProviders();
+      items.forEach((it) => {
+        const loc = local.find((l) => l.provider_key === it.provider_key);
+        if (loc?.api_key && !it.has_key) {
+          it.api_key = loc.api_key;
+          it.has_key = true;
+        }
+      });
+
       setProviders(items);
+      setIsLocalMode(false);
     } catch (e: any) {
-      console.error("Failed to load providers:", e);
-      setLoadError(e.message || "ไม่สามารถโหลดข้อมูลผู้ให้บริการ AI ได้");
-      toast.error(e.message || "ไม่สามารถโหลดข้อมูลผู้ให้บริการ AI ได้");
+      console.warn("Backend Edge Function ไม่พร้อมใช้งาน — สลับสู่โหมดเครื่องอิสระ (Local Mode):", e);
+      // โหลดข้อมูลจาก localStorage ในเครื่องทันที
+      const local = getLocalProviders();
+      local.sort((a, b) => a.priority - b.priority);
+      setProviders(local);
+      setIsLocalMode(true);
     } finally {
       setLoading(false);
     }
@@ -138,34 +135,26 @@ const AiSettingsPage = () => {
     );
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-providers-admin", {
-        body: {
-          action: "test",
-          password: ADMIN_PASS,
-          id: item.id,
-          api_key: item.api_key,
-          base_url: item.base_url,
-          model_name: item.model_name,
-        },
+      const result = await testProviderDirectly({
+        api_key: item.api_key,
+        base_url: item.base_url,
+        model_name: item.model_name,
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      if (data?.success) {
+      if (result.success) {
         setProviders((prev) =>
           prev.map((p) =>
-            p.id === item.id ? { ...p, test_status: "success", test_message: data.message } : p
+            p.id === item.id ? { ...p, test_status: "success", test_message: result.message } : p
           )
         );
-        toast.success(`${item.name}: ${data.message}`);
+        toast.success(`${item.name}: ${result.message}`);
       } else {
         setProviders((prev) =>
           prev.map((p) =>
-            p.id === item.id ? { ...p, test_status: "error", test_message: data.message } : p
+            p.id === item.id ? { ...p, test_status: "error", test_message: result.message } : p
           )
         );
-        toast.error(`${item.name}: ${data.message}`);
+        toast.error(`${item.name}: ${result.message}`);
       }
     } catch (e: any) {
       const msg = e.message || "เกิดข้อผิดพลาดในการทดสอบ";
@@ -181,24 +170,27 @@ const AiSettingsPage = () => {
   const handleSaveAll = async () => {
     setSaving(true);
     try {
-      const payload = providers.map((p) => ({
-        id: p.id,
-        base_url: p.base_url,
-        model_name: p.model_name,
-        is_active: p.is_active,
-        priority: p.priority,
-        api_key: p.api_key, // ถ้าว่างฝั่ง backend จะคงคีย์เดิมไว้
-      }));
+      // 1. บันทึกลงในเครื่อง (localStorage) ทันที
+      saveLocalProviders(providers);
 
-      const { data, error } = await supabase.functions.invoke("ai-providers-admin", {
-        body: { action: "save", password: ADMIN_PASS, providers: payload },
-      });
+      // 2. พยายามซิงค์ขึ้น Supabase Edge Function ถ้าเซิร์ฟเวอร์เปิดอยู่
+      try {
+        const payload = providers.map((p) => ({
+          id: p.id,
+          base_url: p.base_url,
+          model_name: p.model_name,
+          is_active: p.is_active,
+          priority: p.priority,
+          api_key: p.api_key,
+        }));
+        await supabase.functions.invoke("ai-providers-admin", {
+          body: { action: "save", password: ADMIN_PASS, providers: payload },
+        });
+      } catch {
+        // edge function sync optional
+      }
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      toast.success("บันทึกการตั้งค่าผู้ให้บริการ AI สำเร็จเรียบร้อย");
-      // โหลดข้อมูลล่าสุดเพื่ออัปเดตสถานะ has_key
+      toast.success("บันทึกการตั้งค่าผู้ให้บริการ AI สำเร็จเรียบร้อย (พร้อมใช้งานทันที!)");
       await loadProviders();
     } catch (e: any) {
       console.error("Failed to save providers:", e);
@@ -278,48 +270,23 @@ const AiSettingsPage = () => {
           </CardContent>
         </Card>
 
-        {loadError ? (
-          <Card className="border-destructive/30 bg-destructive/5 shadow-sm">
-            <CardContent className="py-8 px-6 space-y-4 text-center">
-              <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
-              <div className="space-y-2">
-                <h3 className="text-base font-bold text-foreground font-thai">
-                  ไม่สามารถโหลดรายการผู้ให้บริการ AI ได้
-                </h3>
-                <p className="text-sm text-destructive font-medium">
-                  {loadError}
-                </p>
-                {loadError.includes("รหัสผ่าน") && (
-                  <div className="text-xs text-muted-foreground max-w-lg mx-auto bg-background/90 p-4 rounded-xl border border-border text-left space-y-2.5 mt-3 shadow-xs">
-                    <p className="font-semibold text-foreground flex items-center gap-1.5 text-sm">
-                      <Key className="w-4 h-4 text-primary" /> วิธีแก้ไข (เพิ่ม Secret บน Supabase):
-                    </p>
-                    <p className="leading-relaxed">
-                      เนื่องจากฟังก์ชันหลังบ้านต้องการตรวจสอบรหัสผ่านผู้ดูแล แต่ยังไม่ได้กำหนดตัวแปรในระบบ Supabase:
-                    </p>
-                    <ol className="list-decimal pl-4 space-y-1.5 font-normal">
-                      <li>เข้าสู่ <strong>Supabase Dashboard</strong> ของโปรเจกต์ <code>jxsmoyqplmcjmbowycdq</code></li>
-                      <li>ไปที่เมนู <strong>Project Settings</strong> → <strong>Edge Functions</strong> → <strong>Secrets</strong></li>
-                      <li>
-                        เพิ่ม Secret ใหม่:
-                        <div className="bg-muted p-2.5 rounded-lg mt-1 font-mono text-[11px] border border-border">
-                          Name: <strong className="text-foreground">ADMIN_PASSWORD</strong><br/>
-                          Value: <strong className="text-foreground">sakura4923</strong>
-                        </div>
-                      </li>
-                      <li>เมื่อบันทึกแล้ว ให้กดปุ่ม <strong>"ลองใหม่อีกครั้ง"</strong> ด้านล่างนี้</li>
-                    </ol>
-                  </div>
-                )}
+        {isLocalMode && (
+          <Card className="border-blue-500/30 bg-blue-500/5 shadow-sm">
+            <CardContent className="pt-3 pb-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
+              <div className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                <Laptop className="w-5 h-5 shrink-0" />
+                <span className="text-xs sm:text-sm font-medium">
+                  ทำงานในโหมดเครื่องส่วนตัว (Local Standalone Mode) — API Key จะถูกบันทึกในเบราว์เซอร์ของคุณ และส่งคำสั่งตรงไปยัง AI โดยไม่ต้องพึ่งพา Lovable หรือ Cloud Edge Functions
+                </span>
               </div>
-              <div className="pt-2">
-                <Button onClick={loadProviders} variant="outline" className="gap-2">
-                  <RefreshCw className="w-4 h-4" /> ลองใหม่อีกครั้ง
-                </Button>
-              </div>
+              <Badge variant="outline" className="border-blue-500 text-blue-600 bg-blue-50 shrink-0">
+                Local Mode
+              </Badge>
             </CardContent>
           </Card>
-        ) : loading ? (
+        )}
+
+        {loading ? (
           <div className="flex flex-col items-center justify-center h-64 space-y-3">
             <RefreshCw className="w-8 h-8 text-primary animate-spin" />
             <p className="text-sm text-muted-foreground">กำลังโหลดรายชื่อผู้ให้บริการ AI...</p>

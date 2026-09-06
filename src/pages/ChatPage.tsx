@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
+import { processLocalChat, hasLocalProviderKey } from "@/lib/local-chat-service";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
@@ -249,102 +250,151 @@ const ChatPage = () => {
       saveMessage(sid, "user", userContent);
     }
 
+    let assistantContent = "";
+    let cleanContent = "";
+    let category = "general";
+    let severity = "none";
+    let sources: SourcesPayload | undefined;
+
     try {
       const allMessages = [...messages, userMsg].map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: allMessages }),
-      });
+      // 1. ถ้ามี Local Provider Key ที่ตั้งค่าไว้ ให้เรียกผ่าน Direct Local Service ทันที
+      if (hasLocalProviderKey()) {
+        const fullResponse = await processLocalChat(userContent, allMessages);
+        const parsed = parseMetadata(fullResponse);
+        cleanContent = parsed.cleanContent;
+        category = parsed.category;
+        severity = parsed.severity;
+        sources = parsed.sources;
 
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Error ${resp.status}`);
-      }
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: cleanContent,
+            category,
+            severity,
+            sources,
+            timestamp: new Date(),
+          },
+        ]);
+      } else {
+        // 2. พยายามเรียก Cloud Edge Function ถ้ามี
+        let usedCloud = false;
+        try {
+          const resp = await fetch(CHAT_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ messages: allMessages }),
+          });
 
-      if (!resp.body) throw new Error("No response body");
+          if (resp.ok && resp.body) {
+            usedCloud = true;
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let textBuffer = "";
+            let streamDone = false;
 
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let assistantContent = "";
-      let streamDone = false;
+            while (!streamDone) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              textBuffer += decoder.decode(value, { stream: true });
 
-      while (!streamDone) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
+              let newlineIndex: number;
+              while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+                let line = textBuffer.slice(0, newlineIndex);
+                textBuffer = textBuffer.slice(newlineIndex + 1);
+                if (line.endsWith("\r")) line = line.slice(0, -1);
+                if (line.startsWith(":") || line.trim() === "") continue;
+                if (!line.startsWith("data: ")) continue;
 
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            streamDone = true;
-            break;
-          }
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) {
-              assistantContent += content;
-              setMessages((prev) => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) =>
-                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
-                  );
+                const jsonStr = line.slice(6).trim();
+                if (jsonStr === "[DONE]") {
+                  streamDone = true;
+                  break;
                 }
-                return [
-                  ...prev,
-                  {
-                    id: (Date.now() + 1).toString(),
-                    role: "assistant",
-                    content: assistantContent,
-                    timestamp: new Date(),
-                  },
-                ];
-              });
+
+                try {
+                  const parsed = JSON.parse(jsonStr);
+                  const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+                  if (content) {
+                    assistantContent += content;
+                    setMessages((prev) => {
+                      const last = prev[prev.length - 1];
+                      if (last?.role === "assistant") {
+                        return prev.map((m, i) =>
+                          i === prev.length - 1 ? { ...m, content: assistantContent } : m
+                        );
+                      }
+                      return [
+                        ...prev,
+                        {
+                          id: (Date.now() + 1).toString(),
+                          role: "assistant",
+                          content: assistantContent,
+                          timestamp: new Date(),
+                        },
+                      ];
+                    });
+                  }
+                } catch {
+                  textBuffer = line + "\n" + textBuffer;
+                  break;
+                }
+              }
             }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
+
+            const parsed = parseMetadata(assistantContent);
+            cleanContent = parsed.cleanContent;
+            category = parsed.category;
+            severity = parsed.severity;
+            sources = parsed.sources;
+
+            setMessages((prev) =>
+              prev.map((m, i) =>
+                i === prev.length - 1 && m.role === "assistant"
+                  ? { ...m, content: cleanContent, category, severity, sources }
+                  : m
+              )
+            );
           }
+        } catch {
+          usedCloud = false;
+        }
+
+        // 3. ถ้า Cloud ล้มเหลว (เช่น เครดิต Lovable หมด / ไม่มีคีย์) และเครื่องยังไม่ได้ใส่คีย์
+        if (!usedCloud) {
+          cleanContent = `🌿 **ยินดีต้อนรับสู่ HerbBot PLK (หมอยาพิษณุโลก)!**\n\nขณะนี้ระบบทำงานใน **โหมดเครื่องส่วนตัว (Local Standalone Mode)** เนื่องจากฟังก์ชันบน Cloud หรือเครดิต Lovable ไม่พร้อมใช้งาน\n\n💡 **วิธีเปิดใช้งานให้หมอยาตอบคำถามได้ทันที (ฟรี):**\n1. ไปที่เมนู **[⚙️ ตั้งค่า AI](/admin/ai-settings)** (รหัสผ่านเข้าหน้า: \`sakura4923\`)\n2. รับ API Key ฟรีจาก **[Google AI Studio](https://aistudio.google.com/app/apikey)**\n3. นำคีย์มาวางในช่อง **Google Gemini** แล้วกด **"ทดสอบ"** และกด **"บันทึกการตั้งค่า"**\n\nเมื่อบันทึกแล้ว คุณสามารถพิมพ์ปรึกษาสรรพคุณสมุนไพรและตำรับยากับหมอยาพิษณุโลกได้ทันทีครับ! 🩺`;
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: cleanContent,
+              category: "general",
+              severity: "none",
+              timestamp: new Date(),
+            },
+          ]);
         }
       }
 
-      // Parse metadata and save
-      const { cleanContent, category, severity, herbs, drugs, sources } = parseMetadata(assistantContent);
-
-      // Update final message with clean content
-      setMessages((prev) =>
-        prev.map((m, i) =>
-          i === prev.length - 1 && m.role === "assistant"
-            ? { ...m, content: cleanContent, category, severity, sources }
-            : m
-        )
-      );
-
-      if (sid) {
+      if (sid && cleanContent) {
         const flatSources = [
           ...(sources?.pubmed || []).map((p) => `PMID:${p.pmid}`),
           ...(sources?.internal || []).map((i) => `${i.type}:${i.id}`),
           ...(sources?.thaijo || []).map((t) => `thaijo:${t.url}`),
         ];
-        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs, drugs, sources: flatSources });
+        saveMessage(sid, "assistant", cleanContent, { category, severity, herbs: [], drugs: [], sources: flatSources });
       }
     } catch (e: any) {
       console.error("Chat error:", e);
