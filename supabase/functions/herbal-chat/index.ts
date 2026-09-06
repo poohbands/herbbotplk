@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { aiComplete, loadActiveProviders, AllProvidersFailedError, type ProviderRow } from "../_shared/ai-router.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -643,7 +644,7 @@ function buildThaiJoQuery(question: string, herbs: HerbRow[], formulas: FormulaR
  * จำแนกเจตนาคำถามด้วยโมเดลเร็ว — ใช้ตัดสินว่าอยู่ในขอบเขตหรือไม่
  * และสกัด "อาการ / ชื่อสมุนไพร / ชื่อยา" เพื่อใช้เป็นคำค้นเข้าฐานข้อมูล
  */
-async function classifyIntent(question: string, history: any[], apiKey: string): Promise<QuestionIntent> {
+async function classifyIntent(question: string, history: any[], providers: ProviderRow[]): Promise<QuestionIntent> {
   const fallbackIntent: QuestionIntent = {
     in_scope: true, type: "unknown", symptoms: [], herbs: [], drugs: [], is_follow_up: false, wants_list: false,
   };
@@ -653,12 +654,11 @@ async function classifyIntent(question: string, history: any[], apiKey: string):
       .map((m: any) => `${m.role}: ${String(m.content || "").slice(0, 300)}`)
       .join("\n");
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
-        messages: [
+    const aiRes = await aiComplete(providers, {
+      light: true,
+      timeoutMs: 12000,
+      response_format: { type: "json_object" },
+      messages: [
           {
             role: "system",
             content: `คุณคือตัวจำแนกเจตนาคำถามของระบบให้คำปรึกษาด้านยาสมุนไพรไทยและ Drug Interaction
@@ -674,17 +674,9 @@ async function classifyIntent(question: string, history: any[], apiKey: string):
 - wants_list = true เมื่อผู้ใช้ขอรายชื่อ/รายการ`,
           },
           { role: "user", content: `บทสนทนาก่อนหน้า:\n${recent || "(ไม่มี)"}\n\nคำถามล่าสุด: "${question}"` },
-        ],
-        response_format: { type: "json_object" },
-      }),
-      signal: AbortSignal.timeout(8000),
+      ],
     });
-    if (!resp.ok) {
-      console.error("[herbal-chat] intent classify failed:", resp.status);
-      return fallbackIntent;
-    }
-    const data = await resp.json();
-    const raw = data?.choices?.[0]?.message?.content || "{}";
+    const raw = aiRes.text || "{}";
     const parsed = JSON.parse(raw.replace(/^```json\s*|```$/g, "").trim());
     return {
       in_scope: parsed.in_scope !== false,
@@ -708,7 +700,7 @@ async function classifyIntent(question: string, history: any[], apiKey: string):
  * (จากข้อมูลที่โมเดลได้รับการฝึกมา — ไม่ใช่ค้นเว็บสด)
  * ผลลัพธ์จะถูกแนบเข้า context พร้อม disclaimer ชัดเจน
  */
-async function fetchAiFallback(question: string, apiKey: string): Promise<AiFallback> {
+async function fetchAiFallback(question: string, providers: ProviderRow[]): Promise<AiFallback> {
   try {
     const prompt = `คุณคือผู้เชี่ยวชาญด้านเภสัชกรรมไทยและบัญชียาหลักแห่งชาติด้านสมุนไพร
 
@@ -736,27 +728,12 @@ async function fetchAiFallback(question: string, apiKey: string): Promise<AiFall
 
 ถ้าคำถามไม่ได้เกี่ยวกับสมุนไพร ยาแผนไทย หรือยาใดๆ เลย ให้ตอบเพียง: "NO_RELEVANT_INFO"`;
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "user", content: prompt }],
-        stream: false,
-        max_tokens: 700,
-      }),
-      signal: AbortSignal.timeout(8000),
+    const aiRes = await aiComplete(providers, {
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 700,
+      timeoutMs: 20000,
     });
-
-    if (!resp.ok) {
-      console.error("[herbal-chat] fallback ai failed:", resp.status);
-      return { summary: "", used: false };
-    }
-    const data = await resp.json();
-    const text: string = data?.choices?.[0]?.message?.content?.trim() || "";
+    const text: string = (aiRes.text || "").trim();
     if (!text || text.includes("NO_RELEVANT_INFO") || text.length < 40) {
       return { summary: "", used: false };
     }
@@ -931,8 +908,6 @@ serve(async (req) => {
 
   try {
     const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not configured');
 
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
     const question: string = lastUserMsg?.content || "";
@@ -941,10 +916,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // ผู้ให้บริการ AI ที่เปิดใช้งาน เรียงตามลำดับความสำคัญ (ใช้สลับอัตโนมัติเมื่อเจ้าแรกล่ม)
+    const providers = await loadActiveProviders(supabase);
+    console.log("[herbal-chat] active providers:", providers.map((p) => `${p.priority}:${p.name}`).join(", ") || "(none — ใช้ AI ภายในระบบ)");
+
     const isCommonDisease = isCommonDiseaseQuestion(question);
 
     // ขั้นที่ 0: ให้ AI จำแนกเจตนา + สกัดคำอาการ/ชื่อยา ก่อนค้นข้อมูล
-    const intent = await classifyIntent(question, messages, LOVABLE_API_KEY);
+    const intent = await classifyIntent(question, messages, providers);
     console.log("[herbal-chat] intent:", JSON.stringify(intent));
 
     // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
@@ -982,7 +961,7 @@ serve(async (req) => {
     const isFollowUp = hasHistory && intent.is_follow_up;
     if (noInternal && pubmed.length === 0 && thaijo.length === 0 && !isCommonDisease && !isFollowUp && intent.in_scope) {
       console.log("[herbal-chat] triggering AI fallback (no internal/pubmed match)");
-      aiFallback = await fetchAiFallback(question, LOVABLE_API_KEY);
+      aiFallback = await fetchAiFallback(question, providers);
       console.log("[herbal-chat] AI fallback used:", aiFallback.used, "len:", aiFallback.summary.length);
     } else if (isFollowUp) {
       console.log("[herbal-chat] skip AI fallback (follow-up question)");
