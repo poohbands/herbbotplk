@@ -37,7 +37,7 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
     name: "Google Gemini",
     provider_key: "gemini",
     base_url: "https://generativelanguage.googleapis.com/v1beta/openai",
-    model_name: "gemini-2.0-flash",
+    model_name: "gemini-2.5-flash",
     is_active: true,
     priority: 1,
     has_key: Boolean(ENV_GEMINI_KEY),
@@ -152,16 +152,20 @@ export async function testProviderDirectly(provider: {
   }
 
   const endpoint = url.endsWith("/chat/completions") ? url : `${url}/chat/completions`;
+  const isGoogle = url.includes("google") || provider.base_url?.includes("generativelanguage");
 
-  const modelsToTry = [model || "gemini-2.0-flash"];
-  if (modelsToTry[0] !== "gemini-2.0-flash" && url.includes("google")) {
-    modelsToTry.push("gemini-2.0-flash");
+  const modelsToTry = [model || (isGoogle ? "gemini-2.5-flash" : "deepseek-chat")];
+  if (isGoogle) {
+    ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"].forEach((cand) => {
+      if (!modelsToTry.includes(cand)) modelsToTry.push(cand);
+    });
   }
 
   let lastStatus = 0;
   let lastErr = "";
 
-  for (const m of modelsToTry) {
+  for (let i = 0; i < modelsToTry.length; i++) {
+    const m = modelsToTry[i];
     try {
       const resp = await fetch(endpoint, {
         method: "POST",
@@ -180,20 +184,37 @@ export async function testProviderDirectly(provider: {
       lastStatus = resp.status;
       if (!resp.ok) {
         lastErr = await resp.text().catch(() => "");
-        if ((resp.status === 503 || resp.status === 429) && modelsToTry.length > 1 && m !== "gemini-2.0-flash") {
+        let errorMsg = lastErr;
+        try {
+          const parsed = JSON.parse(lastErr);
+          if (Array.isArray(parsed) && parsed[0]?.error?.message) {
+            errorMsg = parsed[0].error.message;
+          } else if (parsed?.error?.message) {
+            errorMsg = parsed.error.message;
+          }
+        } catch {}
+
+        // ดึงชื่อโมเดลที่ Google แนะนำใน Error message ถ้ามี
+        const match = errorMsg.match(/use models\/([a-zA-Z0-9._-]+)/i);
+        if (match && match[1] && !modelsToTry.includes(match[1])) {
+          modelsToTry.splice(i + 1, 0, match[1]);
           continue;
         }
+
+        // หากเป็น 404 (ไม่มีโมเดลนี้แล้ว) หรือ 503/429 และยังมีโมเดลอื่นให้ลอง
+        if ((resp.status === 404 || resp.status === 503 || resp.status === 429) && i < modelsToTry.length - 1) {
+          continue;
+        }
+
         return {
           success: false,
-          message: `HTTP ${resp.status}: ${lastErr.slice(0, 150) || "การเชื่อมต่อถูกปฏิเสธ"}${
-            resp.status === 503 ? " (โมเดลนี้มีผู้ใช้หนาแน่น แนะนำเปลี่ยนชื่อโมเดลเป็น gemini-2.0-flash)" : ""
-          }`,
+          message: `HTTP ${resp.status}: ${errorMsg.slice(0, 300) || "การเชื่อมต่อถูกปฏิเสธ"}`,
         };
       }
 
       const data = await resp.json();
       const reply = data?.choices?.[0]?.message?.content || "OK";
-      const switchedNotice = m !== model ? ` (ปรับใช้ ${m} เพื่อเลี่ยงคิวหนาแน่น)` : "";
+      const switchedNotice = m !== model ? ` (ปรับใช้โมเดล ${m} ให้อัตโนมัติ)` : "";
       return {
         success: true,
         message: `เชื่อมต่อสำเร็จ! AI ตอบกลับ: "${reply.slice(0, 50).trim()}"${switchedNotice}`,
@@ -209,6 +230,6 @@ export async function testProviderDirectly(provider: {
 
   return {
     success: false,
-    message: `HTTP ${lastStatus}: ${lastErr.slice(0, 150)}`,
+    message: `HTTP ${lastStatus}: ${lastErr.slice(0, 300)}`,
   };
 }

@@ -148,9 +148,9 @@ export async function processLocalChat(
     }
 
     const isGoogle = baseUrl.includes("google") || provider.provider_key === "gemini";
-    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-2.0-flash" : "deepseek-chat");
+    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-2.5-flash" : "deepseek-chat");
     const modelCandidates = isGoogle
-      ? Array.from(new Set([configuredModel, "gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-flash"]))
+      ? Array.from(new Set([configuredModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]))
       : [configuredModel];
 
     for (const modelToUse of modelCandidates) {
@@ -168,8 +168,8 @@ export async function processLocalChat(
           }),
         });
 
-        if (resp.status === 503 || resp.status === 429) {
-          console.warn(`Model ${modelToUse} returned HTTP ${resp.status} (High Demand). Trying next candidate...`);
+        if (resp.status === 404 || resp.status === 503 || resp.status === 429) {
+          console.warn(`Model ${modelToUse} returned HTTP ${resp.status}. Trying next candidate...`);
           continue;
         }
 

@@ -437,14 +437,14 @@ const AiSettingsPage = () => {
                             type="text"
                             value={item.model_name || ""}
                             onChange={(e) => handleFieldChange(item.id, "model_name", e.target.value)}
-                            placeholder="gemini-2.0-flash"
+                            placeholder="gemini-2.5-flash"
                             className="font-mono text-xs"
                           />
                           {item.provider_key === "gemini" && (
                             <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
                               <span className="text-muted-foreground text-[10px]">เลือกรวดเร็ว:</span>
                               {[
-                                { id: "gemini-2.0-flash", label: "2.0 Flash (แนะนำ ⚡ เร็ว/ไม่ติดคิว)" },
+                                { id: "gemini-2.5-flash", label: "2.5 Flash (แนะนำ ⚡ ล่าสุด)" },
                                 { id: "gemini-1.5-flash", label: "1.5 Flash" },
                                 { id: "gemini-1.5-flash-8b", label: "1.5-8B (ประหยัด)" },
                               ].map((m) => (
