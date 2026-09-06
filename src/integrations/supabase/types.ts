@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_providers: {
+        Row: {
+          api_key: string | null
+          base_url: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          model_name: string
+          name: string
+          priority: number
+          provider_key: string
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string | null
+          base_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model_name: string
+          name: string
+          priority?: number
+          provider_key: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string | null
+          base_url?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          model_name?: string
+          name?: string
+          priority?: number
+          provider_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           category: Database["public"]["Enums"]["question_category"] | null
