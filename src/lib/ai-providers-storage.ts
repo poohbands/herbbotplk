@@ -13,6 +13,9 @@ export type ProviderItem = {
   test_message?: string;
 };
 
+const ENV_GEMINI_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim() || "";
+const ENV_DEEPSEEK_KEY = (import.meta.env.VITE_DEEPSEEK_API_KEY as string | undefined)?.trim() || "";
+
 export const DEFAULT_PROVIDERS: ProviderItem[] = [
   {
     id: "gemini-default",
@@ -22,7 +25,8 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
     model_name: "gemini-2.0-flash",
     is_active: true,
     priority: 1,
-    has_key: false,
+    has_key: Boolean(ENV_GEMINI_KEY),
+    api_key: ENV_GEMINI_KEY || undefined,
   },
   {
     id: "deepseek-default",
@@ -30,9 +34,10 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
     provider_key: "deepseek",
     base_url: "https://api.deepseek.com",
     model_name: "deepseek-chat",
-    is_active: false,
+    is_active: Boolean(ENV_DEEPSEEK_KEY),
     priority: 2,
-    has_key: false,
+    has_key: Boolean(ENV_DEEPSEEK_KEY),
+    api_key: ENV_DEEPSEEK_KEY || undefined,
   },
   {
     id: "openrouter-default",
@@ -64,6 +69,23 @@ export function getLocalProviders(): ProviderItem[] {
     if (!raw) return DEFAULT_PROVIDERS;
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) {
+      // ซิงค์คีย์ส่วนกลางจาก ENV หากในเครื่องยังไม่ได้ตั้งคีย์เฉพาะ
+      if (ENV_GEMINI_KEY) {
+        const gem = parsed.find((p: ProviderItem) => p.provider_key === "gemini");
+        if (gem && (!gem.api_key || gem.api_key === "__CLEAR__")) {
+          gem.api_key = ENV_GEMINI_KEY;
+          gem.has_key = true;
+          gem.is_active = true;
+        }
+      }
+      if (ENV_DEEPSEEK_KEY) {
+        const deep = parsed.find((p: ProviderItem) => p.provider_key === "deepseek");
+        if (deep && (!deep.api_key || deep.api_key === "__CLEAR__")) {
+          deep.api_key = ENV_DEEPSEEK_KEY;
+          deep.has_key = true;
+          deep.is_active = true;
+        }
+      }
       return parsed;
     }
   } catch (e) {
