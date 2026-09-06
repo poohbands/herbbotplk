@@ -212,12 +212,22 @@ export async function processLocalChat(
   }
 
   // เพิ่ม Sources Payload ในคำตอบ
-  const sourcesPayload = {
+  const sourcesPayload: any = {
     internal: [
       ...matchedHerbs.map((h) => ({ type: "herb", id: h.id, name: h.name_thai })),
       ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
     ],
   };
+
+  if (matchedHerbs.length === 0 && matchedFormulas.length === 0 && allKnowledge.length > 0) {
+    sourcesPayload.knowledge = allKnowledge.slice(0, 2).map((k: any) => ({
+      id: k.id,
+      title: k.title,
+      category: k.category,
+      source: "คู่มือ 10 กลุ่มอาการ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      source_url: k.source_url || undefined,
+    }));
+  }
 
   const finalResponse = `${answer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
 

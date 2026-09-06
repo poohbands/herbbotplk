@@ -10,7 +10,15 @@ import { processLocalChat, hasLocalProviderKey } from "@/lib/local-chat-service"
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type SourcesPayload = { pubmed: PubMedSource[]; internal: InternalSource[]; thaijo?: ThaiJoSource[] };
+type KnowledgeSource = { id: string; title: string; category?: string; source?: string; source_url?: string };
+type SourcesPayload = {
+  pubmed?: PubMedSource[];
+  internal?: InternalSource[];
+  thaijo?: ThaiJoSource[];
+  knowledge?: KnowledgeSource[];
+  policy?: string[];
+  ai_fallback?: string[];
+};
 
 type Message = {
   id: string;
@@ -535,8 +543,10 @@ const ChatPage = () => {
                                   e.preventDefault();
                                   if (href) openExternal(href);
                                 }}
+                                className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:text-primary/80 font-medium"
                               >
-                                {children}
+                                <span>{children}</span>
+                                <ExternalLink className="w-3 h-3 inline-block shrink-0" />
                               </a>
                             ),
                           }}
@@ -556,137 +566,197 @@ const ChatPage = () => {
                       </div>
                     )}
                     {msg.role === "assistant" && msg.sources && (
-                      (msg.sources.pubmed?.length > 0 || msg.sources.internal?.length > 0 || msg.sources.thaijo?.length > 0) && (
-                        <div className="mt-3 pt-3 border-t border-border/60 space-y-2">
+                      ((msg.sources.pubmed && msg.sources.pubmed.length > 0) ||
+                       (msg.sources.internal && msg.sources.internal.length > 0) ||
+                       (msg.sources.thaijo && msg.sources.thaijo.length > 0) ||
+                       (msg.sources.knowledge && msg.sources.knowledge.length > 0)) && (
+                        <div className="mt-3 pt-3 border-t border-border/60 space-y-2.5">
                           <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <BookOpen className="w-3.5 h-3.5" />
+                            <BookOpen className="w-3.5 h-3.5 text-primary" />
                             <span>แหล่งอ้างอิงที่ตรวจสอบได้</span>
                           </div>
-                          {msg.sources.internal?.length > 0 && (
-                            <div className="space-y-1">
+
+                          {/* 1. ฐานข้อมูลภายใน (สมุนไพรเดี่ยว / ตำรับยาแผนไทย สสจ.พิษณุโลก) */}
+                          {msg.sources.internal && msg.sources.internal.length > 0 && (
+                            <div className="space-y-1.5">
                               {msg.sources.internal.map((s) => {
-                                const url = `${window.location.origin}/herbs?${s.type}=${s.id}`;
-                                return (
-                                  <a
-                                    key={`${s.type}-${s.id}`}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      openExternal(url);
-                                    }}
-                                    className="flex items-start gap-2 text-xs p-2 rounded-md bg-primary/5 hover:bg-primary/10 transition-colors group"
-                                  >
-                                    <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
-                                    <span className="flex-1">
-                                      <span className="font-medium text-foreground">{s.name}</span>
-                                      <span className="text-muted-foreground ml-1">
-                                        — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูลภายใน)
-                                      </span>
-                                    </span>
-                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                                  </a>
-                                );
-                              })}
-                            </div>
-                          )}
-                          {msg.sources.pubmed?.length > 0 && (
-                            <div className="space-y-1">
-                              {msg.sources.pubmed.map((p) => {
-                                const url = `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`;
+                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.id)}`;
                                 return (
                                   <div
-                                    key={p.pmid}
-                                    className="flex items-start gap-2 text-xs p-2 rounded-md bg-muted/50 hover:bg-muted transition-colors group"
+                                    key={`${s.type}-${s.id}`}
+                                    className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-primary/5 hover:bg-primary/10 border border-primary/15 transition-all"
                                   >
-                                    <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        openExternal(url);
-                                      }}
-                                      className="flex-1 min-w-0 text-left"
-                                    >
-                                      <span className="font-medium text-foreground line-clamp-2">{p.title}</span>
-                                      <span className="text-muted-foreground block mt-0.5">
-                                        {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
-                                      </span>
-                                    </a>
-                                    <button
-                                      type="button"
-                                      aria-label="คัดลอกลิงก์"
-                                      title="คัดลอกลิงก์"
-                                      onClick={() => copyLink(url)}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <Copy className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      aria-label="เปิดลิงก์ในแท็บใหม่"
-                                      title="เปิดลิงก์ในแท็บใหม่"
-                                      onClick={() => openExternal(url)}
-                                      className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                    </button>
+                                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                                      <Leaf className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                                      <div className="min-w-0">
+                                        <span className="font-medium text-foreground">{s.name}</span>
+                                        <span className="text-muted-foreground ml-1.5">
+                                          — {s.type === "herb" ? "สมุนไพร" : "ตำรับยาแผนไทย"} (ฐานข้อมูล สสจ.พิษณุโลก)
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        aria-label="คัดลอกลิงก์"
+                                        title="คัดลอกลิงก์"
+                                        onClick={() => copyLink(url)}
+                                        className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => openExternal(url)}
+                                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-colors cursor-pointer"
+                                        title="เปิดเอกสารข้อมูลสมุนไพร/ตำรับยา"
+                                      >
+                                        <span>เปิดเอกสาร</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </div>
                                   </div>
                                 );
                               })}
                             </div>
                           )}
-                          {msg.sources.thaijo?.length > 0 && (
-                            <div className="space-y-1">
+
+                          {/* 2. งานวิจัยสากล PubMed */}
+                          {msg.sources.pubmed && msg.sources.pubmed.length > 0 && (
+                            <div className="space-y-1.5">
+                              {msg.sources.pubmed.map((p) => {
+                                const url = `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`;
+                                return (
+                                  <div
+                                    key={p.pmid}
+                                    className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-muted/50 hover:bg-muted border border-border/40 transition-all"
+                                  >
+                                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                                      <FlaskConical className="w-3.5 h-3.5 text-herb-earth mt-0.5 shrink-0" />
+                                      <div className="min-w-0">
+                                        <span className="font-medium text-foreground line-clamp-1">{p.title}</span>
+                                        <span className="text-muted-foreground block text-[11px] mt-0.5">
+                                          {p.authors} · {p.journal} {p.year && `(${p.year})`} · PMID: {p.pmid}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        aria-label="คัดลอกลิงก์"
+                                        title="คัดลอกลิงก์"
+                                        onClick={() => copyLink(url)}
+                                        className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => openExternal(url)}
+                                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-colors cursor-pointer"
+                                        title="เปิดเอกสารงานวิจัย PubMed"
+                                      >
+                                        <span>เปิดเอกสาร</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* 3. งานวิจัยไทย ThaiJO */}
+                          {msg.sources.thaijo && msg.sources.thaijo.length > 0 && (
+                            <div className="space-y-1.5">
                               {msg.sources.thaijo.map((t) => (
                                 <div
                                   key={t.url}
-                                  className="flex items-start gap-2 text-xs p-2 rounded-md bg-herb-gold/10 hover:bg-herb-gold/20 transition-colors group"
+                                  className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-herb-gold/10 hover:bg-herb-gold/20 border border-herb-gold/25 transition-all"
                                 >
-                                  <BookOpen className="w-3.5 h-3.5 text-herb-gold mt-0.5 shrink-0" />
-                                  <a
-                                    href={t.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      openExternal(t.url);
-                                    }}
-                                    className="flex-1 min-w-0 text-left"
-                                  >
-                                    <span className="font-medium text-foreground line-clamp-2">{t.title}</span>
-                                    <span className="text-muted-foreground block mt-0.5">
-                                      {t.authors ? `${t.authors} · ` : ""}{t.journal} · งานวิจัยไทย (ThaiJO)
-                                    </span>
-                                  </a>
-                                  <button
-                                    type="button"
-                                    aria-label="คัดลอกลิงก์"
-                                    title="คัดลอกลิงก์"
-                                    onClick={() => copyLink(t.url)}
-                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                  >
-                                    <Copy className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    aria-label="เปิดลิงก์ในแท็บใหม่"
-                                    title="เปิดลิงก์ในแท็บใหม่"
-                                    onClick={() => openExternal(t.url)}
-                                    className="shrink-0 p-1 rounded hover:bg-background/80 text-muted-foreground opacity-60 group-hover:opacity-100"
-                                  >
-                                    <ExternalLink className="w-3 h-3" />
-                                  </button>
+                                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                                    <BookOpen className="w-3.5 h-3.5 text-herb-gold mt-0.5 shrink-0" />
+                                    <div className="min-w-0">
+                                      <span className="font-medium text-foreground line-clamp-1">{t.title}</span>
+                                      <span className="text-muted-foreground block text-[11px] mt-0.5">
+                                        {t.authors ? `${t.authors} · ` : ""}{t.journal} · งานวิจัยไทย (ThaiJO)
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    <button
+                                      type="button"
+                                      aria-label="คัดลอกลิงก์"
+                                      title="คัดลอกลิงก์"
+                                      onClick={() => copyLink(t.url)}
+                                      className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
+                                    >
+                                      <Copy className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => openExternal(t.url)}
+                                      className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-herb-gold/90 text-white hover:bg-herb-gold shadow-xs transition-colors cursor-pointer"
+                                      title="เปิดเอกสารงานวิจัย ThaiJO"
+                                    >
+                                      <span>เปิดเอกสาร</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </button>
+                                  </div>
                                 </div>
                               ))}
                             </div>
                           )}
 
-                          {/* บล็อกแสดงรายการอ้างอิงตามมาตรฐาน APA 7th Edition */}
-                          <div className="mt-2.5 pt-2.5 border-t border-border/40 bg-muted/40 p-2.5 rounded-lg space-y-1.5">
+                          {/* 4. เอกสารองค์ความรู้และคู่มือกระทรวงสาธารณสุข */}
+                          {msg.sources.knowledge && msg.sources.knowledge.length > 0 && (
+                            <div className="space-y-1.5">
+                              {msg.sources.knowledge.map((k) => {
+                                const url = k.source_url || `${window.location.origin}/admin/knowledge`;
+                                return (
+                                  <div
+                                    key={k.id}
+                                    className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-all"
+                                  >
+                                    <div className="flex items-start gap-2 min-w-0 flex-1">
+                                      <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                                      <div className="min-w-0">
+                                        <span className="font-medium text-foreground line-clamp-1">{k.title}</span>
+                                        <span className="text-muted-foreground block text-[11px] mt-0.5">
+                                          {k.source || "คู่มือและแนวทางการแพทย์แผนไทย"} {k.category && `(${k.category})`}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      {k.source_url && (
+                                        <button
+                                          type="button"
+                                          aria-label="คัดลอกลิงก์"
+                                          title="คัดลอกลิงก์"
+                                          onClick={() => copyLink(k.source_url!)}
+                                          className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
+                                        >
+                                          <Copy className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                      <button
+                                        type="button"
+                                        onClick={() => openExternal(url)}
+                                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer"
+                                        title="เปิดเอกสารองค์ความรู้"
+                                      >
+                                        <span>เปิดเอกสาร</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {/* บล็อกแสดงรายการอ้างอิงตามมาตรฐาน APA 7th Edition พร้อมปุ่มเปิดเอกสารท้ายแต่ละรายการ */}
+                          <div className="mt-2.5 pt-2.5 border-t border-border/40 bg-muted/40 p-2.5 rounded-lg space-y-2">
                             <div className="flex items-center justify-between">
                               <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
                                 <BookOpen className="w-3.5 h-3.5 text-primary" />
@@ -707,6 +777,9 @@ const ChatPage = () => {
                                     ...(msg.sources?.thaijo || []).map(
                                       (t) => `${t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). ${t.title}. ${t.journal}. ${t.url}`
                                     ),
+                                    ...(msg.sources?.knowledge || []).map(
+                                      (k) => `${k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). ${k.title}. กระทรวงสาธารณสุข.${k.source_url ? ` ${k.source_url}` : ""}`
+                                    ),
                                   ].join("\n\n");
                                   copyLink(allApa);
                                   toast.success("คัดลอกรายการอ้างอิง APA 7 ทั้งหมดแล้ว");
@@ -717,22 +790,133 @@ const ChatPage = () => {
                                 คัดลอก APA 7
                               </button>
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-mono space-y-1.5 pl-1">
-                              {(msg.sources?.internal || []).map((s) => (
-                                <p key={`apa-internal-${s.id}`} className="leading-relaxed">
-                                  สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). <em>{s.type === "herb" ? "ฐานข้อมูลสมุนไพร" : "ฐานข้อมูลตำรับยาแผนไทย"}: {s.name}</em>. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
-                                </p>
-                              ))}
-                              {(msg.sources?.pubmed || []).map((p) => (
-                                <p key={`apa-pubmed-${p.pmid}`} className="leading-relaxed">
-                                  {p.authors}. ({p.year || "n.d."}). {p.title}. <em>{p.journal}</em>. https://pubmed.ncbi.nlm.nih.gov/{p.pmid}/
-                                </p>
-                              ))}
+                            <div className="text-[11px] text-muted-foreground space-y-2 pl-0.5">
+                              {(msg.sources?.internal || []).map((s) => {
+                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.id)}`;
+                                return (
+                                  <div
+                                    key={`apa-internal-${s.id}`}
+                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                  >
+                                    <p className="leading-relaxed flex-1">
+                                      สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). <em>{s.type === "herb" ? "ฐานข้อมูลสมุนไพร" : "ฐานข้อมูลตำรับยาแผนไทย"}: {s.name}</em>. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => openExternal(url)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
+                                      title="เปิดเอกสารข้อมูลสมุนไพร/ตำรับยา"
+                                    >
+                                      <span>เปิดเอกสาร</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                              {(msg.sources?.pubmed || []).map((p) => {
+                                const url = `https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`;
+                                return (
+                                  <div
+                                    key={`apa-pubmed-${p.pmid}`}
+                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                  >
+                                    <p className="leading-relaxed flex-1">
+                                      {p.authors}. ({p.year || "n.d."}). {p.title}. <em>{p.journal}</em>.{" "}
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          openExternal(url);
+                                        }}
+                                        className="text-primary hover:underline break-all"
+                                      >
+                                        {url}
+                                      </a>
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => openExternal(url)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
+                                      title="เปิดเอกสารงานวิจัย PubMed"
+                                    >
+                                      <span>เปิดเอกสาร</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                               {(msg.sources?.thaijo || []).map((t, idx) => (
-                                <p key={`apa-thaijo-${idx}`} className="leading-relaxed">
-                                  {t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). {t.title}. <em>{t.journal}</em>. {t.url}
-                                </p>
+                                <div
+                                  key={`apa-thaijo-${idx}`}
+                                  className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                >
+                                  <p className="leading-relaxed flex-1">
+                                    {t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). {t.title}. <em>{t.journal}</em>.{" "}
+                                    <a
+                                      href={t.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        openExternal(t.url);
+                                      }}
+                                      className="text-primary hover:underline break-all"
+                                    >
+                                      {t.url}
+                                    </a>
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => openExternal(t.url)}
+                                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-herb-gold/15 text-herb-gold hover:bg-herb-gold/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
+                                    title="เปิดเอกสารงานวิจัย ThaiJO"
+                                  >
+                                    <span>เปิดเอกสาร</span>
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
                               ))}
+                              {(msg.sources?.knowledge || []).map((k) => {
+                                const url = k.source_url || `${window.location.origin}/admin/knowledge`;
+                                return (
+                                  <div
+                                    key={`apa-knowledge-${k.id}`}
+                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                  >
+                                    <p className="leading-relaxed flex-1">
+                                      {k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). <em>{k.title}</em>. กระทรวงสาธารณสุข.
+                                      {k.source_url && (
+                                        <>
+                                          {" "}
+                                          <a
+                                            href={k.source_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              openExternal(k.source_url!);
+                                            }}
+                                            className="text-primary hover:underline break-all"
+                                          >
+                                            {k.source_url}
+                                          </a>
+                                        </>
+                                      )}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => openExternal(url)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
+                                      title="เปิดเอกสารองค์ความรู้"
+                                    >
+                                      <span>เปิดเอกสาร</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>

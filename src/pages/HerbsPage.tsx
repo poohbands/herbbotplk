@@ -60,6 +60,31 @@ const HerbsPage = () => {
     loadFormulas();
   }, []);
 
+  // Auto-open modal if URL has ?herb=... or ?formula=...
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const herbParam = params.get("herb");
+    const formulaParam = params.get("formula");
+
+    if (herbParam && herbs.length > 0) {
+      const found = herbs.find(
+        (h) => h.id === herbParam || h.name_thai === herbParam || h.name_english?.toLowerCase() === herbParam.toLowerCase()
+      );
+      if (found) {
+        setActiveTab("herbs");
+        setSelectedHerb(found);
+      }
+    } else if (formulaParam && formulas.length > 0) {
+      const found = formulas.find(
+        (f) => f.id === formulaParam || f.name_thai === formulaParam || f.name_english?.toLowerCase() === formulaParam.toLowerCase()
+      );
+      if (found) {
+        setActiveTab("formulas");
+        setSelectedFormula(found);
+      }
+    }
+  }, [herbs, formulas]);
+
   useEffect(() => {
     setCategory("ทั้งหมด");
     setSearch("");
