@@ -485,10 +485,18 @@ function buildPubMedQuery(question: string, herbs: HerbRow[]): { query: string; 
   return { query, extraHerbNames, drugTerms: [...drugTerms] };
 }
 
+const pubmedCache = new Map<string, { at: number; data: PubMedSource[] }>();
+const PUBMED_CACHE_TTL = 30 * 60 * 1000;
+
 async function fetchPubMed(query: string): Promise<PubMedSource[]> {
-  if (!query.trim()) return [];
+  const cleanQ = query.trim();
+  if (!cleanQ) return [];
+
+  const cached = pubmedCache.get(cleanQ);
+  if (cached && Date.now() - cached.at < PUBMED_CACHE_TTL) return cached.data;
+
   try {
-    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(query)}&retmax=5&retmode=json&sort=relevance`;
+    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(cleanQ)}&retmax=5&retmode=json&sort=relevance`;
     const searchResp = await fetch(searchUrl, { signal: AbortSignal.timeout(4000) });
     if (!searchResp.ok) return [];
     const searchData = await searchResp.json();
@@ -941,9 +949,8 @@ serve(async (req) => {
 
     const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
     const thaijoQuery = isCommonDisease ? "" : buildThaiJoQuery(question, herbs, formulas);
-    // ข้าม PubMed/ThaiJO สำหรับคำถามเชิงนโยบาย 10 กลุ่มอาการ (ไม่เกี่ยวข้อง)
     const [pubmed, thaijo] = await Promise.all([
-      isCommonDisease ? Promise.resolve([] as PubMedSource[]) : fetchPubMed(pubmedQuery),
+      pubmedQuery ? fetchPubMed(pubmedQuery) : Promise.resolve([] as PubMedSource[]),
       thaijoQuery ? fetchThaiJo(thaijoQuery) : Promise.resolve([] as ThaiJoSource[]),
     ]);
 

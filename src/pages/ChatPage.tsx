@@ -272,25 +272,56 @@ const ChatPage = () => {
 
       // 1. ถ้ามี Local Provider Key ที่ตั้งค่าไว้ ให้เรียกผ่าน Direct Local Service ทันที
       if (hasLocalProviderKey()) {
-        const fullResponse = await processLocalChat(userContent, allMessages);
+        let streamAssistant = "";
+        const fullResponse = await processLocalChat(userContent, allMessages, (liveText) => {
+          streamAssistant = liveText;
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (last?.role === "assistant") {
+              return prev.map((m, i) =>
+                i === prev.length - 1 ? { ...m, content: streamAssistant } : m
+              );
+            }
+            return [
+              ...prev,
+              {
+                id: (Date.now() + 1).toString(),
+                role: "assistant",
+                content: streamAssistant,
+                timestamp: new Date(),
+              },
+            ];
+          });
+        });
+
         const parsed = parseMetadata(fullResponse);
         cleanContent = parsed.cleanContent;
         category = parsed.category;
         severity = parsed.severity;
         sources = parsed.sources;
 
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: cleanContent,
-            category,
-            severity,
-            sources,
-            timestamp: new Date(),
-          },
-        ]);
+        setMessages((prev) => {
+          const last = prev[prev.length - 1];
+          if (last?.role === "assistant") {
+            return prev.map((m, i) =>
+              i === prev.length - 1
+                ? { ...m, content: cleanContent, category, severity, sources }
+                : m
+            );
+          }
+          return [
+            ...prev,
+            {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: cleanContent,
+              category,
+              severity,
+              sources,
+              timestamp: new Date(),
+            },
+          ];
+        });
       } else {
         // 2. พยายามเรียก Cloud Edge Function ถ้ามี
         let usedCloud = false;
