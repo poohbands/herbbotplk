@@ -684,6 +684,57 @@ const ChatPage = () => {
                               ))}
                             </div>
                           )}
+
+                          {/* บล็อกแสดงรายการอ้างอิงตามมาตรฐาน APA 7th Edition */}
+                          <div className="mt-2.5 pt-2.5 border-t border-border/40 bg-muted/40 p-2.5 rounded-lg space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                                <BookOpen className="w-3.5 h-3.5 text-primary" />
+                                รูปแบบการอ้างอิง (APA 7th Edition)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const allApa = [
+                                    ...(msg.sources?.internal || []).map((s) =>
+                                      s.type === "herb"
+                                        ? `สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). ฐานข้อมูลสมุนไพร: ${s.name}. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.`
+                                        : `สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). ฐานข้อมูลตำรับยาแผนไทย: ${s.name}. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.`
+                                    ),
+                                    ...(msg.sources?.pubmed || []).map(
+                                      (p) => `${p.authors}. (${p.year || "n.d."}). ${p.title}. ${p.journal}. https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`
+                                    ),
+                                    ...(msg.sources?.thaijo || []).map(
+                                      (t) => `${t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). ${t.title}. ${t.journal}. ${t.url}`
+                                    ),
+                                  ].join("\n\n");
+                                  copyLink(allApa);
+                                  toast.success("คัดลอกรายการอ้างอิง APA 7 ทั้งหมดแล้ว");
+                                }}
+                                className="text-[10px] text-primary hover:underline flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-primary/10 transition-colors cursor-pointer"
+                              >
+                                <Copy className="w-3 h-3" />
+                                คัดลอก APA 7
+                              </button>
+                            </div>
+                            <div className="text-[11px] text-muted-foreground font-mono space-y-1.5 pl-1">
+                              {(msg.sources?.internal || []).map((s) => (
+                                <p key={`apa-internal-${s.id}`} className="leading-relaxed">
+                                  สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). <em>{s.type === "herb" ? "ฐานข้อมูลสมุนไพร" : "ฐานข้อมูลตำรับยาแผนไทย"}: {s.name}</em>. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
+                                </p>
+                              ))}
+                              {(msg.sources?.pubmed || []).map((p) => (
+                                <p key={`apa-pubmed-${p.pmid}`} className="leading-relaxed">
+                                  {p.authors}. ({p.year || "n.d."}). {p.title}. <em>{p.journal}</em>. https://pubmed.ncbi.nlm.nih.gov/{p.pmid}/
+                                </p>
+                              ))}
+                              {(msg.sources?.thaijo || []).map((t, idx) => (
+                                <p key={`apa-thaijo-${idx}`} className="leading-relaxed">
+                                  {t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). {t.title}. <em>{t.journal}</em>. {t.url}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
                         </div>
                       )
                     )}
