@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
+import { getKnowledgeSettings, type KnowledgeSettings } from "./knowledge-settings";
 
 // พจนานุกรมอาการภาษาไทยเพื่อจับคู่สมุนไพร
 const SYMPTOM_MAP = [
@@ -476,8 +477,13 @@ export function hasLocalProviderKey(): boolean {
 export async function processLocalChat(
   question: string,
   history: { role: string; content: string }[],
-  onChunk?: (text: string) => void
+  onChunk?: (text: string) => void,
+  settings?: KnowledgeSettings
 ): Promise<string> {
+  const currentSettings = settings || getKnowledgeSettings();
+  const enableExternal = currentSettings.enable_external_research !== false;
+  const enableInternal = currentSettings.enable_internal_db !== false;
+
   // 0. ตรวจจับคำถามที่อยู่นอกขอบเขตชัดเจน (Fast short-circuit ตอบปฏิเสธทันที ไม่ต้องต่อ API)
   if (isBlatantlyOutOfScope(question, history)) {
     const refusalText = `${OUT_OF_SCOPE_REFUSAL_MESSAGE}\n\n[METADATA]\ncategory: general\nseverity: none\nherbs:\ndrugs:\n[/METADATA]\n\n[SOURCES]{"internal":[],"pubmed":[],"thaijo":[],"knowledge":[]}[/SOURCES]`;
@@ -497,46 +503,54 @@ export async function processLocalChat(
 
   const q = question.toLowerCase();
 
-  // สร้างคำค้น PubMed อัตโนมัติจากชื่อสมุนไพรและยา
+  // สร้างคำค้น PubMed อัตโนมัติจากชื่อสมุนไพรและยา (เฉพาะเมื่อเปิดใช้งานแหล่งข้อมูลวิจัยภายนอก)
   let pubmedQuery = "";
-  for (const [thai, sci] of Object.entries(HERB_THAI_TO_SCI)) {
-    if (q.includes(thai.toLowerCase())) {
-      pubmedQuery = `"${sci}"`;
-      break;
+  if (enableExternal) {
+    for (const [thai, sci] of Object.entries(HERB_THAI_TO_SCI)) {
+      if (q.includes(thai.toLowerCase())) {
+        pubmedQuery = `"${sci}"`;
+        break;
+      }
     }
-  }
-  for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
-    if (q.includes(thai.toLowerCase())) {
-      pubmedQuery = pubmedQuery ? `(${pubmedQuery}) AND (${en})` : `(${en})`;
-      break;
+    for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
+      if (q.includes(thai.toLowerCase())) {
+        pubmedQuery = pubmedQuery ? `(${pubmedQuery}) AND (${en})` : `(${en})`;
+        break;
+      }
     }
   }
 
-  // 1. ดึงสมุนไพร/ตำรับยาจาก Supabase พร้อมกับค้น PubMed แบบขนาน (Parallel) เพื่อความเร็วสูงสุด
+  // 1. ดึงสมุนไพร/ตำรับยาจาก Supabase (ถ้าเปิดฐานข้อมูลภายใน) พร้อมกับค้น PubMed (ถ้าเปิดงานวิจัยภายนอก) แบบขนาน
   const [
-    { data: herbsData },
-    { data: formulasData },
-    { data: knowledgeData },
+    herbsRes,
+    formulasRes,
+    knowledgeRes,
     pubmedResults,
   ] = await Promise.all([
-    supabase
-      .from("herbs")
-      .select("id, name_thai, name_english, name_scientific, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions")
-      .limit(60),
-    supabase
-      .from("thai_formulas")
-      .select("id, name_thai, name_english, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions")
-      .limit(60),
-    supabase
-      .from("knowledge_documents")
-      .select("id, title, category, content, source, source_url")
-      .limit(10),
-    pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
+    enableInternal
+      ? supabase
+          .from("herbs")
+          .select("id, name_thai, name_english, name_scientific, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions")
+          .limit(60)
+      : Promise.resolve({ data: [] }),
+    enableInternal
+      ? supabase
+          .from("thai_formulas")
+          .select("id, name_thai, name_english, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions")
+          .limit(60)
+      : Promise.resolve({ data: [] }),
+    enableInternal
+      ? supabase
+          .from("knowledge_documents")
+          .select("id, title, category, content, source, source_url")
+          .limit(10)
+      : Promise.resolve({ data: [] }),
+    enableExternal && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
   ]);
 
-  const allHerbs = herbsData || [];
-  const allFormulas = formulasData || [];
-  const allKnowledge = knowledgeData || [];
+  const allHerbs = (herbsRes.data || []) as any[];
+  const allFormulas = (formulasRes.data || []) as any[];
+  const allKnowledge = (knowledgeRes.data || []) as any[];
 
   // 2. ค้นหาสมุนไพรและตำรับที่เกี่ยวข้องกับคำถาม
   const nq = normalizeThaiName(question);
@@ -599,51 +613,72 @@ export async function processLocalChat(
     }).slice(0, 4);
   }
 
-  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ
-  const thaijoResults = findRelevantThaiJo(question, matchedHerbs, matchedFormulas);
+  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก)
+  const thaijoResults = enableExternal
+    ? findRelevantThaiJo(question, matchedHerbs, matchedFormulas)
+    : [];
 
-  // 3. สร้าง Context ที่รวบรวมทั้งข้อมูลภายในและงานวิจัยภายนอก (PubMed & ThaiJO)
-  let contextText = "ข้อมูลอ้างอิงจากฐานข้อมูลสมุนไพรและตำรับยา สสจ.พิษณุโลก:\n";
-  if (matchedHerbs.length > 0) {
-    contextText += "\n[สมุนไพรที่เกี่ยวข้อง]\n";
-    matchedHerbs.forEach((h) => {
-      contextText += `- ${h.name_thai} (${h.name_scientific || h.name_english || ""}): สรรพคุณ: ${(h.properties || []).join(", ")}, ขนาดใช้: ${h.dosage || "ตามคำแนะนำ"}, ข้อควรระวัง: ${(h.precautions || []).join(", ")}, ปฏิกิริยากับยา: ${(h.drug_interactions || []).join(", ")}\n`;
-    });
+  // 3. สร้าง Context ที่รวบรวมทั้งข้อมูลภายในและงานวิจัยภายนอก (ตามการตั้งค่าเปิด-ปิด)
+  let contextText = "";
+
+  if (enableInternal) {
+    contextText += "ข้อมูลอ้างอิงจากฐานข้อมูลสมุนไพรและตำรับยา สสจ.พิษณุโลก:\n";
+    if (matchedHerbs.length > 0) {
+      contextText += "\n[สมุนไพรที่เกี่ยวข้อง]\n";
+      matchedHerbs.forEach((h) => {
+        contextText += `- ${h.name_thai} (${h.name_scientific || h.name_english || ""}): สรรพคุณ: ${(h.properties || []).join(", ")}, ขนาดใช้: ${h.dosage || "ตามคำแนะนำ"}, ข้อควรระวัง: ${(h.precautions || []).join(", ")}, ปฏิกิริยากับยา: ${(h.drug_interactions || []).join(", ")}\n`;
+      });
+    }
+
+    if (matchedFormulas.length > 0) {
+      contextText += "\n[ตำรับยาแผนไทยที่เกี่ยวข้อง]\n";
+      matchedFormulas.forEach((f) => {
+        contextText += `- ${f.name_thai}: ข้อบ่งใช้: ${f.indication || ""}, วิธีใช้: ${f.usage_instructions || ""}, ข้อห้าม: ${(f.contraindications || []).join(", ")}, ปฏิกิริยากับยา: ${(f.drug_interactions || []).join(", ")}\n`;
+      });
+    }
+
+    if (allKnowledge.length > 0 && matchedHerbs.length === 0 && matchedFormulas.length === 0) {
+      contextText += "\n[แนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุข]\n";
+      allKnowledge.slice(0, 2).forEach((k) => {
+        contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.slice(0, 300)}...\n`;
+      });
+    }
   }
 
-  if (matchedFormulas.length > 0) {
-    contextText += "\n[ตำรับยาแผนไทยที่เกี่ยวข้อง]\n";
-    matchedFormulas.forEach((f) => {
-      contextText += `- ${f.name_thai}: ข้อบ่งใช้: ${f.indication || ""}, วิธีใช้: ${f.usage_instructions || ""}, ข้อห้าม: ${(f.contraindications || []).join(", ")}, ปฏิกิริยากับยา: ${(f.drug_interactions || []).join(", ")}\n`;
-    });
+  if (enableExternal) {
+    // ใส่งานวิจัยสากลจาก PubMed เข้า Context
+    if (pubmedResults.length > 0) {
+      contextText += "\n[งานวิจัยระดับสากลจาก PubMed ที่เกี่ยวข้อง]\n";
+      pubmedResults.forEach((p) => {
+        contextText += `- PMID: ${p.pmid} | เรื่อง: ${p.title} | วารสาร: ${p.journal} (${p.year}) | ผู้แต่ง: ${p.authors}\n`;
+      });
+    }
+
+    // ใส่งานวิจัยไทยจาก ThaiJO เข้า Context
+    if (thaijoResults.length > 0) {
+      contextText += "\n[งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO]\n";
+      thaijoResults.forEach((t) => {
+        contextText += `- เรื่อง: ${t.title} | วารสาร: ${t.journal} | ผู้แต่ง: ${t.authors} | ลิงก์: ${t.url}\n`;
+      });
+    }
   }
 
-  // ใส่งานวิจัยสากลจาก PubMed เข้า Context
-  if (pubmedResults.length > 0) {
-    contextText += "\n[งานวิจัยระดับสากลจาก PubMed ที่เกี่ยวข้อง]\n";
-    pubmedResults.forEach((p) => {
-      contextText += `- PMID: ${p.pmid} | เรื่อง: ${p.title} | วารสาร: ${p.journal} (${p.year}) | ผู้แต่ง: ${p.authors}\n`;
-    });
+  if (!contextText.trim()) {
+    contextText = "ขณะนี้ไม่มีข้อมูลจากฐานข้อมูลภายในหรืองานวิจัยภายนอกที่เปิดใช้งาน ให้ตอบตามหลักวิชาชีพการแพทย์แผนไทยและคำแนะนำสุขภาพทั่วไป";
   }
 
-  // ใส่งานวิจัยไทยจาก ThaiJO เข้า Context
-  if (thaijoResults.length > 0) {
-    contextText += "\n[งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO]\n";
-    thaijoResults.forEach((t) => {
-      contextText += `- เรื่อง: ${t.title} | วารสาร: ${t.journal} | ผู้แต่ง: ${t.authors} | ลิงก์: ${t.url}\n`;
-    });
+  // ปรับคำสั่งพิเศษตามการเปิด-ปิดแหล่งข้อมูล
+  let dynamicInstructions = "";
+  if (!enableExternal) {
+    dynamicInstructions += "\n\n⚠️ หมายเหตุสำคัญ: ขณะนี้ระบบปิดการดึงข้อมูลวิจัยภายนอก (PubMed และ ThaiJO) ห้ามแต่งหรืออ้างอิงงานวิจัยภายนอก และไม่ต้องใส่หัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ของงานวิจัยภายนอก";
   }
-
-  if (allKnowledge.length > 0 && matchedHerbs.length === 0 && matchedFormulas.length === 0) {
-    contextText += "\n[แนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุข]\n";
-    allKnowledge.slice(0, 2).forEach((k) => {
-      contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.slice(0, 300)}...\n`;
-    });
+  if (!enableInternal) {
+    dynamicInstructions += "\n\n⚠️ หมายเหตุสำคัญ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลสมุนไพรและตำรับยาภายในเว็บ ให้ตอบตามหลักวิชาการและการดูแลตนเองทั่วไป";
   }
 
   // 4. เตรียมชุดข้อความส่งไปยัง AI Model
   const messagesToSend = [
-    { role: "system", content: `${SYSTEM_PROMPT}\n\n<CONTEXT>\n${contextText}\n</CONTEXT>` },
+    { role: "system", content: `${SYSTEM_PROMPT}${dynamicInstructions}\n\n<CONTEXT>\n${contextText}\n</CONTEXT>` },
     ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: question },
   ];
@@ -779,10 +814,12 @@ export async function processLocalChat(
     answer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
 
   // 6. รวบรวม Sources Payload ทั้งภายในและภายนอก (PubMed & ThaiJO)
-  let internalSources = [
-    ...matchedHerbs.map((h) => ({ type: "herb", id: h.id, name: h.name_thai })),
-    ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
-  ];
+  let internalSources = enableInternal
+    ? [
+        ...matchedHerbs.map((h) => ({ type: "herb", id: h.id, name: h.name_thai })),
+        ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
+      ]
+    : [];
   if (exactMatchedFormulas.length > 0 && exactMatchedHerbs.length === 0) {
     internalSources = internalSources.filter((s) => s.type === "formula");
   } else if (exactMatchedHerbs.length > 0 && exactMatchedFormulas.length === 0) {
@@ -793,11 +830,17 @@ export async function processLocalChat(
     ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
     : {
         internal: internalSources,
-        pubmed: pubmedResults,
-        thaijo: thaijoResults,
+        pubmed: enableExternal ? pubmedResults : [],
+        thaijo: enableExternal ? thaijoResults : [],
       };
 
-  if (!isOutOfScope && matchedHerbs.length === 0 && matchedFormulas.length === 0 && allKnowledge.length > 0) {
+  if (
+    enableInternal &&
+    !isOutOfScope &&
+    matchedHerbs.length === 0 &&
+    matchedFormulas.length === 0 &&
+    allKnowledge.length > 0
+  ) {
     sourcesPayload.knowledge = allKnowledge.slice(0, 2).map((k: any) => ({
       id: k.id,
       title: k.title,

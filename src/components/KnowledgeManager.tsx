@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, BookOpen, Search, ExternalLink } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Search, ExternalLink, Globe, Database, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import {
+  getKnowledgeSettings,
+  saveKnowledgeSettings,
+  type KnowledgeSettings,
+} from "@/lib/knowledge-settings";
 
 type KnowledgeDoc = {
   id: string;
@@ -56,6 +61,30 @@ const KnowledgeManager = () => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+
+  const [knowledgeSettings, setKnowledgeSettings] = useState<KnowledgeSettings>(() => getKnowledgeSettings());
+
+  const handleToggleExternal = (checked: boolean) => {
+    const updated = saveKnowledgeSettings({ enable_external_research: checked });
+    setKnowledgeSettings(updated);
+    toast({
+      title: checked ? "เปิดการดึงงานวิจัยภายนอกและ APA 7 แล้ว" : "ปิดการดึงงานวิจัยภายนอกแล้ว",
+      description: checked
+        ? "AI จะค้นหางานวิจัยจาก PubMed และ ThaiJO พร้อมสร้างอ้างอิง APA 7 และตรวจสอบความถูกต้อง"
+        : "AI จะไม่ดึงงานวิจัยจาก PubMed/ThaiJO มาประกอบคำตอบ",
+    });
+  };
+
+  const handleToggleInternal = (checked: boolean) => {
+    const updated = saveKnowledgeSettings({ enable_internal_db: checked });
+    setKnowledgeSettings(updated);
+    toast({
+      title: checked ? "เปิดการใช้ฐานข้อมูลภายในเว็บแล้ว" : "ปิดการใช้ฐานข้อมูลภายในเว็บแล้ว",
+      description: checked
+        ? "AI จะใช้ข้อมูลสมุนไพรเดี่ยว ตำรับยาไทย และเอกสารความรู้ สสจ.พิษณุโลก"
+        : "AI จะไม่ดึงข้อมูลจากฐานข้อมูลภายในเว็บ",
+    });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -154,6 +183,144 @@ const KnowledgeManager = () => {
         <Button onClick={openNew} className="gap-2">
           <Plus className="w-4 h-4" /> เพิ่มความรู้ใหม่
         </Button>
+      </div>
+
+      {/* กล่องเมนูเปิด-ปิดแหล่งข้อมูลสำหรับ AI (External APA 7 & Internal DB) */}
+      <div className="bg-muted/40 rounded-xl border border-border p-4 mb-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div>
+            <h4 className="text-sm font-semibold font-thai text-foreground flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              การควบคุมแหล่งข้อมูลสำหรับ AI (AI Data Source & APA 7 Settings)
+            </h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              กำหนดให้ระบบ AI ดึงข้อมูลจากภายนอกหรือภายในเว็บในการตอบคำถาม พร้อมระบบตรวจสอบความถูกต้อง
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* เมนูที่ 1: แหล่งข้อมูลวิจัยภายนอก (PubMed & ThaiJO) + อ้างอิง APA 7 */}
+          <div
+            className={`p-3.5 rounded-lg border transition-all ${
+              knowledgeSettings.enable_external_research
+                ? "bg-card border-primary/30 shadow-xs"
+                : "bg-card/50 border-border opacity-70"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <Globe
+                    className={`w-4 h-4 ${
+                      knowledgeSettings.enable_external_research
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                  <span className="text-sm font-medium text-foreground font-thai">
+                    1. งานวิจัยภายนอกและอ้างอิง APA 7
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  ดึงงานวิจัยสากล (PubMed) และงานวิจัยไทย (ThaiJO) มาประกอบการตอบ พร้อมสร้างเอกสารอ้างอิงตามมาตรฐาน APA 7th Edition และตรวจสอบความถูกต้องตรงประเด็น
+                </p>
+                <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                  <Badge
+                    variant={
+                      knowledgeSettings.enable_external_research
+                        ? "default"
+                        : "secondary"
+                    }
+                    className="text-[10px] px-1.5 py-0"
+                  >
+                    {knowledgeSettings.enable_external_research
+                      ? "เปิดใช้งาน"
+                      : "ปิดใช้งาน"}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    PubMed
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    ThaiJO
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    APA 7th
+                  </Badge>
+                </div>
+              </div>
+              <Switch
+                checked={knowledgeSettings.enable_external_research}
+                onCheckedChange={handleToggleExternal}
+                aria-label="เปิด-ปิดการดึงข้อมูลวิจัยภายนอกและอ้างอิง APA 7"
+              />
+            </div>
+          </div>
+
+          {/* เมนูที่ 2: ฐานข้อมูลภายในเว็บ */}
+          <div
+            className={`p-3.5 rounded-lg border transition-all ${
+              knowledgeSettings.enable_internal_db
+                ? "bg-card border-primary/30 shadow-xs"
+                : "bg-card/50 border-border opacity-70"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <Database
+                    className={`w-4 h-4 ${
+                      knowledgeSettings.enable_internal_db
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                  <span className="text-sm font-medium text-foreground font-thai">
+                    2. ฐานข้อมูลภายในเว็บ (Internal DB)
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  ดึงข้อมูลสมุนไพรเดี่ยว, ตำรับยาไทย, ข้อบ่งใช้, ขนาดใช้, ข้อควรระวัง และคลังความรู้ภายในระบบ สสจ.พิษณุโลก มาใช้ตอบคำถาม
+                </p>
+                <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                  <Badge
+                    variant={
+                      knowledgeSettings.enable_internal_db
+                        ? "default"
+                        : "secondary"
+                    }
+                    className="text-[10px] px-1.5 py-0"
+                  >
+                    {knowledgeSettings.enable_internal_db
+                      ? "เปิดใช้งาน"
+                      : "ปิดใช้งาน"}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    สมุนไพรเดี่ยว
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    ตำรับยาไทย
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    เอกสาร สสจ.
+                  </Badge>
+                </div>
+              </div>
+              <Switch
+                checked={knowledgeSettings.enable_internal_db}
+                onCheckedChange={handleToggleInternal}
+                aria-label="เปิด-ปิดการใช้ฐานข้อมูลภายในเว็บ"
+              />
+            </div>
+          </div>
+        </div>
+
+        {!knowledgeSettings.enable_external_research &&
+          !knowledgeSettings.enable_internal_db && (
+            <div className="text-xs text-destructive bg-destructive/10 p-2.5 rounded-md flex items-center gap-1.5">
+              ⚠️ คุณกำลังปิดทั้งฐานข้อมูลภายในและงานวิจัยภายนอก AI จะตอบด้วยความรู้ทั่วไปและแนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุขเท่านั้น
+            </div>
+          )}
       </div>
 
       <div className="relative mb-4">

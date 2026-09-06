@@ -6,6 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 import { processLocalChat, hasLocalProviderKey } from "@/lib/local-chat-service";
+import {
+  getKnowledgeSettings,
+  KNOWLEDGE_SETTINGS_EVENT,
+  type KnowledgeSettings,
+} from "@/lib/knowledge-settings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
@@ -163,7 +168,20 @@ const ChatPage = () => {
   const [suggestedCategories, setSuggestedCategories] = useState(DEFAULT_CATEGORIES);
   const [selectedKnowledgeDoc, setSelectedKnowledgeDoc] = useState<KnowledgeSource | null>(null);
   const [fetchingKnowledgeContent, setFetchingKnowledgeContent] = useState(false);
+  const [knowledgeSettings, setKnowledgeSettings] = useState<KnowledgeSettings>(() => getKnowledgeSettings());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleSettingsChange = () => {
+      setKnowledgeSettings(getKnowledgeSettings());
+    };
+    window.addEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
+    window.addEventListener("storage", handleSettingsChange);
+    return () => {
+      window.removeEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
+      window.removeEventListener("storage", handleSettingsChange);
+    };
+  }, []);
 
   const handleOpenKnowledge = async (k: KnowledgeSource) => {
     if (k.source_url && (k.source_url.startsWith("http://") || k.source_url.startsWith("https://"))) {
@@ -308,29 +326,36 @@ const ChatPage = () => {
         content: m.content,
       }));
 
+      const currentSettings = getKnowledgeSettings();
+
       // 1. ถ้ามี Local Provider Key ที่ตั้งค่าไว้ ให้เรียกผ่าน Direct Local Service ทันที
       if (hasLocalProviderKey()) {
         let streamAssistant = "";
-        const fullResponse = await processLocalChat(userContent, allMessages, (liveText) => {
-          streamAssistant = liveText;
-          setMessages((prev) => {
-            const last = prev[prev.length - 1];
-            if (last?.role === "assistant") {
-              return prev.map((m, i) =>
-                i === prev.length - 1 ? { ...m, content: streamAssistant } : m
-              );
-            }
-            return [
-              ...prev,
-              {
-                id: (Date.now() + 1).toString(),
-                role: "assistant",
-                content: streamAssistant,
-                timestamp: new Date(),
-              },
-            ];
-          });
-        });
+        const fullResponse = await processLocalChat(
+          userContent,
+          allMessages,
+          (liveText) => {
+            streamAssistant = liveText;
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant") {
+                return prev.map((m, i) =>
+                  i === prev.length - 1 ? { ...m, content: streamAssistant } : m
+                );
+              }
+              return [
+                ...prev,
+                {
+                  id: (Date.now() + 1).toString(),
+                  role: "assistant",
+                  content: streamAssistant,
+                  timestamp: new Date(),
+                },
+              ];
+            });
+          },
+          currentSettings
+        );
 
         const parsed = parseMetadata(fullResponse);
         cleanContent = parsed.cleanContent;
@@ -370,7 +395,10 @@ const ChatPage = () => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             },
-            body: JSON.stringify({ messages: allMessages }),
+            body: JSON.stringify({
+              messages: allMessages,
+              settings: currentSettings,
+            }),
           });
 
           if (resp.ok && resp.body) {
@@ -1044,6 +1072,17 @@ const ChatPage = () => {
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur-sm sticky bottom-0">
         <div className="container max-w-4xl mx-auto px-4 py-3">
+          {(!knowledgeSettings.enable_internal_db || !knowledgeSettings.enable_external_research) && (
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+                <span>⚙️ สถานะแหล่งข้อมูล:</span>
+                {!knowledgeSettings.enable_internal_db && <span className="line-through text-muted-foreground">ฐานข้อมูลในเว็บ</span>}
+                {!knowledgeSettings.enable_internal_db && !knowledgeSettings.enable_external_research && <span>•</span>}
+                {!knowledgeSettings.enable_external_research && <span className="line-through text-muted-foreground">งานวิจัยภายนอก/APA 7</span>}
+                <a href="/admin" className="underline font-medium hover:text-foreground ml-1">ตั้งค่าในคลังความรู้</a>
+              </span>
+            </div>
+          )}
           <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input

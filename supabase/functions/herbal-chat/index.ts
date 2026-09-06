@@ -1223,7 +1223,9 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, settings } = await req.json();
+    const enableExternal = settings?.enable_external_research !== false;
+    const enableInternal = settings?.enable_internal_db !== false;
 
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
     const question: string = lastUserMsg?.content || "";
@@ -1267,21 +1269,35 @@ serve(async (req) => {
       });
     }
 
-    // รันการค้นหาแบบขนาน (DB + knowledge) แทนการรอทีละอัน
+    // รันการค้นหาแบบขนาน (DB + knowledge) เฉพาะเมื่อเปิดใช้งานฐานข้อมูลภายใน
     const knowledgeQuery = [question, ...intent.symptoms, ...intent.herbs].join(" ");
-    const [{ herbs, formulas, nameMatchedHerbNames, nameMatchedFormulaNames, listMode }, knowledge] = await Promise.all([
-      findRelevantHerbs(supabase, question, intent),
-      findRelevantKnowledge(supabase, knowledgeQuery),
-    ]);
+    const [{ herbs, formulas, nameMatchedHerbNames, nameMatchedFormulaNames, listMode }, knowledge] = enableInternal
+      ? await Promise.all([
+          findRelevantHerbs(supabase, question, intent),
+          findRelevantKnowledge(supabase, knowledgeQuery),
+        ])
+      : [
+          { herbs: [], formulas: [], nameMatchedHerbNames: [], nameMatchedFormulaNames: [], listMode: false },
+          [],
+        ];
 
-    const { query: pubmedQuery, extraHerbNames, drugTerms } = buildPubMedQuery(question, herbs);
-    const thaijoQuery = isCommonDisease ? "" : buildThaiJoQuery(question, herbs, formulas, nameMatchedFormulaNames, nameMatchedHerbNames);
-    const [pubmed, thaijo] = await Promise.all([
-      pubmedQuery ? fetchPubMed(pubmedQuery) : Promise.resolve([] as PubMedSource[]),
-      thaijoQuery
-        ? fetchThaiJo(thaijoQuery, question, herbs, formulas, nameMatchedFormulaNames, nameMatchedHerbNames)
-        : Promise.resolve([] as ThaiJoSource[]),
-    ]);
+    // รันการค้นหา PubMed และ ThaiJO เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก
+    const { query: pubmedQuery, extraHerbNames, drugTerms } = enableExternal
+      ? buildPubMedQuery(question, herbs)
+      : { query: "", extraHerbNames: [], drugTerms: [] };
+
+    const thaijoQuery = (!enableExternal || isCommonDisease)
+      ? ""
+      : buildThaiJoQuery(question, herbs, formulas, nameMatchedFormulaNames, nameMatchedHerbNames);
+
+    const [pubmed, thaijo] = enableExternal
+      ? await Promise.all([
+          pubmedQuery ? fetchPubMed(pubmedQuery) : Promise.resolve([] as PubMedSource[]),
+          thaijoQuery
+            ? fetchThaiJo(thaijoQuery, question, herbs, formulas, nameMatchedFormulaNames, nameMatchedHerbNames)
+            : Promise.resolve([] as ThaiJoSource[]),
+        ])
+      : [[], []];
 
     console.log("[herbal-chat] question:", question);
     console.log("[herbal-chat] common disease intent:", isCommonDisease);
@@ -1310,27 +1326,40 @@ serve(async (req) => {
     }
 
 
-    let internalSources: InternalSource[] = [
-      ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
-      ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
-    ];
+    let internalSources: InternalSource[] = enableInternal
+      ? [
+          ...herbs.map((h) => ({ type: "herb" as const, id: h.id, name: h.name_thai })),
+          ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
+        ]
+      : [];
     if (nameMatchedFormulaNames.length > 0 && nameMatchedHerbNames.length === 0) {
       internalSources = internalSources.filter((s) => s.type === "formula");
     } else if (nameMatchedHerbNames.length > 0 && nameMatchedFormulaNames.length === 0) {
       internalSources = internalSources.filter((s) => s.type === "herb");
     }
-    const knowledgeSources: KnowledgeSource[] = knowledge.map((k) => ({
-      id: k.id, title: k.title, category: k.category, content: k.content, source: k.source, source_url: k.source_url,
-    }));
+    const knowledgeSources: KnowledgeSource[] = enableInternal
+      ? knowledge.map((k) => ({
+          id: k.id, title: k.title, category: k.category, content: k.content, source: k.source, source_url: k.source_url,
+        }))
+      : [];
 
     // ใส่แนวทาง 10 กลุ่มอาการของกระทรวงฯ ให้ด้วย เมื่อเป็นคำถามอาการที่ค้นภายในไม่เจอ
     const includeCommonDisease = isCommonDisease || (intent.type === "symptom" && noInternal);
-    const contextBlock = buildContext(herbs, formulas, pubmed, extraHerbNames, knowledge, includeCommonDisease, aiFallback, thaijo);
+    const contextBlock = buildContext(
+      enableInternal ? herbs : [],
+      enableInternal ? formulas : [],
+      enableExternal ? pubmed : [],
+      enableExternal ? extraHerbNames : [],
+      enableInternal ? knowledge : [],
+      includeCommonDisease,
+      aiFallback,
+      enableExternal ? thaijo : []
+    );
     const sourcesJson = JSON.stringify({
-      pubmed,
-      thaijo,
-      internal: internalSources,
-      knowledge: knowledgeSources,
+      pubmed: enableExternal ? pubmed : [],
+      thaijo: enableExternal ? thaijo : [],
+      internal: enableInternal ? internalSources : [],
+      knowledge: enableInternal ? knowledgeSources : [],
       ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
@@ -1338,6 +1367,15 @@ serve(async (req) => {
     const listInstruction = listMode && (formulas.length > 0 || herbs.length > 0)
       ? `\n\nคำถามนี้เป็นคำถามแบบ "ขอรายชื่อ" — ต้องระบุ **ชื่อทุกรายการ** ที่อยู่ใน CONTEXT ให้ครบ (ตำรับ ${formulas.length} รายการ, สมุนไพร ${herbs.length} รายการ) เป็นรายการหัวข้อย่อย ห้ามตอบว่า "ข้อมูลไม่ได้ระบุชื่อ" ทั้งที่มีชื่ออยู่ใน CONTEXT`
       : "";
+
+    // คำสั่งพิเศษตามการตั้งค่าเปิด-ปิดแหล่งข้อมูล
+    let settingsInstruction = "";
+    if (!enableExternal) {
+      settingsInstruction += "\n\n⚠️ คำสั่งพิเศษ: ขณะนี้ระบบปิดการดึงข้อมูลวิจัยภายนอก (PubMed และ ThaiJO) ห้ามแต่งหรืออ้างอิงงานวิจัยภายนอก และไม่ต้องใส่หัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ของงานวิจัยภายนอก";
+    }
+    if (!enableInternal) {
+      settingsInstruction += "\n\n⚠️ คำสั่งพิเศษ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลภายในเว็บ ให้ตอบตามหลักวิชาการทั่วไปและการดูแลสุขภาพเบื้องต้น";
+    }
 
     // ผลการจำแนกเจตนาเป็นตัวตัดสินว่าจะปฏิเสธหรือไม่ (โมเดลหลักไม่ต้องตัดสินเอง)
     const scopeInstruction = intent.in_scope
@@ -1355,7 +1393,7 @@ ${contextBlock}
 ${sourcesJson}
 </แหล่งอ้างอิงที่ใช้จริง>
 
-จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}${scopeInstruction}`,
+จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}${scopeInstruction}${settingsInstruction}`,
     };
 
     // ---- ขั้นที่ 1: ร่างคำตอบ ----
