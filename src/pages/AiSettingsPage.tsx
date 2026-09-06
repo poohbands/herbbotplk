@@ -144,7 +144,14 @@ const AiSettingsPage = () => {
       if (result.success) {
         setProviders((prev) =>
           prev.map((p) =>
-            p.id === item.id ? { ...p, test_status: "success", test_message: result.message } : p
+            p.id === item.id
+              ? {
+                  ...p,
+                  test_status: "success",
+                  test_message: result.message,
+                  model_name: result.suggestedModel || p.model_name,
+                }
+              : p
           )
         );
         toast.success(`${item.name}: ${result.message}`);
@@ -416,9 +423,32 @@ const AiSettingsPage = () => {
                             type="text"
                             value={item.model_name || ""}
                             onChange={(e) => handleFieldChange(item.id, "model_name", e.target.value)}
-                            placeholder="gemini-2.5-flash"
+                            placeholder="gemini-2.0-flash"
                             className="font-mono text-xs"
                           />
+                          {item.provider_key === "gemini" && (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+                              <span className="text-muted-foreground text-[10px]">เลือกรวดเร็ว:</span>
+                              {[
+                                { id: "gemini-2.0-flash", label: "2.0 Flash (แนะนำ ⚡ เร็ว/ไม่ติดคิว)" },
+                                { id: "gemini-1.5-flash", label: "1.5 Flash" },
+                                { id: "gemini-1.5-flash-8b", label: "1.5-8B (ประหยัด)" },
+                              ].map((m) => (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleFieldChange(item.id, "model_name", m.id)}
+                                  className={`px-1.5 py-0.5 rounded border text-[10px] font-mono cursor-pointer transition-colors ${
+                                    item.model_name === m.id
+                                      ? "border-primary bg-primary/10 text-primary font-bold"
+                                      : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                                  }`}
+                                >
+                                  {m.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
 

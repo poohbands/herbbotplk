@@ -19,7 +19,7 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
     name: "Google Gemini",
     provider_key: "gemini",
     base_url: "https://generativelanguage.googleapis.com/v1beta/openai",
-    model_name: "gemini-1.5-flash",
+    model_name: "gemini-2.0-flash",
     is_active: true,
     priority: 1,
     has_key: false,
@@ -92,7 +92,7 @@ export async function testProviderDirectly(provider: {
   api_key?: string;
   base_url: string;
   model_name: string;
-}): Promise<{ success: boolean; message: string }> {
+}): Promise<{ success: boolean; message: string; suggestedModel?: string }> {
   const key = provider.api_key?.trim();
   const url = provider.base_url?.trim().replace(/\/+$/, "");
   const model = provider.model_name?.trim();
@@ -106,39 +106,62 @@ export async function testProviderDirectly(provider: {
 
   const endpoint = url.endsWith("/chat/completions") ? url : `${url}/chat/completions`;
 
-  try {
-    const resp = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: model || "gemini-1.5-flash",
-        messages: [{ role: "user", content: "ตอบกลับสั้นๆ ว่า OK" }],
-        max_tokens: 20,
-      }),
-      signal: AbortSignal.timeout(20000),
-    });
+  const modelsToTry = [model || "gemini-2.0-flash"];
+  if (modelsToTry[0] !== "gemini-2.0-flash" && url.includes("google")) {
+    modelsToTry.push("gemini-2.0-flash");
+  }
 
-    if (!resp.ok) {
-      const errText = await resp.text().catch(() => "");
+  let lastStatus = 0;
+  let lastErr = "";
+
+  for (const m of modelsToTry) {
+    try {
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${key}`,
+        },
+        body: JSON.stringify({
+          model: m,
+          messages: [{ role: "user", content: "ตอบกลับสั้นๆ ว่า OK" }],
+          max_tokens: 20,
+        }),
+        signal: AbortSignal.timeout(20000),
+      });
+
+      lastStatus = resp.status;
+      if (!resp.ok) {
+        lastErr = await resp.text().catch(() => "");
+        if ((resp.status === 503 || resp.status === 429) && modelsToTry.length > 1 && m !== "gemini-2.0-flash") {
+          continue;
+        }
+        return {
+          success: false,
+          message: `HTTP ${resp.status}: ${lastErr.slice(0, 150) || "การเชื่อมต่อถูกปฏิเสธ"}${
+            resp.status === 503 ? " (โมเดลนี้มีผู้ใช้หนาแน่น แนะนำเปลี่ยนชื่อโมเดลเป็น gemini-2.0-flash)" : ""
+          }`,
+        };
+      }
+
+      const data = await resp.json();
+      const reply = data?.choices?.[0]?.message?.content || "OK";
+      const switchedNotice = m !== model ? ` (ปรับใช้ ${m} เพื่อเลี่ยงคิวหนาแน่น)` : "";
+      return {
+        success: true,
+        message: `เชื่อมต่อสำเร็จ! AI ตอบกลับ: "${reply.slice(0, 50).trim()}"${switchedNotice}`,
+        suggestedModel: m !== model ? m : undefined,
+      };
+    } catch (e: any) {
       return {
         success: false,
-        message: `HTTP ${resp.status}: ${errText.slice(0, 150) || "การเชื่อมต่อถูกปฏิเสธ"}`,
+        message: `เชื่อมต่อไม่สำเร็จ: ${e.message || "Network Error"}`,
       };
     }
-
-    const data = await resp.json();
-    const reply = data?.choices?.[0]?.message?.content || "OK";
-    return {
-      success: true,
-      message: `เชื่อมต่อสำเร็จ! AI ตอบกลับ: "${reply.slice(0, 50).trim()}"`,
-    };
-  } catch (e: any) {
-    return {
-      success: false,
-      message: `เชื่อมต่อไม่สำเร็จ: ${e.message || "Network Error"}`,
-    };
   }
+
+  return {
+    success: false,
+    message: `HTTP ${lastStatus}: ${lastErr.slice(0, 150)}`,
+  };
 }

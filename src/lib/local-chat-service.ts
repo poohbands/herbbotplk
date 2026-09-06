@@ -132,42 +132,58 @@ export async function processLocalChat(
     { role: "user", content: question },
   ];
 
-  // 5. เรียกใช้ AI โดยรองรับ Auto-Failover
+  // 5. เรียกใช้ AI โดยรองรับ Auto-Failover และ Resilience ต่อปัญหา 503 High Demand
   let lastError: Error | null = null;
   let answer = "";
 
   for (const provider of availableProviders) {
-    try {
-      const baseUrl = provider.base_url.trim().replace(/\/+$/, "");
-      const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
+    const baseUrl = provider.base_url.trim().replace(/\/+$/, "");
+    const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
-      const resp = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${provider.api_key}`,
-        },
-        body: JSON.stringify({
-          model: provider.model_name || "gemini-1.5-flash",
-          messages: messagesToSend,
-          temperature: 0.3,
-        }),
-      });
+    const isGoogle = baseUrl.includes("google") || provider.provider_key === "gemini";
+    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-2.0-flash" : "deepseek-chat");
+    const modelCandidates = isGoogle
+      ? Array.from(new Set([configuredModel, "gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-flash"]))
+      : [configuredModel];
 
-      if (!resp.ok) {
-        const errText = await resp.text().catch(() => "");
-        throw new Error(`HTTP ${resp.status}: ${errText.slice(0, 150)}`);
+    for (const modelToUse of modelCandidates) {
+      try {
+        const resp = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${provider.api_key}`,
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages: messagesToSend,
+            temperature: 0.3,
+          }),
+        });
+
+        if (resp.status === 503 || resp.status === 429) {
+          console.warn(`Model ${modelToUse} returned HTTP ${resp.status} (High Demand). Trying next candidate...`);
+          continue;
+        }
+
+        if (!resp.ok) {
+          const errText = await resp.text().catch(() => "");
+          throw new Error(`HTTP ${resp.status}: ${errText.slice(0, 150)}`);
+        }
+
+        const result = await resp.json();
+        answer = result?.choices?.[0]?.message?.content || "";
+        if (answer) {
+          break;
+        }
+      } catch (e: any) {
+        console.warn(`Provider ${provider.name} model ${modelToUse} failed:`, e.message);
+        lastError = e;
       }
+    }
 
-      const result = await resp.json();
-      answer = result?.choices?.[0]?.message?.content || "";
-      if (answer) {
-        break; // สำเร็จ
-      }
-    } catch (e: any) {
-      console.warn(`Provider ${provider.name} failed:`, e.message);
-      lastError = e;
-      // วนลูปไปลอง Provider ตัวถัดไปตาม Priority
+    if (answer) {
+      break;
     }
   }
 
