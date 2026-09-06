@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
-type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
+type ThaiJoSource = { title: string; authors: string; year?: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
 type KnowledgeSource = { id: string; title: string; category?: string; source?: string; source_url?: string; content?: string };
 type SourcesPayload = {
@@ -748,7 +748,7 @@ const ChatPage = () => {
                                     <div className="min-w-0">
                                       <span className="font-medium text-foreground line-clamp-1">{t.title}</span>
                                       <span className="text-muted-foreground block text-[11px] mt-0.5">
-                                        {t.authors ? `${t.authors} · ` : ""}{t.journal} · งานวิจัยไทย (ThaiJO)
+                                        {t.authors ? `${t.authors} · ` : ""}{t.journal} {t.year && `(${t.year}) `}· งานวิจัยไทย (ThaiJO)
                                       </span>
                                     </div>
                                   </div>
@@ -841,7 +841,7 @@ const ChatPage = () => {
                                       (p) => `${p.authors}. (${p.year || "n.d."}). ${p.title}. ${p.journal}. https://pubmed.ncbi.nlm.nih.gov/${p.pmid}/`
                                     ),
                                     ...(msg.sources?.thaijo || []).map(
-                                      (t) => `${t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). ${t.title}. ${t.journal}. ${t.url}`
+                                      (t) => `${t.authors ? `${t.authors}. ` : ""}(${t.year || "ม.ป.ป."}). ${t.title}. ${t.journal}. ${t.url}`
                                     ),
                                     ...(msg.sources?.knowledge || []).map(
                                       (k) => `${k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). ${k.title}. กระทรวงสาธารณสุข.${k.source_url ? ` ${k.source_url}` : ""}`
@@ -919,7 +919,7 @@ const ChatPage = () => {
                                   className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                                 >
                                   <p className="leading-relaxed flex-1">
-                                    {t.authors ? `${t.authors}. ` : ""}(ม.ป.ป.). {t.title}. <em>{t.journal}</em>.{" "}
+                                    {t.authors ? `${t.authors}. ` : ""}({t.year || "ม.ป.ป."}). {t.title}. <em>{t.journal}</em>.{" "}
                                     <a
                                       href={t.url}
                                       target="_blank"

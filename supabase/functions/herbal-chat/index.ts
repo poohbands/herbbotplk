@@ -49,6 +49,7 @@ type PubMedSource = {
 type ThaiJoSource = {
   title: string;
   authors: string;
+  year?: string;
   journal: string;
   url: string;
 };
