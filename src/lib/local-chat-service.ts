@@ -292,9 +292,75 @@ export function findRelevantThaiJo(question: string, matchedHerbs: any[]): ThaiJ
   return results;
 }
 
+// ข้อความปฏิเสธมาตรฐานที่สุภาพ เมื่อได้รับคำถามที่ไม่เกี่ยวข้องกับการแพทย์แผนไทย การแพทย์แผนปัจจุบัน หรือการดูแลสุขภาพ
+export const OUT_OF_SCOPE_REFUSAL_MESSAGE = `ขออภัยด้วยครับ ผมคือ **หมอยาพิษณุโลก** ผู้ช่วยให้คำปรึกษาเฉพาะทางด้าน **การแพทย์แผนไทย การแพทย์แผนปัจจุบัน สมุนไพรไทย และอันตรกิริยาระหว่างยา (Drug-Herb Interaction)** ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
+
+เนื่องจากคำถามของท่านไม่ได้เกี่ยวข้องกับทางด้านการแพทย์แผนไทย การแพทย์แผนปัจจุบัน หรือการดูแลสุขภาพ จึงอยู่นอกเหนือขอบเขตที่ผมสามารถให้ข้อมูลได้ครับ 🙏
+
+ท่านสามารถสอบถามหรือปรึกษาข้อมูลด้านสุขภาพและสมุนไพรได้ดังนี้ครับ:
+🌿 **สมุนไพรและตำรับยาแผนไทย:** สรรพคุณ วิธีใช้ ขนาดยา และข้อควรระวัง
+💊 **ยาแผนปัจจุบันและอันตรกิริยา:** การใช้ยาสมุนไพรร่วมกับยาแผนปัจจุบัน (Drug-Herb Interaction)
+🩺 **การดูแลสุขภาพเบื้องต้น:** การดูแลตนเองตามแนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุข`;
+
+/** ตรวจสอบคำถามที่อยู่นอกขอบเขตการแพทย์และสุขภาพอย่างชัดเจน (เช่น โค้ดดิ้ง, การเมือง, กีฬา, สภาพอากาศ, ดูดวง ฯลฯ) */
+export function isBlatantlyOutOfScope(
+  question: string,
+  history: { role: string; content: string }[] = []
+): boolean {
+  const q = (question || "").trim().toLowerCase();
+  if (!q) return false;
+
+  // 1. คำค้นที่ไม่เกี่ยวกับการแพทย์อย่างชัดเจน
+  const nonMedicalPattern =
+    /(?:เขียน(?:โปรแกรม|โค้ด)|โค้ดดิ้ง|programming|coding|javascript|typescript|python|java\b|c\+\+|html|css|sql|docker|react|vue|angular|node\.js|ฟังก์ชัน|อัลกอริทึม|แก้บั๊ก|บักในโค้ด|พยากรณ์อากาศ|สภาพอากาศ|ฝนตกไหม|วันนี้ฝนตก|อุณหภูมิวันนี้|กี่องศา|ผลบอล|ตารางบอล|พรีเมียร์ลีก|ลิเวอร์พูล|แมนยู|อาร์เซนอล|เชลซี|ตารางแข่ง|บอลเมื่อคืน|การเมือง|เลือกตั้งนายก|พรรคการเมือง|ยุบสภา|นายกรัฐมนตรีคนใหม่|อภิปรายไม่ไว้วางใจ|ดูดวง|ทำนายดวง|ไพ่ยิปซี|ราศีเกิด|เลขเด็ด|ตรวจหวย|หวยงวดนี้|ผลสลาก|แต่งกลอน|แต่งเพลง|เล่าเรื่องตลก|คุยเล่นแก้เหงา|แปลภาษาอังกฤษเป็นไทย|แปลประโยคนี้)/i;
+
+  if (!nonMedicalPattern.test(q)) {
+    return false;
+  }
+
+  // 2. ข้อยกเว้น: หากมีคำทางการแพทย์/สมุนไพร/ยา/อาการ ให้ถือว่าอยู่ในขอบเขต
+  const medicalWhitelist =
+    /(?:สมุนไพร|ตำรับ(?:ยา)?|ขนาดยา|วิธีใช้|ขนาดใช้|กินยังไง|ทานยังไง|ผลข้างเคียง|แพ้ยา|อันตรกิริยา|สรรพคุณ|สารสกัด|การรักษา|รักษา|บรรเทา|กินยา|ทานยา|ใช้ยา|ตัวยา|ดื้อยา|ยาแผน|ยาสามัญ|ยาเม็ด|ยาน้ำ|ยาแคปซูล|ยาแก้|ยาลด|ยาบำรุง|ยาต้ม|ยาผง|ยาดม|ยาทา|หยอดตา|(?:^|[^\u0E00-\u0E7F])ยา(?=[^\u0E00-\u0E7F\s]|แผน|สมุนไพร|เม็ด|แคปซูล|แก้|ลด|บำรุง|หยอด|ทา|รักษา|กิน|ทาน|ใช้|สระ|ดม|\s|$)|แพทย์|เภสัช|พยาบาล|โรงพยาบาล|คลินิก|ผู้ป่วย|คนไข้|อาการ|เจ็บป่วย|ติดเชื้อ|อักเสบ|ความดัน|เบาหวาน|คอเลสเตอรอล|ไขมันในเลือด|โรคตับ|โรคไต|โรคหัวใจ|มะเร็ง|นอนไม่หลับ|ไมเกรน|ปวด|มีไข้|ตัวร้อน|ลดไข้|แก้ไข้|ไอ|เจ็บคอ|หวัด|คัดจมูก|น้ำมูก|ท้องเสีย|ท้องผูก|ท้องอืด|ท้องเฟ้อ|จุกเสียด|แน่นท้อง|คลื่นไส้|อาเจียน|ผื่น|คัน|แผล|น้ำตาลในเลือด|ข้อเข่า|กล้ามเนื้อ|เฮิร์บ|herb|drug|medicine)/i;
+
+  if (medicalWhitelist.test(q)) {
+    return false;
+  }
+
+  // 3. ข้อยกเว้น: หากในประวัติ 2 ข้อความล่าสุด มีการพูดถึงเรื่องยาหรือสมุนไพร
+  const recentHistory = history.slice(-2).map((m) => m.content).join(" ");
+  if (medicalWhitelist.test(recentHistory)) {
+    return false;
+  }
+
+  return true;
+}
+
 const SYSTEM_PROMPT = `คุณคือ "หมอยาพิษณุโลก" ผู้เชี่ยวชาญด้านเภสัชกรรมไทยและอันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
 
-แนวทางการตอบ:
+## กฎสำคัญที่สุด — ขอบเขตการตอบคำถาม:
+1. **อยู่ในขอบเขต — ตอบได้อย่างละเอียด ชัดเจน และมีหลักฐานอ้างอิง:**
+   - การแพทย์แผนไทย สมุนไพรไทย ตำรับยาแผนไทย บัญชียาหลักแห่งชาติด้านสมุนไพร
+   - การแพทย์แผนปัจจุบัน ยาแผนปัจจุบันทุกชนิด และผลข้างเคียง
+   - อันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) และอันตรกิริยาระหว่างยา (Drug-Drug Interaction)
+   - อาการเจ็บป่วย การดูแลสุขภาพเบื้องต้น (เช่น 10 กลุ่มอาการ สธ.) ขนาดยา วิธีใช้ ข้อห้าม ข้อควรระวัง
+   - คำถามต่อเนื่องในบทสนทนาที่เกี่ยวกับสุขภาพ/ยา/สมุนไพร
+
+2. **อยู่นอกขอบเขต — ห้ามตอบคำถามเด็ดขาด:**
+   - หากคำถามไม่เกี่ยวข้องกับการแพทย์แผนไทย การแพทย์แผนปัจจุบัน หรือการดูแลสุขภาพ (เช่น เขียนโปรแกรม/โค้ดดิ้ง, การเมือง, กีฬา, พยากรณ์อากาศ, ดูดวง/หวย, แปลภาษาทั่วไป, บันเทิง/เพลง, ช่าง/เทคนิคทั่วไปที่ไม่เกี่ยวกับการแพทย์, เรื่องส่วนตัวของ AI ฯลฯ)
+   - **ห้ามตอบคำถามหรือให้ข้อมูลของคำถามนั้นแม้แต่น้อย**
+   - **ต้องตอบปฏิเสธด้วยข้อความสุภาพมาตรฐานด้านล่างนี้เท่านั้น**:
+${OUT_OF_SCOPE_REFUSAL_MESSAGE}
+
+   - ในกรณีปฏิเสธนี้ **ห้ามใส่หัวข้อ "📚 เอกสารอ้างอิง (APA 7th Edition)" ใดๆ ทั้งสิ้น**
+   - ใส่แท็กโครงสร้างข้อมูล:
+[METADATA]
+category: general
+severity: none
+herbs:
+drugs:
+[/METADATA]
+
+แนวทางการตอบสำหรับคำถามที่อยู่ในขอบเขต:
 1. ตอบด้วยภาษาไทยที่สุภาพ เป็นมิตร น่าเชื่อถือ อธิบายเข้าใจง่าย ชัดเจน ตรงประเด็น
 2. หากมีการใช้ยาร่วมกัน ให้ระบุระดับความรุนแรง (Major/Moderate/Minor) ให้ชัดเจน
 3. ระบุชื่อสมุนไพร/ตำรับยา, สรรพคุณ, ขนาดและวิธีใช้, ข้อห้าม และข้อควรระวัง
@@ -335,6 +401,16 @@ export async function processLocalChat(
   history: { role: string; content: string }[],
   onChunk?: (text: string) => void
 ): Promise<string> {
+  // 0. ตรวจจับคำถามที่อยู่นอกขอบเขตชัดเจน (Fast short-circuit ตอบปฏิเสธทันที ไม่ต้องต่อ API)
+  if (isBlatantlyOutOfScope(question, history)) {
+    const refusalText = `${OUT_OF_SCOPE_REFUSAL_MESSAGE}\n\n[METADATA]\ncategory: general\nseverity: none\nherbs:\ndrugs:\n[/METADATA]\n\n[SOURCES]{"internal":[],"pubmed":[],"thaijo":[],"knowledge":[]}[/SOURCES]`;
+    if (onChunk) {
+      onChunk(OUT_OF_SCOPE_REFUSAL_MESSAGE);
+      onChunk(refusalText);
+    }
+    return refusalText;
+  }
+
   const availableProviders = getAvailableLocalProviders();
   if (availableProviders.length === 0) {
     throw new Error(
@@ -582,17 +658,25 @@ export async function processLocalChat(
     );
   }
 
-  // 6. รวบรวม Sources Payload ทั้งภายในและภายนอก (PubMed & ThaiJO)
-  const sourcesPayload: any = {
-    internal: [
-      ...matchedHerbs.map((h) => ({ type: "herb", id: h.id, name: h.name_thai })),
-      ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
-    ],
-    pubmed: pubmedResults,
-    thaijo: thaijoResults,
-  };
+  // ตรวจสอบว่าคำตอบของ AI เป็นการปฏิเสธคำถามนอกขอบเขตหรือไม่
+  const isOutOfScope =
+    answer.includes("อยู่นอกเหนือขอบเขต") ||
+    answer.includes("ไม่ได้เกี่ยวข้องกับทางด้านการแพทย์") ||
+    answer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
 
-  if (matchedHerbs.length === 0 && matchedFormulas.length === 0 && allKnowledge.length > 0) {
+  // 6. รวบรวม Sources Payload ทั้งภายในและภายนอก (PubMed & ThaiJO)
+  const sourcesPayload: any = isOutOfScope
+    ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
+    : {
+        internal: [
+          ...matchedHerbs.map((h) => ({ type: "herb", id: h.id, name: h.name_thai })),
+          ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
+        ],
+        pubmed: pubmedResults,
+        thaijo: thaijoResults,
+      };
+
+  if (!isOutOfScope && matchedHerbs.length === 0 && matchedFormulas.length === 0 && allKnowledge.length > 0) {
     sourcesPayload.knowledge = allKnowledge.slice(0, 2).map((k: any) => ({
       id: k.id,
       title: k.title,
