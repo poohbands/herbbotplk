@@ -1011,73 +1011,47 @@ ${sourcesJson}
 จำไว้: อ้างอิงเฉพาะจาก CONTEXT ข้างต้นเท่านั้น ห้ามแต่งแหล่งอ้างอิงใหม่ และเวลาใส่ [SOURCES] ให้คัดลอก JSON ในแท็ก <แหล่งอ้างอิงที่ใช้จริง> ทั้งหมดโดยไม่แก้ไข${listInstruction}${scopeInstruction}`,
     };
 
-    const callGateway = async (body: Record<string, unknown>) =>
-      await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
-
     // ---- ขั้นที่ 1: ร่างคำตอบ ----
-    const response = await callGateway({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        contextMessage,
-        ...(Array.isArray(messages) ? messages.slice(-10) : messages),
-      ],
-    });
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: 'Rate limit exceeded. กรุณารอสักครู่แล้วลองใหม่' }), {
-          status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'Credits หมด กรุณาเติม credits ที่ Lovable workspace' }), {
-          status: 402,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-      const t = await response.text();
-      console.error('AI gateway error:', response.status, t);
-      return new Response(JSON.stringify({ error: 'AI gateway error' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    let finalAnswer = "";
+    try {
+      const draftResult = await aiComplete(providers, {
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          contextMessage,
+          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
+        ],
+        temperature: 0.2,
+        timeoutMs: 35000,
       });
+      finalAnswer = draftResult.text || "";
+    } catch (err) {
+      console.error("[herbal-chat] draft generation failed on all providers:", err);
+      finalAnswer = "ขออภัยครับ ระบบให้คำปรึกษาไม่พร้อมใช้งานชั่วคราว กรุณาลองใหม่อีกครั้งในภายหลัง หรือปรึกษาแพทย์แผนไทย/เภสัชกรที่สถานพยาบาลใกล้บ้าน";
     }
-
-    const draftData = await response.json();
-    let finalAnswer: string = draftData?.choices?.[0]?.message?.content || "";
 
     // ---- ขั้นที่ 1.5: ถ้าปฏิเสธทั้งที่คำถามอยู่ในขอบเขต → ร่างใหม่ทันที ----
     const looksRefusal = (t: string) => t.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
     if (intent.in_scope && looksRefusal(finalAnswer)) {
       console.log("[herbal-chat] wrong refusal detected → regenerating");
-      const retryResp = await callGateway({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          contextMessage,
-          ...(Array.isArray(messages) ? messages.slice(-10) : messages),
-          {
-            role: 'system',
-            content: `คำตอบก่อนหน้าปฏิเสธคำถามนี้ ซึ่ง**ผิด** — คำถามนี้อยู่ในขอบเขตด้านสุขภาพ/สมุนไพร (${intent.type}${intent.symptoms.length ? `: ${intent.symptoms.join(", ")}` : ""})
+      try {
+        const retryResult = await aiComplete(providers, {
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            contextMessage,
+            ...(Array.isArray(messages) ? messages.slice(-10) : messages),
+            {
+              role: 'system',
+              content: `คำตอบก่อนหน้าปฏิเสธคำถามนี้ ซึ่ง**ผิด** — คำถามนี้อยู่ในขอบเขตด้านสุขภาพ/สมุนไพร (${intent.type}${intent.symptoms.length ? `: ${intent.symptoms.join(", ")}` : ""})
 ให้ตอบใหม่แบบเป็นประโยชน์ทันที: แนะนำสมุนไพร/ตำรับที่เหมาะกับอาการตาม CONTEXT และแนวทาง 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ พร้อมขนาดยา ข้อควรระวัง คำเตือนให้ปรึกษาแพทย์/เภสัชกร และบล็อก [METADATA]/[SOURCES] ตามรูปแบบ ห้ามปฏิเสธ`,
-          },
-        ],
-      });
-      if (retryResp.ok) {
-        const retryData = await retryResp.json();
-        const retryText: string = retryData?.choices?.[0]?.message?.content || "";
+            },
+          ],
+          temperature: 0.2,
+          timeoutMs: 35000,
+        });
+        const retryText: string = retryResult.text || "";
         if (retryText.trim().length > 40 && !looksRefusal(retryText)) finalAnswer = retryText;
-      } else {
-        console.error("[herbal-chat] regenerate failed:", retryResp.status);
+      } catch (e) {
+        console.error("[herbal-chat] regenerate failed:", e);
       }
     }
 
@@ -1085,8 +1059,7 @@ ${sourcesJson}
     const isRefusal = looksRefusal(finalAnswer);
     if (finalAnswer.trim().length > 0 && !isRefusal) {
       try {
-        const verifyResp = await callGateway({
-          model: 'google/gemini-2.5-flash',
+        const verifyResult = await aiComplete(providers, {
           messages: [
             {
               role: 'system',
@@ -1106,18 +1079,14 @@ ${sourcesJson}
               content: `<CONTEXT>\n${contextBlock}\n</CONTEXT>\n\n<แหล่งอ้างอิงที่ใช้จริง>\n${sourcesJson}\n</แหล่งอ้างอิงที่ใช้จริง>\n\n<คำถามผู้ใช้>\n${question}\n</คำถามผู้ใช้>\n\n<ร่างคำตอบ>\n${finalAnswer}\n</ร่างคำตอบ>`,
             },
           ],
+          timeoutMs: 25000,
         });
-        if (verifyResp.ok) {
-          const vData = await verifyResp.json();
-          const verdict: string = (vData?.choices?.[0]?.message?.content || "").trim();
-          if (verdict && !/^pass\b/i.test(verdict) && verdict.length > 80) {
-            console.log("[herbal-chat] verification: corrected answer");
-            finalAnswer = verdict;
-          } else {
-            console.log("[herbal-chat] verification: PASS");
-          }
+        const verdict = (verifyResult.text || "").trim();
+        if (verdict && !/^pass\b/i.test(verdict) && verdict.length > 80) {
+          console.log("[herbal-chat] verification: corrected answer");
+          finalAnswer = verdict;
         } else {
-          console.error("[herbal-chat] verification failed:", verifyResp.status);
+          console.log("[herbal-chat] verification: PASS");
         }
       } catch (e) {
         console.error("[herbal-chat] verification exception:", e);

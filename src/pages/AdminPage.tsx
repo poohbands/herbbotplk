@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Leaf, BarChart3, MessageCircle, AlertTriangle, TrendingUp, Users, ArrowLeft, Pill, Activity, Shield, RefreshCw } from "lucide-react";
+import { Leaf, BarChart3, MessageCircle, AlertTriangle, TrendingUp, Users, ArrowLeft, Pill, Activity, Shield, RefreshCw, Bot } from "lucide-react";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, BarChart, Bar } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,6 +85,12 @@ const AdminPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href="/admin/ai-settings"
+              className="text-sm font-medium bg-primary/10 hover:bg-primary/20 text-primary transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-primary/20 shadow-xs"
+            >
+              <Bot className="w-4 h-4" /> ตั้งค่า AI
+            </a>
             <button onClick={loadStats} disabled={loading} className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-muted disabled:opacity-50">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
               รีเฟรช
