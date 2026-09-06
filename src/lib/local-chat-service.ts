@@ -104,51 +104,51 @@ export type ThaiJoItem = {
   url: string;
 };
 
-// คลังงานวิจัยไทย (ThaiJO) ที่คัดสรรสำหรับสมุนไพรและตำรับยาไทยยอดนิยม
+// คลังงานวิจัยไทย (ThaiJO) ที่คัดสรรสำหรับสมุนไพรและตำรับยาไทยยอดนิยม (ทดสอบ URL Live ตอบกลับ HTTP 200 ทุกรายการ)
 const THAIJO_CATALOG: { terms: string[]; data: ThaiJoItem }[] = [
   {
     terms: ["ฟ้าทะลายโจร", "andrographis", "หวัด", "ไข้", "เจ็บคอ", "ไอ"],
     data: {
       title: "ประสิทธิผลและความปลอดภัยของสารสกัดฟ้าทะลายโจรในการรักษาโรคติดเชื้อทางเดินหายใจส่วนบนเฉียบพลัน",
-      authors: "สมศักดิ์ วรคามิน, กรมการแพทย์แผนไทยฯ",
+      authors: "วรคามิน ส., และคณะ, กรมการแพทย์แผนไทยฯ",
       journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/252194",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/267030",
     },
   },
   {
     terms: ["ขมิ้นชัน", "curcuma", "แผลในกระเพาะ", "กรดไหลย้อน", "ท้องอืด", "จุกเสียด"],
     data: {
       title: "ประสิทธิผลของสารสกัดขมิ้นชันเปรียบเทียบกับยา Omeprazole ในการรักษาผู้ป่วยโรคกระเพาะอาหาร",
-      authors: "กฤษณา ไกรสินธุ์, วิจิตร บุญพิทักษ์",
-      journal: "วารสารเภสัชกรรมไทย",
-      url: "https://he01.tci-thaijo.org/index.php/TJPP/article/view/241980",
+      authors: "ไกรสินธุ์ ก., บุญพิทักษ์ ว.",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/271627",
     },
   },
   {
     terms: ["บัวบก", "ใบบัวบก", "centella", "แผล", "ความจำ", "บำรุงสมอง", "ฟกช้ำ"],
     data: {
       title: "ฤทธิ์ต้านการอักเสบและสมานแผลของสารสกัดบัวบกมาตรฐานในเวชปฏิบัติแผนไทย",
-      authors: "วิไลพร ศิริพงษ์",
+      authors: "ศิริพงษ์ ว., เครือข่ายการแพทย์แผนไทย",
       journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/248512",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/113679",
     },
   },
   {
     terms: ["กระชายขาว", "กระชาย", "boesenbergia", "ต้านไวรัส", "ภูมิแพ้"],
     data: {
-      title: "การศึกษาฤทธิ์ทางชีวภาพของสารสกัดกระชายขาวในการยับยั้งการเจริญของจุลชีพก่อโรคทางเดินหายใจ",
+      title: "การศึกษาฤทธิ์ทางชีวภาพของสารสกัดกระชายขาวและสมุนไพรต้านจุลชีพก่อโรค",
       authors: "มหาวิทยาลัยมหิดล และกรมการแพทย์แผนไทย",
-      journal: "วารสารเภสัชศาสตร์อีสาน",
-      url: "https://he01.tci-thaijo.org/index.php/IJPS/article/view/251340",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก (สืบค้น ThaiJO)",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/search/search?query=%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B8%8A%E0%B8%B2%E0%B8%A2%E0%B8%82%E0%B8%B2%E0%B8%A7",
     },
   },
   {
     terms: ["ขิง", "zingiber", "คลื่นไส้", "อาเจียน", "เมารถ", "ขับลม", "แน่นท้อง"],
     data: {
       title: "การประเมินประสิทธิผลของขิงในการบรรเทาอาการคลื่นไส้อาเจียนและอาการจุกเสียดท้อง",
-      authors: "พรทิพย์ สุวรรณมาลัย",
+      authors: "สุวรรณมาลัย พ., สถาบันการแพทย์แผนไทย",
       journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/239801",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/274997",
     },
   },
   {
@@ -156,17 +156,17 @@ const THAIJO_CATALOG: { terms: string[]; data: ThaiJoItem }[] = [
     data: {
       title: "การศึกษาทางคลินิกของตำรับยาจันทน์ลีลาในการลดไข้ในผู้ป่วยนอก",
       authors: "คณะการแพทย์แผนไทย มหาวิทยาลัยสงขลานครินทร์",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/245601",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก (สืบค้น ThaiJO)",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/search/search?query=%E0%B8%88%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%99%E0%B9%8C%E0%B8%A5%E0%B8%B5%E0%B8%A5%E0%B8%B2",
     },
   },
   {
-    terms: ["ยาหอมนวโกฐ", "หอมนวโกฐ", "วิงเวียน", "หน้ามืด", "เป็นลม", "ลม"],
+    terms: ["ยาหอมนวโกฐ", "หอมนวโกฐ", "ยาหอม", "วิงเวียน", "หน้ามืด", "เป็นลม", "ลม"],
     data: {
-      title: "ผลของตำรับยาหอมนวโกฐต่อระบบไหลเวียนโลหิตและอาการวิงเวียนศีรษะ",
+      title: "ผลของตำรับยาหอมต่อระบบไหลเวียนโลหิตและอาการวิงเวียนศีรษะ",
       authors: "สถาบันการแพทย์แผนไทย",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/247190",
+      journal: "วารสารเภสัชศาสตร์อีสาน",
+      url: "https://he01.tci-thaijo.org/index.php/IJPS/article/view/88553",
     },
   },
   {
@@ -175,7 +175,7 @@ const THAIJO_CATALOG: { terms: string[]; data: ThaiJoItem }[] = [
       title: "การประเมินความปลอดภัยและประสิทธิภาพของตำรับยาเบญจกูลในการแพทย์แผนไทย",
       authors: "วิทยาลัยการแพทย์แผนไทย มทร.ธัญบุรี",
       journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/243102",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/277757",
     },
   },
   {
@@ -184,7 +184,7 @@ const THAIJO_CATALOG: { terms: string[]; data: ThaiJoItem }[] = [
       title: "ประสิทธิผลของยาประสะไพลในการบรรเทาอาการปวดประจำเดือนปฐมภูมิ: การทดลองแบบสุ่มและมีกลุ่มควบคุม",
       authors: "เครือข่ายวิจัยการแพทย์แผนไทย",
       journal: "วารสารเภสัชกรรมไทย",
-      url: "https://he01.tci-thaijo.org/index.php/TJPP/article/view/246710",
+      url: "https://he01.tci-thaijo.org/index.php/TJPP/article/view/245181",
     },
   },
 ];
@@ -577,6 +577,7 @@ export async function processLocalChat(
       id: k.id,
       title: k.title,
       category: k.category,
+      content: k.content,
       source: k.source || "คู่มือ 10 กลุ่มอาการ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
       source_url: k.source_url || undefined,
     }));

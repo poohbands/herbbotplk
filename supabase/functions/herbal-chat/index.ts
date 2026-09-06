@@ -76,6 +76,7 @@ type KnowledgeSource = {
   category: string;
   source: string | null;
   source_url: string | null;
+  content?: string;
 };
 
 type AiFallback = {
@@ -577,11 +578,15 @@ async function searchThaiJoJournal(
     const title = stripTags(linkMatch[2]);
     if (!title) continue;
     const authorsMatch = block.match(/class="authors"\s*>([\s\S]*?)<\/div>/);
+    let articleUrl = linkMatch[1].trim();
+    if (!articleUrl.startsWith("http://") && !articleUrl.startsWith("https://")) {
+      articleUrl = `https://${journal.host}.tci-thaijo.org${articleUrl.startsWith("/") ? "" : "/"}${articleUrl}`;
+    }
     results.push({
       title,
       authors: authorsMatch ? stripTags(authorsMatch[1]).slice(0, 120) : "",
       journal: journal.name,
-      url: linkMatch[1],
+      url: articleUrl,
     });
     if (results.length >= limit) break;
   }
@@ -986,7 +991,7 @@ serve(async (req) => {
       ...formulas.map((f) => ({ type: "formula" as const, id: f.id, name: f.name_thai })),
     ];
     const knowledgeSources: KnowledgeSource[] = knowledge.map((k) => ({
-      id: k.id, title: k.title, category: k.category, source: k.source, source_url: k.source_url,
+      id: k.id, title: k.title, category: k.category, content: k.content, source: k.source, source_url: k.source_url,
     }));
 
     // ใส่แนวทาง 10 กลุ่มอาการของกระทรวงฯ ให้ด้วย เมื่อเป็นคำถามอาการที่ค้นภายในไม่เจอ

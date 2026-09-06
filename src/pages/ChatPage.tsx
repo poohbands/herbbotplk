@@ -6,11 +6,13 @@ import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 import { processLocalChat, hasLocalProviderKey } from "@/lib/local-chat-service";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type KnowledgeSource = { id: string; title: string; category?: string; source?: string; source_url?: string };
+type KnowledgeSource = { id: string; title: string; category?: string; source?: string; source_url?: string; content?: string };
 type SourcesPayload = {
   pubmed?: PubMedSource[];
   internal?: InternalSource[];
@@ -159,7 +161,43 @@ const ChatPage = () => {
 
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [suggestedCategories, setSuggestedCategories] = useState(DEFAULT_CATEGORIES);
+  const [selectedKnowledgeDoc, setSelectedKnowledgeDoc] = useState<KnowledgeSource | null>(null);
+  const [fetchingKnowledgeContent, setFetchingKnowledgeContent] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenKnowledge = async (k: KnowledgeSource) => {
+    if (k.source_url && (k.source_url.startsWith("http://") || k.source_url.startsWith("https://"))) {
+      openExternal(k.source_url);
+      return;
+    }
+    setSelectedKnowledgeDoc(k);
+    if (!k.content && k.id) {
+      setFetchingKnowledgeContent(true);
+      try {
+        const { data } = await supabase
+          .from("knowledge_documents")
+          .select("content, source, category, title")
+          .eq("id", k.id)
+          .maybeSingle();
+        if (data) {
+          setSelectedKnowledgeDoc((prev) =>
+            prev && prev.id === k.id
+              ? {
+                  ...prev,
+                  content: data.content,
+                  source: data.source || prev.source,
+                  category: data.category || prev.category,
+                }
+              : prev
+          );
+        }
+      } catch (e) {
+        console.warn("Failed to fetch knowledge document details:", e);
+      } finally {
+        setFetchingKnowledgeContent(false);
+      }
+    }
+  };
 
   // Load popular questions from DB
   useEffect(() => {
@@ -742,47 +780,44 @@ const ChatPage = () => {
                           {/* 4. เอกสารองค์ความรู้และคู่มือกระทรวงสาธารณสุข */}
                           {msg.sources.knowledge && msg.sources.knowledge.length > 0 && (
                             <div className="space-y-1.5">
-                              {msg.sources.knowledge.map((k) => {
-                                const url = k.source_url || `${window.location.origin}/admin/knowledge`;
-                                return (
-                                  <div
-                                    key={k.id}
-                                    className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-all"
-                                  >
-                                    <div className="flex items-start gap-2 min-w-0 flex-1">
-                                      <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
-                                      <div className="min-w-0">
-                                        <span className="font-medium text-foreground line-clamp-1">{k.title}</span>
-                                        <span className="text-muted-foreground block text-[11px] mt-0.5">
-                                          {k.source || "คู่มือและแนวทางการแพทย์แผนไทย"} {k.category && `(${k.category})`}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-1.5 shrink-0">
-                                      {k.source_url && (
-                                        <button
-                                          type="button"
-                                          aria-label="คัดลอกลิงก์"
-                                          title="คัดลอกลิงก์"
-                                          onClick={() => copyLink(k.source_url!)}
-                                          className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
-                                        >
-                                          <Copy className="w-3.5 h-3.5" />
-                                        </button>
-                                      )}
-                                      <button
-                                        type="button"
-                                        onClick={() => openExternal(url)}
-                                        className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer"
-                                        title="เปิดเอกสารองค์ความรู้"
-                                      >
-                                        <span>เปิดเอกสาร</span>
-                                        <ExternalLink className="w-3 h-3" />
-                                      </button>
+                              {msg.sources.knowledge.map((k) => (
+                                <div
+                                  key={k.id}
+                                  className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-all"
+                                >
+                                  <div className="flex items-start gap-2 min-w-0 flex-1">
+                                    <BookOpen className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                                    <div className="min-w-0">
+                                      <span className="font-medium text-foreground line-clamp-1">{k.title}</span>
+                                      <span className="text-muted-foreground block text-[11px] mt-0.5">
+                                        {k.source || "คู่มือและแนวทางการแพทย์แผนไทย"} {k.category && `(${k.category})`}
+                                      </span>
                                     </div>
                                   </div>
-                                );
-                              })}
+                                  <div className="flex items-center gap-1.5 shrink-0">
+                                    {k.source_url && (
+                                      <button
+                                        type="button"
+                                        aria-label="คัดลอกลิงก์"
+                                        title="คัดลอกลิงก์"
+                                        onClick={() => copyLink(k.source_url!)}
+                                        className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
+                                      >
+                                        <Copy className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenKnowledge(k)}
+                                      className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer"
+                                      title="เปิดอ่านเอกสารองค์ความรู้"
+                                    >
+                                      <span>เปิดเอกสาร</span>
+                                      <ExternalLink className="w-3 h-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           )}
 
@@ -909,45 +944,42 @@ const ChatPage = () => {
                                   </button>
                                 </div>
                               ))}
-                              {(msg.sources?.knowledge || []).map((k) => {
-                                const url = k.source_url || `${window.location.origin}/admin/knowledge`;
-                                return (
-                                  <div
-                                    key={`apa-knowledge-${k.id}`}
-                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                              {(msg.sources?.knowledge || []).map((k) => (
+                                <div
+                                  key={`apa-knowledge-${k.id}`}
+                                  className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                >
+                                  <p className="leading-relaxed flex-1">
+                                    {k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). <em>{k.title}</em>. กระทรวงสาธารณสุข.
+                                    {k.source_url && (
+                                      <>
+                                        {" "}
+                                        <a
+                                          href={k.source_url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            openExternal(k.source_url!);
+                                          }}
+                                          className="text-primary hover:underline break-all"
+                                        >
+                                          {k.source_url}
+                                        </a>
+                                      </>
+                                    )}
+                                  </p>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenKnowledge(k)}
+                                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
+                                    title="เปิดอ่านเอกสารองค์ความรู้"
                                   >
-                                    <p className="leading-relaxed flex-1">
-                                      {k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). <em>{k.title}</em>. กระทรวงสาธารณสุข.
-                                      {k.source_url && (
-                                        <>
-                                          {" "}
-                                          <a
-                                            href={k.source_url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              openExternal(k.source_url!);
-                                            }}
-                                            className="text-primary hover:underline break-all"
-                                          >
-                                            {k.source_url}
-                                          </a>
-                                        </>
-                                      )}
-                                    </p>
-                                    <button
-                                      type="button"
-                                      onClick={() => openExternal(url)}
-                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
-                                      title="เปิดเอกสารองค์ความรู้"
-                                    >
-                                      <span>เปิดเอกสาร</span>
-                                      <ExternalLink className="w-2.5 h-2.5" />
-                                    </button>
-                                  </div>
-                                );
-                              })}
+                                    <span>เปิดเอกสาร</span>
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -1036,6 +1068,87 @@ const ChatPage = () => {
           </p>
         </div>
       </div>
+
+      {/* Dialog หน้าต่างอ่านเอกสารองค์ความรู้และคู่มือ สธ. ฉบับเต็ม */}
+      <Dialog open={!!selectedKnowledgeDoc} onOpenChange={(open) => { if (!open) setSelectedKnowledgeDoc(null); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden border-border bg-card">
+          <DialogHeader className="p-5 border-b border-border bg-muted/30">
+            <div className="flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+              <BookOpen className="w-4 h-4" />
+              <span>เอกสารองค์ความรู้และแนวทางปฏิบัติ</span>
+              {selectedKnowledgeDoc?.category && (
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] border border-emerald-500/20">
+                  {selectedKnowledgeDoc.category}
+                </span>
+              )}
+            </div>
+            <DialogTitle className="text-base sm:text-lg font-bold text-foreground mt-1.5 leading-snug">
+              {selectedKnowledgeDoc?.title}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
+              แหล่งที่มา: {selectedKnowledgeDoc?.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            {fetchingKnowledgeContent ? (
+              <div className="py-12 flex flex-col items-center justify-center gap-3 text-muted-foreground">
+                <Leaf className="w-6 h-6 animate-pulse-soft text-emerald-500" />
+                <span className="text-xs">กำลังโหลดเนื้อหาเอกสาร...</span>
+              </div>
+            ) : selectedKnowledgeDoc?.content ? (
+              <div className="prose prose-sm dark:prose-invert max-w-none text-foreground leading-relaxed">
+                <ReactMarkdown>{selectedKnowledgeDoc.content}</ReactMarkdown>
+              </div>
+            ) : (
+              <div className="py-8 text-center text-muted-foreground text-xs">
+                <p>เอกสารฉบับนี้เป็นแนวทางมาตรฐานของการแพทย์แผนไทยและสาธารณสุข</p>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="p-3 border-t border-border bg-muted/20 flex flex-row items-center justify-between gap-2 sm:justify-between">
+            <div className="flex items-center gap-2">
+              {selectedKnowledgeDoc?.content && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedKnowledgeDoc?.content) {
+                      void copyLink(selectedKnowledgeDoc.content);
+                      toast.success("คัดลอกเนื้อหาเอกสารแล้ว");
+                    }
+                  }}
+                  className="text-xs gap-1"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span>คัดลอกเนื้อหา</span>
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openExternal("https://dtam.moph.go.th/")}
+                className="text-xs gap-1 hidden sm:inline-flex"
+              >
+                <span>เว็บกรมแพทย์แผนไทยฯ</span>
+                <ExternalLink className="w-3 h-3" />
+              </Button>
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              onClick={() => setSelectedKnowledgeDoc(null)}
+              className="text-xs"
+            >
+              ปิดหน้าต่าง
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
