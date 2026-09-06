@@ -13,8 +13,23 @@ export type ProviderItem = {
   test_message?: string;
 };
 
-const ENV_GEMINI_KEY = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim() || "";
-const ENV_DEEPSEEK_KEY = (import.meta.env.VITE_DEEPSEEK_API_KEY as string | undefined)?.trim() || "";
+export function isValidAsciiKey(k?: string | null): boolean {
+  if (!k || typeof k !== "string") return false;
+  const trimmed = k.trim();
+  // Headers in fetch only allow ISO-8859-1 / ASCII printable range
+  return /^[\x20-\x7E]+$/.test(trimmed) && !trimmed.includes("ใส่_") && !trimmed.includes("YOUR_");
+}
+
+export function sanitizeKey(k?: string | null): string {
+  if (!k || typeof k !== "string") return "";
+  return k.replace(/[^\x20-\x7E]/g, "").trim();
+}
+
+const rawGeminiEnv = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim() || "";
+const rawDeepseekEnv = (import.meta.env.VITE_DEEPSEEK_API_KEY as string | undefined)?.trim() || "";
+
+const ENV_GEMINI_KEY = isValidAsciiKey(rawGeminiEnv) ? rawGeminiEnv : "";
+const ENV_DEEPSEEK_KEY = isValidAsciiKey(rawDeepseekEnv) ? rawDeepseekEnv : "";
 
 export const DEFAULT_PROVIDERS: ProviderItem[] = [
   {
@@ -115,13 +130,23 @@ export async function testProviderDirectly(provider: {
   base_url: string;
   model_name: string;
 }): Promise<{ success: boolean; message: string; suggestedModel?: string }> {
-  const key = provider.api_key?.trim();
+  const rawKey = provider.api_key?.trim() || "";
   const url = provider.base_url?.trim().replace(/\/+$/, "");
   const model = provider.model_name?.trim();
 
-  if (!key) {
+  if (!rawKey || rawKey === "__CLEAR__") {
     return { success: false, message: "ยังไม่ได้กรอก API Key" };
   }
+
+  if (!isValidAsciiKey(rawKey)) {
+    return {
+      success: false,
+      message: "API Key ไม่ถูกต้อง: มีตัวอักษรภาษาไทยหรืออักขระพิเศษปนอยู่ กรุณาลบกุญแจเดิมแล้วใส่เฉพาะรหัสภาษาอังกฤษ/ตัวเลข (เช่น AIza...)",
+    };
+  }
+
+  const cleanKey = sanitizeKey(rawKey);
+
   if (!url) {
     return { success: false, message: "ยังไม่ได้ระบุ Base URL" };
   }
@@ -142,7 +167,7 @@ export async function testProviderDirectly(provider: {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${key}`,
+          Authorization: `Bearer ${cleanKey}`,
         },
         body: JSON.stringify({
           model: m,

@@ -140,6 +140,13 @@ export async function processLocalChat(
     const baseUrl = provider.base_url.trim().replace(/\/+$/, "");
     const endpoint = baseUrl.endsWith("/chat/completions") ? baseUrl : `${baseUrl}/chat/completions`;
 
+    const rawKey = provider.api_key?.trim() || "";
+    const cleanKey = rawKey.replace(/[^\x20-\x7E]/g, "").trim();
+    if (!cleanKey || cleanKey.includes("ใส่_")) {
+      console.warn(`Provider ${provider.name} has invalid or empty API key. Skipping.`);
+      continue;
+    }
+
     const isGoogle = baseUrl.includes("google") || provider.provider_key === "gemini";
     const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-2.0-flash" : "deepseek-chat");
     const modelCandidates = isGoogle
@@ -152,7 +159,7 @@ export async function processLocalChat(
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${provider.api_key}`,
+            Authorization: `Bearer ${cleanKey}`,
           },
           body: JSON.stringify({
             model: modelToUse,

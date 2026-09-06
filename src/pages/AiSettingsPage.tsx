@@ -98,8 +98,23 @@ const AiSettingsPage = () => {
   };
 
   const handleFieldChange = (id: string, field: "base_url" | "model_name" | "api_key", value: string) => {
+    let cleanVal = value;
+    if (field === "api_key") {
+      if (/[^\x20-\x7E]/.test(value)) {
+        toast.warning("API Key ต้องเป็นภาษาอังกฤษ/ตัวเลขเท่านั้น (ระบบตัดภาษาไทยออกให้อัตโนมัติ)");
+      }
+      cleanVal = value.replace(/[^\x20-\x7E]/g, "").trim();
+    }
     setProviders((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, [field]: value } : p))
+      prev.map((p) =>
+        p.id === id
+          ? {
+              ...p,
+              [field]: cleanVal,
+              has_key: field === "api_key" ? Boolean(cleanVal) : p.has_key,
+            }
+          : p
+      )
     );
   };
 
@@ -112,7 +127,6 @@ const AiSettingsPage = () => {
     newProviders[index] = newProviders[targetIndex];
     newProviders[targetIndex] = temp;
 
-    // รีเซ็ตลำดับตัวเลข priority 1, 2, 3...
     newProviders.forEach((p, idx) => {
       p.priority = idx + 1;
     });
@@ -122,9 +136,9 @@ const AiSettingsPage = () => {
 
   const handleClearKey = (id: string) => {
     setProviders((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, api_key: "__CLEAR__", has_key: false } : p))
+      prev.map((p) => (p.id === id ? { ...p, api_key: "", has_key: false } : p))
     );
-    toast.info("ตั้งค่าให้ลบกุญแจแล้ว (จะมีผลเมื่อกดบันทึก)");
+    toast.info("ล้างกุญแจเดิมแล้ว คุณสามารถวาง API Key ใหม่ได้ทันที");
   };
 
   const handleTest = async (item: ProviderItem) => {
