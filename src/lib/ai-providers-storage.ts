@@ -37,7 +37,7 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
     name: "Google Gemini",
     provider_key: "gemini",
     base_url: "https://generativelanguage.googleapis.com/v1beta/openai",
-    model_name: "gemini-2.5-flash",
+    model_name: "gemini-flash-latest",
     is_active: true,
     priority: 1,
     has_key: Boolean(ENV_GEMINI_KEY),
@@ -141,7 +141,7 @@ export async function testProviderDirectly(provider: {
   if (!isValidAsciiKey(rawKey)) {
     return {
       success: false,
-      message: "API Key ไม่ถูกต้อง: มีตัวอักษรภาษาไทยหรืออักขระพิเศษปนอยู่ กรุณาลบกุญแจเดิมแล้วใส่เฉพาะรหัสภาษาอังกฤษ/ตัวเลข (เช่น AIza...)",
+      message: "API Key ไม่ถูกต้อง: มีตัวอักษรภาษาไทยหรืออักขระพิเศษปนอยู่ กรุณาลบกุญแจเดิมแล้วใส่เฉพาะรหัสภาษาอังกฤษ/ตัวเลข (เช่น AIza... หรือ AQ...)",
     };
   }
 
@@ -154,9 +154,9 @@ export async function testProviderDirectly(provider: {
   const endpoint = url.endsWith("/chat/completions") ? url : `${url}/chat/completions`;
   const isGoogle = url.includes("google") || provider.base_url?.includes("generativelanguage");
 
-  const modelsToTry = [model || (isGoogle ? "gemini-2.5-flash" : "deepseek-chat")];
+  const modelsToTry = [model || (isGoogle ? "gemini-flash-latest" : "deepseek-chat")];
   if (isGoogle) {
-    ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"].forEach((cand) => {
+    ["gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"].forEach((cand) => {
       if (!modelsToTry.includes(cand)) modelsToTry.push(cand);
     });
   }

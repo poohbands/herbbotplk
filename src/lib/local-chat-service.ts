@@ -708,9 +708,9 @@ export async function processLocalChat(
     }
 
     const isGoogle = baseUrl.includes("google") || provider.provider_key === "gemini";
-    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-2.5-flash" : "deepseek-chat");
+    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-flash-latest" : "deepseek-chat");
     const modelCandidates = isGoogle
-      ? Array.from(new Set([configuredModel, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"]))
+      ? Array.from(new Set([configuredModel, "gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]))
       : [configuredModel];
 
     for (const modelToUse of modelCandidates) {
