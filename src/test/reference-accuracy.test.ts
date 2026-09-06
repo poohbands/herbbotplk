@@ -3,7 +3,7 @@ import { findRelevantThaiJo, normalizeThaiName } from "../lib/local-chat-service
 
 describe("Reference and Citation Accuracy (Strict Relevance)", () => {
   describe("ThaiJO Catalog matching (findRelevantThaiJo)", () => {
-    it("returns ONLY ยาจันทน์ลีลา research and NO ฟ้าทะลายโจร when querying ยาจันทน์ลีลา for fever", () => {
+    it("returns NO results for ยาจันทน์ลีลา (no ThaiJO entry - fake search URL removed) and NO ฟ้าทะลายโจร", () => {
       const question = "ยาจันทน์ลีลาใช้ลดไข้ได้ไหม ขนาดเท่าไร?";
       const matchedFormulas = [
         { id: "f1", name_thai: "ยาจันทน์ลีลา", indication: "แก้ไข้ ตัวร้อน ไข้เปลี่ยนฤดู" },
@@ -12,9 +12,9 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
 
       const thaijo = findRelevantThaiJo(question, matchedHerbs, matchedFormulas);
 
-      // Must find ยาจันทน์ลีลา
-      expect(thaijo.length).toBeGreaterThan(0);
-      expect(thaijo.some((t) => t.title.includes("ยาจันทน์ลีลา") || t.title.includes("จันทน์ลีลา"))).toBe(true);
+      // จันทน์ลีลา entry ถูกลบออกจาก catalog เพราะ URL เดิมเป็น Search URL ปลอม
+      // พฤติกรรมที่ถูกต้อง: ไม่ควรพบ result ใดๆ สำหรับจันทน์ลีลา (ดีกว่าอ้างอิง URL ปลอม)
+      expect(thaijo.length).toBe(0);
 
       // Must NOT contain ฟ้าทะลายโจร (article 257226) or แอนโดรกราโฟไลด์ (article 267030)
       expect(thaijo.some((t) => t.url.includes("257226"))).toBe(false);

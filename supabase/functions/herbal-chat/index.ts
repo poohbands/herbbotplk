@@ -659,17 +659,7 @@ const THAIJO_CATALOG: ThaiJoCatalogEntry[] = [
       url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/240988",
     },
   },
-  {
-    subjects: ["กระชายขาว", "กระชาย", "boesenbergia"],
-    symptoms: ["ต้านไวรัส", "ภูมิแพ้"],
-    data: {
-      title: "คลังงานวิจัยและบทความวิชาการกระชายขาวในระบบวารสารวิชาการไทย (ThaiJO Search: กระชายขาว)",
-      authors: "ศูนย์ดัชนีการอ้างอิงวารสารไทย (TCI) และเครือข่ายวิจัยการแพทย์แผนไทย",
-      year: "2567",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก (ฐานข้อมูล ThaiJO)",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/search/search?query=%E0%B8%81%E0%B8%A3%E0%B8%B0%E0%B8%8A%E0%B8%B2%E0%B8%A2%E0%B8%82%E0%B8%B2%E0%B8%A7",
-    },
-  },
+  // กระชายขาว: ยังไม่พบ URL บทความจริงที่ยืนยันได้ใน ThaiJO — ไม่ใส่ fake URL เพื่อป้องกัน citation ผิด
   {
     subjects: ["ขิง", "zingiber"],
     symptoms: ["คลื่นไส้", "อาเจียน", "เมารถ", "ขับลม", "แน่นท้อง"],
@@ -681,19 +671,10 @@ const THAIJO_CATALOG: ThaiJoCatalogEntry[] = [
       url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/120228",
     },
   },
+  // จันทน์ลีลา: ยังไม่พบ URL บทความจริงที่ยืนยันได้ใน ThaiJO — ไม่ใส่ fake Search URL เพื่อป้องกัน citation ผิด
+  // (ข้อมูลสรรพคุณ ขนาดยา ข้อบ่งใช้ยังคงมาจากฐานข้อมูล thai_formulas ใน Supabase)
   {
-    subjects: ["จันทน์ลีลา", "ยาจันทน์ลีลา"],
-    symptoms: ["ไข้", "ลดไข้", "ตัวร้อน", "ปวดหัว", "ไข้เปลี่ยนฤดู"],
-    data: {
-      title: "คลังงานวิจัยและบทความวิชาการตำรับยาจันทน์ลีลาในระบบวารสารวิชาการไทย (ThaiJO Search: ยาจันทน์ลีลา)",
-      authors: "ศูนย์ดัชนีการอ้างอิงวารสารไทย (TCI) และเครือข่ายวิจัยการแพทย์แผนไทย",
-      year: "2567",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก (ฐานข้อมูล ThaiJO)",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/search/search?query=%E0%B8%88%E0%B8%B1%E0%B8%99%E0%B8%97%E0%B8%99%E0%B9%8C%E0%B8%A5%E0%B8%B5%E0%B8%A5%E0%B8%B2",
-    },
-  },
-  {
-    subjects: ["ยาหอมนวโกฐ", "หอมนวโกฐ", "ยาหอม", "ยาหอมอินทจักร์"],
+    subjects: ["ยาหอมนวโกฐ", "หอมนวโกฐ"],
     symptoms: ["วิงเวียน", "หน้ามืด", "เป็นลม", "ลม"],
     data: {
       title: "ฤทธิ์ต้านอนุมูลอิสระและปริมาณฟีนอลิกรวมของตำรับยาแผนไทยบางตำรับ (Antioxidant Activity and Total Phenolic Contents of Some Thai Traditional Formulation)",
@@ -711,18 +692,18 @@ const THAIJO_CATALOG: ThaiJoCatalogEntry[] = [
       authors: "ก้องกุม ช., ปิ่นศรศักดิ์ ป., กนกกังสดาล ภ., และคณะ",
       year: "2025",
       journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/4237",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/277757",
     },
   },
   {
     subjects: ["ประสะไพล", "ยาประสะไพล", "ไพล"],
-    symptoms: ["ปวดประจำเดือน", "ประจำเดือนไม่ปกติ", "ขับน้ำคาวปลา"],
+    symptoms: ["ปวดประจำเดือน", "ประจำเดือนมาผิดปกติ", "ประจำเดือน", "ระดู", "ปวดท้องประจำเดือน", "ขับน้ำคาวปลา"],
     data: {
-      title: "คลังงานวิจัยและบทความวิชาการตำรับยาประสะไพลในระบบวารสารวิชาการไทย (ThaiJO Search: ยาประสะไพล)",
-      authors: "ศูนย์ดัชนีการอ้างอิงวารสารไทย (TCI) และเครือข่ายวิจัยการแพทย์แผนไทย",
-      year: "2567",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก (ฐานข้อมูล ThaiJO)",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/search/search?query=%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%AA%E0%B8%B0%E0%B9%84%E0%B8%9E%E0%B8%A5",
+      title: "ผลเบื้องต้นของยาแคปซูลประสะไพลเพื่อรักษาอาการประจำเดือนมาผิดปกติ (Preliminary Effects of Prasaplai Capsule for Menstruation Disorder Treatment)",
+      authors: "สว่างจิตร ร., และคณะ",
+      year: "2019",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/186302",
     },
   },
 ];
@@ -773,7 +754,9 @@ function findRelevantThaiJoCatalog(
       for (const item of THAIJO_CATALOG) {
         const isMatch = item.subjects.some((s) => {
           const sn = normalizeThaiName(s);
-          return nhn.includes(sn) || sn.includes(nhn);
+          // Strict one-directional: subject ต้องตรงกับ herb name เป๊ะๆ หรือ subject ต้องครอบคลุม herb name
+          // ป้องกัน: "กระชาย" ไม่ match catalog entry ที่ subject = "กระชายขาว"
+          return sn === nhn || sn.includes(nhn) || s.toLowerCase() === hn.toLowerCase() || s.toLowerCase().endsWith(hn.toLowerCase());
         });
         if (isMatch && !seen.has(item.data.url)) {
           seen.add(item.data.url);
@@ -1024,6 +1007,7 @@ async function fetchAiFallback(question: string, providers: ProviderRow[]): Prom
     const aiRes = await aiComplete(providers, {
       messages: [{ role: "user", content: prompt }],
       max_tokens: 700,
+      temperature: 0.2,
       timeoutMs: 20000,
     });
     const text: string = (aiRes.text || "").trim();
@@ -1380,7 +1364,7 @@ serve(async (req) => {
     // ผลการจำแนกเจตนาเป็นตัวตัดสินว่าจะปฏิเสธหรือไม่ (โมเดลหลักไม่ต้องตัดสินเอง)
     const scopeInstruction = intent.in_scope
       ? `\n\n**ระบบได้ตรวจสอบแล้วว่าคำถามนี้อยู่ในขอบเขต (${intent.type}) — ห้ามปฏิเสธคำถามนี้เด็ดขาด ห้ามตอบว่า "ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้"**
-ถ้าไม่มีข้อมูลตรง ๆ ใน CONTEXT ให้ตอบด้วยแนวทางการใช้ยาสมุนไพรใน 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ ที่ให้ไว้ พร้อมระบุว่ายังไม่มีรายละเอียดในฐานข้อมูลภายใน และแนะนำให้ปรึกษาแพทย์แผนไทย/เภสัชกร — ห้ามตอบว่าอยู่นอกขอบเขต`
+ต้องใช้ข้อมูลสมุนไพร ตำรับยา หรืองานวิจัยที่มีอยู่ใน CONTEXT ตอบเป็นลำดับแรกอย่างครบถ้วน หากไม่มีข้อมูลตรง ๆ ใน CONTEXT จริง จึงให้ตอบด้วยแนวทางการดูแลสุขภาพตาม 10 กลุ่มอาการของกรมการแพทย์แผนไทยฯ พร้อมระบุว่ายังไม่มีรายละเอียดเฉพาะในฐานข้อมูล และแนะนำให้ปรึกษาแพทย์แผนไทยหรือเภสัชกร — ห้ามตอบว่าอยู่นอกขอบเขต`
       : `\n\nระบบประเมินว่าคำถามนี้อาจอยู่นอกขอบเขต — ถ้าไม่เกี่ยวกับสุขภาพ ยา หรือสมุนไพรจริง ให้ปฏิเสธด้วยข้อความมาตรฐาน`;
 
     const contextMessage = {
