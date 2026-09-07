@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Cpu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
@@ -663,6 +664,7 @@ const ChatPage = () => {
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none text-foreground">
                         <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
                           components={{
                             a: ({ href, children }) => (
                               <a
@@ -678,6 +680,38 @@ const ChatPage = () => {
                                 <span>{children}</span>
                                 <ExternalLink className="w-3 h-3 inline-block shrink-0" />
                               </a>
+                            ),
+                            table: ({ children }) => (
+                              <div className="my-3 overflow-x-auto rounded-lg border border-primary/20 shadow-xs">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  {children}
+                                </table>
+                              </div>
+                            ),
+                            thead: ({ children }) => (
+                              <thead className="bg-primary/10 text-primary border-b border-primary/20">
+                                {children}
+                              </thead>
+                            ),
+                            th: ({ children }) => (
+                              <th className="px-3 py-2.5 font-semibold text-foreground font-thai whitespace-nowrap">
+                                {children}
+                              </th>
+                            ),
+                            tbody: ({ children }) => (
+                              <tbody className="divide-y divide-border/60 bg-card/60">
+                                {children}
+                              </tbody>
+                            ),
+                            tr: ({ children }) => (
+                              <tr className="hover:bg-primary/5 transition-colors">
+                                {children}
+                              </tr>
+                            ),
+                            td: ({ children }) => (
+                              <td className="px-3 py-2.5 text-xs text-foreground/90 align-top">
+                                {children}
+                              </td>
                             ),
                           }}
                         >
