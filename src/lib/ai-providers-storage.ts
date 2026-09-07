@@ -90,7 +90,6 @@ export function getLocalProviders(): ProviderItem[] {
         if (gem && (!gem.api_key || gem.api_key === "__CLEAR__")) {
           gem.api_key = ENV_GEMINI_KEY;
           gem.has_key = true;
-          gem.is_active = true;
         }
       }
       if (ENV_DEEPSEEK_KEY) {
@@ -98,7 +97,6 @@ export function getLocalProviders(): ProviderItem[] {
         if (deep && (!deep.api_key || deep.api_key === "__CLEAR__")) {
           deep.api_key = ENV_DEEPSEEK_KEY;
           deep.has_key = true;
-          deep.is_active = true;
         }
       }
       return parsed;

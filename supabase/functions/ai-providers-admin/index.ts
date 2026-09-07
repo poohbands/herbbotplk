@@ -56,7 +56,7 @@ serve(async (req) => {
       if (rows.length === 0) return json({ error: "ไม่มีข้อมูลที่จะบันทึก" }, 400);
 
       for (const r of rows) {
-        if (!r?.id) continue;
+        if (!r) continue;
         const patch: Record<string, unknown> = {
           model_name: String(r.model_name || "").trim() || "gemini-2.5-flash",
           base_url: String(r.base_url || "").trim() || null,
@@ -67,8 +67,17 @@ serve(async (req) => {
         if (typeof r.api_key === "string" && r.api_key.trim().length > 0) {
           patch.api_key = r.api_key.trim() === "__CLEAR__" ? null : r.api_key.trim();
         }
-        const { error } = await supabase.from("ai_providers").update(patch).eq("id", r.id);
-        if (error) return json({ error: error.message }, 500);
+        
+        let query = supabase.from("ai_providers").update(patch);
+        if (r.provider_key) {
+          query = query.eq("provider_key", r.provider_key);
+        } else if (r.id) {
+          query = query.eq("id", r.id);
+        } else {
+          continue;
+        }
+        const { error } = await query;
+        if (error) console.error("[ai-providers-admin] update row error:", error.message);
       }
       clearProviderCache();
       return json({ success: true });

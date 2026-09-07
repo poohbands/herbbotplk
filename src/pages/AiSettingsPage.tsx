@@ -65,17 +65,31 @@ const AiSettingsPage = () => {
       if (data?.error) throw new Error(data.error);
 
       const items = (data?.providers || []) as ProviderItem[];
-      items.sort((a, b) => a.priority - b.priority);
 
-      // ผสานคีย์จาก local storage ถ้ามี
+      // ผสานการตั้งค่าจาก local storage (เพื่อรักษา priority, is_active, api_key ที่ผู้ใช้ตั้งค่าไว้ล่าสุด)
       const local = getLocalProviders();
       items.forEach((it) => {
-        const loc = local.find((l) => l.provider_key === it.provider_key);
-        if (loc?.api_key && !it.has_key) {
-          it.api_key = loc.api_key;
-          it.has_key = true;
+        const loc = local.find((l) => l.provider_key === it.provider_key || l.id === it.id);
+        if (loc) {
+          if (loc.api_key) {
+            it.api_key = loc.api_key;
+            it.has_key = true;
+          }
+          if (typeof loc.is_active === "boolean") {
+            it.is_active = loc.is_active;
+          }
+          if (typeof loc.priority === "number") {
+            it.priority = loc.priority;
+          }
+          if (loc.model_name) {
+            it.model_name = loc.model_name;
+          }
+          if (loc.base_url) {
+            it.base_url = loc.base_url;
+          }
         }
       });
+      items.sort((a, b) => a.priority - b.priority);
 
       setProviders(items);
       setIsLocalMode(false);
