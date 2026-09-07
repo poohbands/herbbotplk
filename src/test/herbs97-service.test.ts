@@ -39,4 +39,42 @@ describe("97 Herbs Dataset & Search (Column A focus)", () => {
     expect(context).toContain("สรรพคุณ/ข้อบ่งใช้");
     expect(context).toContain("ปฏิกิริยาระหว่างยา (Drug Interaction)");
   });
+
+  it("should retrieve cannabis medicines when query mentions 'กัญชา'", () => {
+    const results = searchHerbs97ByName("ยากัญชามีอะไรบ้าง");
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((r) => r.has_cannabis)).toBe(true);
+
+    const names = results.map((r) => r.name);
+    // ตรวจสอบว่ามียาที่มีส่วนผสมของกัญชา เช่น ยาศุขไสยาศน์ หรือ ยาทำลายพระสุเมรุ หรือ ยาทาขมิ้นชันและกัญชา
+    expect(
+      names.some(
+        (n) =>
+          n.includes("กัญชา") ||
+          n === "ยาศุขไสยาศน์" ||
+          n === "ยาทำลายพระสุเมรุ" ||
+          n === "ยาแก้ลมแก้เส้น" ||
+          n === "ยาอัมฤตย์โอสถ" ||
+          n === "ยาประสะกัญชา"
+      )
+    ).toBe(true);
+  });
+
+  it("should correctly tag specific cannabis formulas requested by user", () => {
+    const targetCannabisDrugs = [
+      "ยาทาขมิ้นชันและกัญชา",
+      "ยาแก้ลมแก้เส้น",
+      "ยาทำลายพระสุเมรุ",
+      "ยาอัมฤตย์โอสถ",
+      "ยาประสะกัญชา",
+      "ยาศุขไสยาศน์",
+    ];
+
+    for (const drugName of targetCannabisDrugs) {
+      const match = HERBS_97_DATA.find((h) => h.name === drugName);
+      expect(match).toBeDefined();
+      expect(match?.has_cannabis).toBe(true);
+    }
+  });
 });
+

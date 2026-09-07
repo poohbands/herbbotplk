@@ -12,7 +12,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396",
+    "has_cannabis": false
   },
   {
     "id": "herb97-2",
@@ -27,7 +28,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396",
+    "has_cannabis": false
   },
   {
     "id": "herb97-3",
@@ -42,7 +44,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396",
+    "has_cannabis": false
   },
   {
     "id": "herb97-4",
@@ -57,7 +60,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-5",
@@ -72,7 +76,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-6",
@@ -87,7 +92,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-7",
@@ -102,7 +108,8 @@
     "side_effects": "ผิวหนังอักเสบจากการแพ้",
     "drug_interaction": "• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน",
     "evidence_level": "คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-8",
@@ -117,7 +124,8 @@
     "side_effects": "อาการแสบร้อนบริเวณทางเดินอาหาร อาการระคายเคืองบริเวณปากและคอ",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-9",
@@ -132,7 +140,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-10",
@@ -147,7 +156,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-11",
@@ -162,7 +172,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-12",
@@ -177,7 +188,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396",
+    "has_cannabis": false
   },
   {
     "id": "herb97-13",
@@ -192,7 +204,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-14",
@@ -207,7 +220,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-15",
@@ -222,7 +236,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human PK evidence + pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-16",
@@ -237,7 +252,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-17",
@@ -252,7 +268,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human crossover study + human platelet study",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-18",
@@ -267,7 +284,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-19",
@@ -282,7 +300,8 @@
     "side_effects": "อาจทำให้เกิดอาการปวดมวนท้อง เนื่องจากการบีบตัวของลำไส้ใหญ่",
     "drug_interaction": "• digoxin/cardiac glycosides, ยาขับปัสสาวะที่ทำให้โพแทสเซียมต่ำ และ corticosteroids: การใช้ยาระบาย senna นาน/มากเกินอาจทำให้ hypokalaemia และเพิ่มความเสี่ยง arrhythmia หรือพิษจาก digoxin; ควรใช้ระยะสั้นและติดตาม electrolyte ในผู้เสี่ยง",
     "evidence_level": "EMA herbal monograph / pharmacodynamic interaction",
-    "references": "https://www.ema.europa.eu/en/medicines/herbal/sennae-folium"
+    "references": "https://www.ema.europa.eu/en/medicines/herbal/sennae-folium",
+    "has_cannabis": false
   },
   {
     "id": "herb97-20",
@@ -297,7 +316,8 @@
     "side_effects": "ปวดเสียดท้อง",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-21",
@@ -312,7 +332,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human crossover study + human platelet study",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-22",
@@ -327,7 +348,8 @@
     "side_effects": "ปวดมวนท้อง ผื่นคัน 2.3 กลุ่มยาบรรเทาอาการท้องเสีย",
     "drug_interaction": "• digoxin/cardiac glycosides, ยาขับปัสสาวะที่ทำให้โพแทสเซียมต่ำ และ corticosteroids: การใช้ยาระบาย senna นาน/มากเกินอาจทำให้ hypokalaemia และเพิ่มความเสี่ยง arrhythmia หรือพิษจาก digoxin; ควรใช้ระยะสั้นและติดตาม electrolyte ในผู้เสี่ยง",
     "evidence_level": "EMA herbal monograph / pharmacodynamic interaction",
-    "references": "https://www.ema.europa.eu/en/medicines/herbal/sennae-folium"
+    "references": "https://www.ema.europa.eu/en/medicines/herbal/sennae-folium",
+    "has_cannabis": false
   },
   {
     "id": "herb97-23",
@@ -342,7 +364,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence; human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-24",
@@ -357,7 +380,8 @@
     "side_effects": "ท้องอืด\n---\nอาการไม่พึงประสงค์: ท้องอืด 2.6 กลุ่มยาบรรเทาอาการคลื่นไส้ อาเจียน",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-25",
@@ -372,14 +396,15 @@
     "side_effects": "- - หากใช้ติดต่อกันเป็นเวลานาน อาจทำให้แขนขามีอาการชาหรืออ่อนแรง - หากใช้ติดต่อกันเกิน 3 วัน แล้วไม่ดีขึ้น หรืออาการรุนแรงขึ้น ระหว่างการใช้ยา ควรหยุดใช้และพบแพทย์ - ควรระวังการใช้ยานี้ร่วมกับสารกันเลือดเป็นลิ่ม (anticoagulants) และยาต้านการ จับตัวของเกล็ดเลือด (antiplatelets) - ควรระวังการใช้ยานี้ร่วมกับยาลดความดันเลือดเพราะอาจเสริมฤทธิ์กันได้ - ควรระวังการใช้ยานี้ร่วมกับยาที่กระบวนการเมแทบอลิซึม ผ่านเอนไซม์ Cytochrome P450 (CYP 450) เนื่องจากฟ้าทะลายโจรมีฤทธิ์ยับยั้งเอนไซม์ CYP 1A2, CYP 2C9 และ CYP 3A4 - ควรระวังการใช้ในผู้ป่วยที่มีอาการของตับผิดปกติ อาจทำให้เกิดอาการผิดปกติของทางเดินอาหาร เช่น ปวดท้อง ท้องเสีย คลื่นไส้ เบื่ออาหาร วิงเวียนศีรษะ ใจสั่น และอาจเกิดลมพิษได้ 2.4 กลุ่มยาบรรเทาริดสีดวงทวารหนัก\n---\nอาการไม่พึงประสงค์: - - หากใช้ติดต่อกันเป็นเวลานาน อาจทำให้แขนขามีอาการชาหรืออ่อนแรง - หากใช้ติดต่อกันเกิน 3 วัน แล้วไม่ดีขึ้น หรืออาการรุนแรงขึ้น ระหว่างการใช้ยาควร หยุดใช้ และพบแพทย์ - ควรระวังการใช้ยานี้ร่วมกับสารกันเลือดเป็นลิ่ม (anticoagulants) และ ยาต้านการจับตัวของเกล็ดเลือด (antiplatelets) - ควรระวังการใช้ยานี้ร่วมกับยาลดความดันเลือดเพราะอาจเสริมฤทธิ์กันได้ - ควรระวังการใช้ยานี้ร่วมกับยาที่กระบวนการเมแทบอลิซึม ผ่านเอนไซม์ Cytochrome P450 (CYP 450) เนื่องจากฟ้าทะลายโจรมีฤทธิ์ยับยั้งเอนไซม์ CYP 1A2, CYP 2C9 และ CYP 3A4 - ควรระวังการใช้ในผู้ป่วยที่มีอาการของตับผิดปกติ อาจทำให้เกิดอาการผิดปกติของทางเดินอาหาร เช่น ปวดท้อง ท้องเสีย คลื่นไส้ เบื่ออาหาร วิงเวียนศีรษะ ใจสั่น และอาจเกิดลมพิษได้\n---\nอาการไม่พึงประสงค์: อาจทำให้เกิดอาการผิดปกติของทางเดินอาหาร เช่น ปวดท้อง ท้องเสีย คลื่นไส้ เบื่ออาหาร วิงเวียนศีรษะ ใจสั่น และอาจเกิดลมพิษได้ กลุ่มที่ 6 ยาบำรุงโลหิต\n---",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• ยาต้านเกล็ดเลือด/ยาต้านการแข็งตัว: มีสัญญาณลด platelet aggregation จึงควรระวังเลือดออก โดยเฉพาะผู้ใช้หลายยาหรือมีความเสี่ยงสูง\n• ยาที่เป็น substrates ของ CYP2C9/CYP3A4: มีข้อมูล in vitro ว่า andrographolide/สารสกัดอาจยับยั้งเอนไซม์; ความสำคัญทางคลินิกยังไม่แน่นอน จึงไม่ควรใช้เป็นข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human platelet signal + in vitro CYP evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/8043997/\nhttps://pubmed.ncbi.nlm.nih.gov/21365364/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/8043997/\nhttps://pubmed.ncbi.nlm.nih.gov/21365364/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-26",
     "index": 26,
     "name": "ยาทาขมิ้นชันและกัญชา",
     "dosage_form": "ยาน้ำมัน ยาผงสำหรับผสมในน้ำมัน (รพ.)",
-    "category": "บัญชีรายการยาพื้นฐาน",
+    "category": "บัญชีรายการยาพื้นฐาน (มีส่วนผสมของกัญชา)",
     "ingredients": "ยาผง 30 กรัม เตรียมจาก เหง้าขมิ้นชัน 15 กรัม ใบกัญชา 15 กรัม สำหรับนำไปผสมกับน้ำมันเมล็ดฝ้าย 30 กรัม",
     "indication": "รักษาริดสีดวงทวารหนัก",
     "dosage_usage": "ก่อนใช้ให้นำยาผงผสมกับส่วนน้ำมันให้เข้ากัน ทาวันละ 2 ครั้ง หลังอาบน้ำ เช้า และ เย็น",
@@ -387,7 +412,8 @@
     "side_effects": "อาจทำให้มีอาการระคายเคืองผิวหนังผื่นคัน แดงร้อน ได้",
     "drug_interaction": "• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน\n• กัญชาในตำรับนี้ใช้ภายนอก จึงไม่ควร extrapolate interaction แบบ systemic CBD/THC โดยอัตโนมัติ; ไม่พบหลักฐาน clinical DDI ที่น่าเชื่อถือของตำรับใช้ภายนอกโดยตรง",
     "evidence_level": "คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence; route-specific assessment; no direct clinical DDI found",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/",
+    "has_cannabis": true
   },
   {
     "id": "herb97-27",
@@ -402,7 +428,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-28",
@@ -417,7 +444,8 @@
     "side_effects": "ท้องเสีย",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-29",
@@ -432,7 +460,8 @@
     "side_effects": "ท้องเสีย มวนท้อง",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-30",
@@ -447,14 +476,15 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-31",
     "index": 31,
     "name": "ยาน้ำมันสารสกัดกัญชาที่มี delta-9-tetrahydrocannabinol (THC) จำนวน 2 ความแรง ได้แก่ ไม่เกิน 0.5 มิลลิกรัม/หยด และ ไม่เกิน 3 มิลลิกรัม/หยด",
     "dosage_form": "ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก (Oromucosal drops); ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "สารสกัดจากกัญชา (Cannabis sativa L.) ที่มีสารสำคัญ Delta-9-Tetrahydrocannabinol ไม่เกิน 0.5 มิลลิกรัม/หยด หรือ ไม่เกิน 3 มิลลิกรัม/หยด\n---\nสารสกัดจากกัญชา (Cannabis sativaL.) ที่มีสารสำคัญ Delta-9-Tetrahydrocannabinol (THC) 27 มิลลิกรัม/มิลลิลิตรและ Cannabidiol (CBD) 25 มิลลิกรัม/มิลลิลิตร",
     "indication": "ใช้รักษาเสริมหรือควบรวมกับการรักษาตามมาตรฐานในการรักษาภาวะ คลื่นไส้อาเจียนจากเคมีบำบัด\n---\nใช้รักษาเสริมในผู้ป่วยโรคมะเร็งระยะท้ายที่มีอาการนอนไม่หลับ เบื่ออาหาร หรือมีอาการ ปวดในระดับปานกลางถึงรุนแรง ที่รักษาด้วยยามาตรฐานไม่ได้หรือไม่ได้ผล\n---\nใช้รักษาเสริมในผู้ป่วยโรคมะเร็งระยะท้ายที่มีอาการนอนไม่หลับ เบื่ออาหาร หรือมีอาการปวดในระดับปานกลางถึงรุนแรงที่รักษาด้วยยามาตรฐานไม่ได้ หรือไม่ได้ผล",
     "dosage_usage": "- กรณี THC ไม่เกิน 0.5 มิลลิกรัม/หยด หยดใต้ลิ้น 1 หยด (THC 0.5 มิลลิกรัม) ทุกวันก่อนนอน ปรับขนาดยาทุก 48 ชั่วโมง โดยปรับขนาดยาอย่างช้า ๆ ขนาดยาสูงสุดไม่ควรเกินวันละ 10 หยด (THC 5 มิลลิกรัม ต่อวัน) - กรณี THC ไม่เกิน 3 มิลลิกรัม/หยด หยดใต้ลิ้น 1 หยด (THC 3 มิลลิกรัม) ทุกวันก่อนนอน สําหรับผู้ที่เคยใช้น้ำมันสารสกัดกัญชาที่มี THC ไม่เกิน 0.5 มิลลิกรัม/หยด ให้คํานวณปริมาณของ THC ในขนาดที่เทียบเท่ากัน โดยขนาดยาสูงสุดไม่เกิน วันละ 20 มิลลิกรัม\n---\nหยดบนเยื่อบุใต้ลิ้นครั้งละ 1 หยด (THC 1 มิลลิกรัม และ CBD 1 มิลลิกรัม) ก่อนนอน หาก เวลาผ่านไป 15 นาที แล้วไม่ได้ผล อาจปรับเพิ่มขนาดยาโดยหยดเพิ่มอีก 1 หยดหากใช้ มากกว่า 2 หยดต่อวัน แบ่งให้ 2 เวลา เช้า และ ก่อนนอน โดยไม่ควรใช้เกิน 30 หยดต่อวัน (THC 30 มิลลิกรัม และ CBD 30 มิลลิกรัม)",
@@ -462,7 +492,8 @@
     "side_effects": "ปากแห้ง คอแห้ง วิงเวียนศีรษะ ง่วงซึม เคลิ้มสุข (euphoria) คลื่นไส้ อาเจียน ตาพร่า ประสาทหลอน ภาวะพุทธิปัญญาบกพร่อง (cognitive impairment) กลุ่มที่ 3 ยารักษากลุ่มอาการสูติศาสตร์นรีเวชวิทยา\n---\nอาการไม่พึงประสงค์: เวียนศีรษะ คลื่นไส้ อาเจียน สับสน อ่อนเพลีย ง่วงซึม ปากแห้ง ท้องเสีย\n---\nอาการไม่พึงประสงค์: ปากแห้ง คอแห้ง วิงเวียนศีรษะ ง่วงซึม เคลิ้มสุข (euphoria) คลื่นไส้ อาเจียน ตาพร่า ประสาทหลอน ภาวะพุทธิปัญญาบกพร่อง (cognitive impairment)",
     "drug_interaction": "• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง\n• clobazam: CBD ยับยั้ง CYP2C19 ทำให้ N-desmethylclobazam เพิ่มและเพิ่มความเสี่ยงง่วงซึม; monitor sedation และพิจารณาลด clobazam เมื่อจำเป็น\n• warfarin: มี case reports ของ INR เพิ่ม; ควรติดตาม INR ถี่ขึ้นเมื่อเริ่ม/หยุด/ปรับ CBD",
     "evidence_level": "คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; cannabinoid-class pharmacodynamic evidence; clinical PK studies + case reports",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/26114620/\nhttps://pubmed.ncbi.nlm.nih.gov/32652616/\nhttps://pubmed.ncbi.nlm.nih.gov/33016308/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/26114620/\nhttps://pubmed.ncbi.nlm.nih.gov/32652616/\nhttps://pubmed.ncbi.nlm.nih.gov/33016308/",
+    "has_cannabis": true
   },
   {
     "id": "herb97-32",
@@ -477,7 +508,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-33",
@@ -492,7 +524,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-34",
@@ -507,7 +540,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-35",
@@ -522,7 +556,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-36",
@@ -537,7 +572,8 @@
     "side_effects": "แสบร้อนยอดอก",
     "drug_interaction": "• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว",
     "evidence_level": "คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human crossover study + human platelet study",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-37",
@@ -552,7 +588,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-38",
@@ -567,7 +604,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-39",
@@ -582,7 +620,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-40",
@@ -597,7 +636,8 @@
     "side_effects": "ง่วงนอน คลื่นไส้ อาเจียน แสบท้อง มวนท้อง ท้องอืด และปัสสาวะบ่อย",
     "drug_interaction": "• ยาที่ผ่าน CYP2C9/CYP2D6/CYP3A4: พบการยับยั้งใน vitro แตกต่างตามชนิดสารสกัด แต่ standardized water extract บางงานประเมินว่าความเสี่ยง CYP-mediated DDI ค่อนข้างต่ำ; ยังไม่มีหลักฐาน human DDI เพียงพอ",
     "evidence_level": "in vitro only / clinical relevance uncertain",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/32581050/\nhttps://pubmed.ncbi.nlm.nih.gov/20457244/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/32581050/\nhttps://pubmed.ncbi.nlm.nih.gov/20457244/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-41",
@@ -612,7 +652,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-42",
@@ -627,7 +668,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-43",
@@ -642,7 +684,8 @@
     "side_effects": "คลื่นไส้ วิงเวียน ชาปลายมือปลายเท้า hypoglycemic coma อาการชักในเด็ก ท้องเดิน ท้องอืด ปวดศีรษะ และอาจเพิ่มระดับเอนไซม์ gamma-glutamyl transferase และ alkaline phosphatase ในเลือดได้",
     "drug_interaction": "• ยาลดน้ำตาล เช่น metformin, sulfonylureas (เช่น glibenclamide) และ insulin: อาจเสริมฤทธิ์ลดน้ำตาลและเพิ่มความเสี่ยง hypoglycaemia; ควรติดตามระดับน้ำตาลและอาการน้ำตาลต่ำ",
     "evidence_level": "human clinical evidence + pharmacodynamic plausibility",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15521566/\nhttps://pubmed.ncbi.nlm.nih.gov/29431598/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15521566/\nhttps://pubmed.ncbi.nlm.nih.gov/29431598/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-44",
@@ -657,7 +700,8 @@
     "side_effects": "- กลุ่มที่ 12 ยาลดความอยากบุหรี่",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-45",
@@ -672,7 +716,8 @@
     "side_effects": "- กลุ่มที่ 10 ยารักษากลุ่มอาการทางระบบทางเดินปัสสาวะ",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-46",
@@ -687,7 +732,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-47",
@@ -702,7 +748,8 @@
     "side_effects": "ท้องเสีย",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-48",
@@ -717,7 +764,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-49",
@@ -732,7 +780,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-50",
@@ -747,7 +796,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-51",
@@ -762,7 +812,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-52",
@@ -777,7 +828,8 @@
     "side_effects": "ท้องเสีย",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-53",
@@ -792,7 +844,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-54",
@@ -807,7 +860,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-55",
@@ -822,7 +876,8 @@
     "side_effects": "แสบร้อนยอดอก",
     "drug_interaction": "• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human crossover study + human platelet study; cannabinoid-class pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7",
+    "has_cannabis": false
   },
   {
     "id": "herb97-56",
@@ -837,7 +892,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-57",
@@ -852,14 +908,15 @@
     "side_effects": "ปวดท้อง ท้องผูก ปัสสาวะบ่อย คอแห้ง ใจสั่น",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-58",
     "index": 58,
     "name": "ยาแก้ลมแก้เส้น",
     "dosage_form": "ยาผง",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "ในยา 150 กรัม ประกอบด้วย เมล็ดพริกไทย 80 กรัม ใบกัญชา 40 กรัม รากเจตมูลเพลิง 10 กรัม เหง้าขิง 8 กรัม เทียนข้าวเปลือก 6 กรัม เทียนดำ 4 กรัม เทียนขาว 2 กรัม",
     "indication": "แก้ลมในเส้น บรรเทาอาการปวดกล้ามเนื้อที่มีอาการมือเท้าชา",
     "dosage_usage": "รับประทานครั้งละ 1 - 4 กรัม วันละ 2 ครั้ง ก่อนอาหาร เช้าและเย็น น้ำกระสายยา - น้ำผึ้งรวงหรือน้ำส้มซ่า 1 ช้อนชา (5 ซีซี) - ถ้าหาน้ำกระสายยาไม่ได้ ให้ใช้น้ำสุกครึ่งแก้ว (60 ซีซี) แทน ข้อแนะนำการใช้ - ควรจ่ายยาให้ผู้ป่วยโดยค่อยๆ ปรับเพิ่มขนาดยา - ควรใช้น้ำผึ้งรวงหรือน้ำซ่าเป็นน้ำกระสายยา จะช่วยลดการเกิดอาการ ไม่พึงประสงค์จากการใช้ยา",
@@ -867,7 +924,8 @@
     "side_effects": "อาจทำให้เกิดอาการวิงเวียนศีรษะ งุนงง คอแห้ง แสบร้อนกลางอกได้",
     "drug_interaction": "• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK; cannabinoid-class pharmacodynamic evidence",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7",
+    "has_cannabis": true
   },
   {
     "id": "herb97-59",
@@ -882,7 +940,8 @@
     "side_effects": "แสบร้อนยอดอก",
     "drug_interaction": "• saquinavir: garlic supplement เคยทำให้ AUC/Cmax/trough ลดลงมากในการศึกษาในอาสาสมัคร; หลีกเลี่ยงผลิตภัณฑ์กระเทียมเข้มข้นร่วมกับ saquinavir/ยาที่มี exposure ไวต่อ P-gp หากไม่มีการติดตาม\n• ยาต้านการแข็งตัว/ยาต้านเกล็ดเลือด: อาจเสริมความเสี่ยงเลือดออก โดยเฉพาะสารสกัดหรือขนาดสูง; เฝ้าระวังอาการเลือดออก\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "human PK evidence + pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/11740713/\nhttps://pubmed.ncbi.nlm.nih.gov/20933082/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-60",
@@ -897,7 +956,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-61",
@@ -912,7 +972,8 @@
     "side_effects": "แสบร้อนยอดอก",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-62",
@@ -927,7 +988,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-63",
@@ -942,14 +1004,15 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-64",
     "index": 64,
     "name": "ยาทำลายพระสุเมรุ",
     "dosage_form": "ยาแคปซูล ยาผง",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "ในยา 714 กรัม ประกอบด้วย เมล็ดพริกไทยล่อน 462 กรัม ต้นหัสคุณเทศ 21 กรัม การบูร 21 กรัม เนื้อลูกสมอเทศ 20 กรัม เนื้อลูกสมอไทย 19 กรัม หัวบุกรอ 18 กรัม รากเจตมูลเพลิง 17 กรัม กัญชา 16 กรัม เหง้าขิงแห้ง 15 กรัม เทียนข้าวเปลือก 14 กรัม เทียนตาตั๊กแตน 13 กรัม เทียนขาว 12 กรัม เทียนแดง 11 กรัม เทียนดำ 10 กรัม โกฐเขมา 9 กรัม โกฐสอ 8 กรัม เหง้าว่านน้ำ 7 กรัม เกลือสินเธาว์ 6 กรัม ดอกดีปลี 5 กรัม ดอกกานพลู 4 กรัม ผลกระวาน 3 กรัม ดอกจันทน์ 2 กรัม ลูกจันทน์ 1 กรัม",
     "indication": "แก้ลมเปลี่ยวดำ เป็นยาเสริมเพื่อฟื้นฟูอาการกล้ามเนื้ออ่อนแรงจากโรคลมอัมพฤกษ์อัมพาต",
     "dosage_usage": "รับประทานครั้งละ 2 กรัม วันละ 2 ครั้ง ก่อนอาหาร เช้าและเย็น น้ำกระสายยา - น้ำอ้อยแดง น้ำนมโค ปริมาณครึ่งแก้ว (125 มิลลิลิตร) - ถ้าหาน้ำกระสายยาไม่ได้ ให้ใช้น้ำต้มสุกแทน",
@@ -957,7 +1020,8 @@
     "side_effects": "เวียนศีรษะ แสบร้อนกลางอก ปากแห้ง ง่วงนอน คลื่นไส้",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human crossover study + human platelet study; cannabinoid-class pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7",
+    "has_cannabis": true
   },
   {
     "id": "herb97-65",
@@ -972,14 +1036,15 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-66",
     "index": 66,
     "name": "ยาน้ำมันกัญชาทั้งห้า",
     "dosage_form": "ยาหยดในช่องปาก หรือ",
-    "category": "บัญชีรายการยาพื้นฐาน",
+    "category": "บัญชีรายการยาพื้นฐาน (มีส่วนผสมของกัญชา)",
     "ingredients": "ในน้ำมัน 5 มิลลิลิตร ได้จากการเคี่ยวราก ลำต้นรวมกิ่งก้าน ใบ และช่อดอกรวมเมล็ด ของกัญชาอย่างละ 312.5 มิลลิกรัม ในน้ำมันมะพร้าว ซึ่งมี Delta-9-Tetrahydrocannabinol (THC) 0.1-0.4 มิลลิกรัม/มิลลิลิตร และ Cannabidiol (CBD) น้อยกว่า 0.04 มิลลิกรัม/มิลลิลิตร",
     "indication": "ใช้เสริมการรักษาในผู้ป่วยที่มีอาการปวดกล้ามเนื้อและข้อ ที่ใช้ยามาตรฐานแล้ว ไม่ได้ผล\n---\nใช้เสริมการรักษาในผู้ป่วยที่มีอาการนอนไม่หลับที่ใช้ยามาตรฐานแล้วไม่ได้ผล",
     "dosage_usage": "หยดใต้ลิ้น เริ่มต้นครั้งละ 2 หยด วันละ 2 ครั้ง ก่อนอาหารเช้า และ เย็น หรือตามแพทย์สั่ง สามารถปรับขนาดยาเพิ่มได้ครั้งละ 1-2 หยด บริหารยาได้วันละ 3-4 ครั้ง ห่างกันทุก 6-8 ชั่วโมง โดยปรับขนาดยาเพิ่มได้ทุก 3-7 วัน ภายใต้คำแนะนำ ของแพทย์จนเห็นผลการรักษาแต่ไม่เกิดผลข้างเคียงจากการใช้ยา ไม่แนะนำให้ใช้ THC เกิน 20 มิลลิกรัมต่อวัน\n---\nหยดใต้ลิ้น เริ่มต้นครั้งละ 2 หยด วันละ 1 ครั้ง ก่อนนอน หรือตามแพทย์สั่ง สามารถปรับขนาดยาเพิ่มได้ครั้งละ 1-2 หยด บริหารยาได้วันละ 3-4 ครั้ง ห่างกันทุก 6-8 ชั่วโมง โดยปรับขนาดยาเพิ่มได้ทุก 3-7 วัน ภายใต้คำแนะนำ ของแพทย์จนเห็นผลการรักษาแต่ไม่เกิดผลข้างเคียงจากการใช้ยา ไม่แนะนำให้ใช้ THC เกิน 20 มิลลิกรัมต่อวัน",
@@ -987,14 +1052,15 @@
     "side_effects": "ปากแห้ง คอแห้ง วิงเวียนศีรษะ ง่วงซึม ใจเต้นเร็ว คลื่นไส้",
     "drug_interaction": "• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• ยากดระบบประสาทส่วนกลาง เช่น benzodiazepines, ยานอนหลับ, opioids, ยาต้านฮิสตามีนที่ทำให้ง่วง และยากันชักบางชนิด: อาจเสริมอาการง่วงซึม เวียนศีรษะ การทรงตัวผิดปกติ และกดการหายใจ\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; คำเตือนระดับตำรับ + cannabinoid-class pharmacodynamic evidence; cannabinoid-class pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7",
+    "has_cannabis": true
   },
   {
     "id": "herb97-67",
     "index": 67,
     "name": "ยาน้ำมันสารสกัดกัญชาที่มี delta-9-tetrahydrocannabinol (THC) และ cannabidiol (CBD) ในอัตราส่วน 1:1",
     "dosage_form": "ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก (Oromucosal drops); ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "สารสกัดจากกัญชา (Cannabis sativa L.) ที่มีสารสำคัญ Delta-9-Tetrahydrocannabinol (THC) 27 มิลลิกรัม/มิลลิลิตร และ Cannabidiol (CBD) 25 มิลลิกรัม/มิลลิลิตร",
     "indication": "ใช้รักษาเสริมในโรคภาวะปลอกประสาทเสื่อมแข็ง (Multiple Sclerosis) ในระยะ Progressive ที่มีภาวะกล้ามเนื้อหดเกร็ง (Spasticity)",
     "dosage_usage": "หยดบนเยื่อบุใต้ลิ้นครั้งละ 1 หยด (THC 1 มิลลิกรัม และ CBD 1 มิลลิกรัม) ก่อนนอน หากเวลาผ่านไป 15 นาที แล้วไม่ได้ผล อาจปรับเพิ่มขนาดยาโดยหยดเพิ่มอีก 1 หยด หากใช้มากกว่า 2 หยดต่อวัน แบ่งให้ 2 เวลา เช้า และ ก่อนนอน โดยไม่ควรใช้เกิน 30 หยดต่อวัน (THC 30 มิลลิกรัม และ CBD 30 มิลลิกรัม)",
@@ -1002,7 +1068,8 @@
     "side_effects": "เวียนศีรษะ คลื่นไส้ อาเจียน สับสน อ่อนเพลีย ง่วงซึม ปากแห้ง ท้องเสีย",
     "drug_interaction": "• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง\n• clobazam: CBD ยับยั้ง CYP2C19 ทำให้ N-desmethylclobazam เพิ่มและเพิ่มความเสี่ยงง่วงซึม; monitor sedation และพิจารณาลด clobazam เมื่อจำเป็น\n• warfarin: มี case reports ของ INR เพิ่ม; ควรติดตาม INR ถี่ขึ้นเมื่อเริ่ม/หยุด/ปรับ CBD",
     "evidence_level": "cannabinoid-class pharmacodynamic evidence; clinical PK studies + case reports",
-    "references": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/26114620/\nhttps://pubmed.ncbi.nlm.nih.gov/32652616/\nhttps://pubmed.ncbi.nlm.nih.gov/33016308/"
+    "references": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/26114620/\nhttps://pubmed.ncbi.nlm.nih.gov/32652616/\nhttps://pubmed.ncbi.nlm.nih.gov/33016308/",
+    "has_cannabis": true
   },
   {
     "id": "herb97-68",
@@ -1017,7 +1084,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน",
     "evidence_level": "คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-69",
@@ -1032,7 +1100,8 @@
     "side_effects": "ปวดท้อง ท้องผูก ปัสสาวะบ่อย คอแห้ง ใจสั่น",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-70",
@@ -1047,7 +1116,8 @@
     "side_effects": "ปวดท้อง ท้องผูก ปัสสาวะบ่อย คอแห้ง ใจสั่น",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-71",
@@ -1062,7 +1132,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-72",
@@ -1077,7 +1148,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-73",
@@ -1092,7 +1164,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-74",
@@ -1107,7 +1180,8 @@
     "side_effects": "ควรระวังการใช้ยาพริกบริเวณผิวที่บอบบางหรือบริเวณผิวหนังที่แตก เนื่องจากทำให้ เกิดอาการระคายเคือง ผิวหนังแดง ปวด และแสบร้อน",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-75",
@@ -1122,7 +1196,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-76",
@@ -1137,7 +1212,8 @@
     "side_effects": "ร้อนท้อง แสบท้อง คลื่นไส้ คอแห้ง ผื่นคัน",
     "drug_interaction": "• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม",
     "evidence_level": "คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-77",
@@ -1152,7 +1228,8 @@
     "side_effects": "ผิวอักเสบจากการแพ้",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• warfarin, clopidogrel, apixaban/ยาต้านการแข็งตัวและยาต้านเกล็ดเลือด: เสี่ยงเลือดออกเพิ่มขึ้น; warfarin ควรติดตาม INR โดยเฉพาะเมื่อเริ่ม/หยุด/เปลี่ยนขนาดขมิ้นชัน\n• tacrolimus: อาจเพิ่มระดับยา; หากใช้ร่วมกันควรพิจารณาติดตาม trough concentration และอาการพิษ\n• paclitaxel (โดยเฉพาะขมิ้นชันขนาดสูง/สารสกัดเข้มข้น): มีความเป็นไปได้เพิ่ม exposure จากการยับยั้ง CYP2C9/CYP3A4; ควรหลีกเลี่ยงขนาดสูงหรือให้ทีมมะเร็งประเมิน",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนทางการไทย พ.ศ. 2568 + mechanistic CYP evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/18480186/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-78",
@@ -1167,14 +1244,15 @@
     "side_effects": "เวียนศีรษะ ปวดศีรษะ อุจจาระเหลว",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-79",
     "index": 79,
     "name": "ยาอัมฤตย์โอสถ",
     "dosage_form": "ยาผง (รพ.) ยาแคปซูล (รพ.)",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "ยาผง ยาแคปซูล 76 กรัม เตรียมจากตัวยาสำคัญ 1. ลำต้นสหัสคุณ แก่นแสมทะเล รากส้มกุ้ง ผลมะตูม ผลสมอพิเภก ผลพิลังกาสา ผลสมอเทศ ผลสมอไทย โกฐเขมา เทียนดำ เทียนขาว ลูกจันทน์ ดอกจันทน์ ผลกระวาน กานพลู ดอกดีปลี อย่างละ 1 กรัม 2. เปลือกหอยโข่งเผา เปลือกหอยขมเผา เปลือกหอยแครงเผา เบี้ยผู้เผา อย่างละ 3 กรัม 3. เรือนช่อดอกกัญชา 10 กรัม 4. ผลพริกไทย 38 กรัม",
     "indication": "แก้ลมกษัย บรรเทาอาการปวดเมื่อยตึงกล้ามเนื้อที่เป็นเรื้อรัง",
     "dosage_usage": "รับประทานครั้งละ 1 - 2 กรัม วันละ 2 ครั้ง ก่อนอาหาร เช้าและเย็น น้ำกระสายยาที่ใช้ - ใช้น้ำสุกครึ่งแก้ว (125 ซีซี) หมายเหตุ: ควรเริ่มให้ยาขนาดต่ำแล้วค่อยปรับขนาดขึ้น\n---\nรับประทานครั้งละ 1 - 2 กรัม วันละ 2 ครั้ง ก่อนอาหาร เช้าและเย็น น้ำกระสายยาที่ใช้ ใช้น้ำสุกครึ่งแก้ว (125 ซีซี) หมายเหตุควรเริ่มให้ยาขนาดต่ำแล้วค่อยปรับขนาดขึ้น",
@@ -1182,7 +1260,8 @@
     "side_effects": "เวียนศีรษะ แสบท้อง ง่วงนอน ปากแห้ง คอแห้ง",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; cannabinoid-class pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7",
+    "has_cannabis": true
   },
   {
     "id": "herb97-80",
@@ -1197,7 +1276,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-81",
@@ -1212,7 +1292,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• phenytoin, propranolol, theophylline และ rifampicin: ตำรับที่มีพริกไทย/พริกไทยล่อนปริมาณสูงอาจเปลี่ยนระดับยา; แนะนำเฝ้าระวังอาการพิษ/ประสิทธิผล และพิจารณา TDM สำหรับยาที่เหมาะสม\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว",
     "evidence_level": "คำเตือนระดับตำรับ + หลักฐาน human PK ของ piperine; human crossover study + human platelet study",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-82",
@@ -1227,7 +1308,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-83",
@@ -1242,7 +1324,8 @@
     "side_effects": "อาจทำให้เกิดอาการคัน มีผื่นแดง หรือผื่นแพ้สัมผัสได้ หากมีอาการดังกล่าว ให้หยุดใช้ยา",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-84",
@@ -1257,7 +1340,8 @@
     "side_effects": "- บริเวณที่ทายาอาจมีสีผิวหนังเข้มขึ้น - อาการทางผิวหนัง เช่น คัน ผิวหนังแห้ง มีตุ่มพอง - เป็นยาน้ำแขวนตะกอน ควรเตรียมสดและไม่ควรเก็บไว้นานเกิน 1 เดือน หากมี ลักษณะทางกายภาพเปลี่ยนแปลงไปจากเดิม ให้เปลี่ยนขวดใหม่ และให้เก็บยาไว้ที่ อุณหูมิห้อง เก็บให้พ้นแสง - ให้ใช้ต่อเนื่องจนหายแต่ไม่เกิน 6 เดือน - อาการต่าง ๆ เช่น แดง บวม และคันที่ขอบเล็บ เล็บเปราะ เล็บเปื่อยยุ่ย เล็บเสียรูป เปลี่ยนสีแยกออกจากหนังใต้เล็บ จะเห็นผลดีขึ้นภายใน 3 เดือน โดยเล็บจะขึ้นมาปกติ ได้ภายใน 6 เดือน - ให้มีการติดตามผู้ป่วยทุกเดือน",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-85",
@@ -1272,7 +1356,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-86",
@@ -1287,7 +1372,8 @@
     "side_effects": "เมื่อทาติดต่อกันเป็นเวลานานอาจทำให้ผิวหนังเป็นสีดำ แต่เมื่อหยุดยาแล้วอาการจะหายไป",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-87",
@@ -1302,7 +1388,8 @@
     "side_effects": "มีรายงานว่าการทาสารสกัดใบบัวบกชนิดขี้ผึ้งหรือผง อาจทำให้เกิดผื่นแพ้สัมผัสได้",
     "drug_interaction": "• ยาที่ผ่าน CYP2C9/CYP2D6/CYP3A4: พบการยับยั้งใน vitro แตกต่างตามชนิดสารสกัด แต่ standardized water extract บางงานประเมินว่าความเสี่ยง CYP-mediated DDI ค่อนข้างต่ำ; ยังไม่มีหลักฐาน human DDI เพียงพอ",
     "evidence_level": "in vitro only / clinical relevance uncertain",
-    "references": "https://pubmed.ncbi.nlm.nih.gov/32581050/\nhttps://pubmed.ncbi.nlm.nih.gov/20457244/"
+    "references": "https://pubmed.ncbi.nlm.nih.gov/32581050/\nhttps://pubmed.ncbi.nlm.nih.gov/20457244/",
+    "has_cannabis": false
   },
   {
     "id": "herb97-88",
@@ -1317,7 +1404,8 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-89",
@@ -1332,7 +1420,8 @@
     "side_effects": "อาจทำให้เกิดอาการคัน มีผื่นแดง หรือผื่นแพ้สัมผัสได้ หากมีอาการดังกล่าวให้หยุดใช้ยา",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-90",
@@ -1347,7 +1436,8 @@
     "side_effects": "อาจมีอาการปวดมวนท้องได้",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-91",
@@ -1362,7 +1452,8 @@
     "side_effects": "- กลุ่มที่ 11 ยาถอนพิษเบื่อเมา",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-92",
@@ -1377,7 +1468,8 @@
     "side_effects": "ปากแห้ง คอแห้ง",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-93",
@@ -1392,14 +1484,15 @@
     "side_effects": "ปากแห้ง คอแห้ง กลุ่มที่ 13 ยารักษากลุ่มโรคที่เกี่ยวกับกษัย",
     "drug_interaction": "• ไม่พบหลักฐาน Drug interaction กับยาแผนปัจจุบันที่น่าเชื่อถือในแหล่งข้อมูลที่สืบค้นสำหรับตำรับ/ผลิตภัณฑ์นี้โดยตรง ณ การทบทวนครั้งนี้; ไม่ได้หมายความว่าไม่มีโอกาสเกิด interaction ควรพิจารณายาร่วมและอาการผู้ป่วยเป็นรายกรณี",
     "evidence_level": "ไม่พบ direct clinical evidence ที่เพียงพอ",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344",
+    "has_cannabis": false
   },
   {
     "id": "herb97-94",
     "index": 94,
     "name": "ยาน้ำมันสารสกัดกัญชาที่มี cannabidiol (CBD) 100 มิลลิกรัม/มิลลิลิตร และมี delta-9-tetrahydrocannabinol (THC) ในอัตราส่วนที่ CBD:THC มากกว่าหรือเท่ากับ 20:1",
     "dosage_form": "ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก (Oromucosal drops); ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก",
-    "category": "บัญชีรายการยาพิเศษ",
+    "category": "บัญชีรายการยาพิเศษ (มีส่วนผสมของกัญชา)",
     "ingredients": "ไม่ระบุในเอกสาร",
     "indication": "1. โรคลมชักรักษายาก 2. โรคลมชักที่ดื้อต่อการรักษา กลุ่มที่ 15 ยารักษากลุ่มอาการอื่น ๆ",
     "dosage_usage": "ไม่ระบุในเอกสาร",
@@ -1407,14 +1500,15 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง\n• clobazam: CBD ยับยั้ง CYP2C19 ทำให้ N-desmethylclobazam เพิ่มและเพิ่มความเสี่ยงง่วงซึม; monitor sedation และพิจารณาลด clobazam เมื่อจำเป็น\n• warfarin: มี case reports ของ INR เพิ่ม; ควรติดตาม INR ถี่ขึ้นเมื่อเริ่ม/หยุด/ปรับ CBD",
     "evidence_level": "cannabinoid-class pharmacodynamic evidence; clinical PK studies + case reports",
-    "references": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/26114620/\nhttps://pubmed.ncbi.nlm.nih.gov/32652616/\nhttps://pubmed.ncbi.nlm.nih.gov/33016308/"
+    "references": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/26114620/\nhttps://pubmed.ncbi.nlm.nih.gov/32652616/\nhttps://pubmed.ncbi.nlm.nih.gov/33016308/",
+    "has_cannabis": true
   },
   {
     "id": "herb97-95",
     "index": 95,
     "name": "ยาน้ำมันกัญชาที่ผลิตจากช่อดอก ซึ่งยามี delta-9-tetrahydrocannabinol (THC) 2.0 มิลลิกรัม/มิลลิลิตร",
     "dosage_form": "ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก (Oromucosal drops); ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก; ยาหยดในช่องปาก หรือ เยื่อบุในช่องปาก (รพ.)",
-    "category": "บัญชีรายการยาพื้นฐาน",
+    "category": "บัญชีรายการยาพื้นฐาน (มีส่วนผสมของกัญชา)",
     "ingredients": "สารสกัดกัญชาในน้ำมันมะพร้าว ความเข้มข้น 10% ของน้ำหนักช่อดอกกัญชาแห้ง ซึ่งมีปริมาณ THC 2.0 มิลลิกรัม/มิลลิลิตร",
     "indication": "บรรเทาอาการปวดเรื้อรัง ช่วยให้นอนหลับ ช่วยให้เจริญอาหาร ในผู้ป่วยที่ได้รับการวินิจฉัยว่าเป็นมะเร็ง",
     "dosage_usage": "- หยดรับประทานครั้งละ 1 หยด ก่อนนอน หรือ ตามดุลพินิจ ของแพทย์แผนไทย แพทย์แผนไทยประยุกต์/แพทย์แผนปัจจุบันที่สั่งใช้ยาน้ำมันกัญชา - หากอาการไม่ดีขึ้น จาการติดตามอาการและประเมินผลให้ปรับขนาดยาเพิ่มขึ้น ครั้งละ 1-2 หยด ทุก 1 สัปดาห์หรือระยะเวลาตามแพทย์แผนไทย/แพทย์แผนไทย ประยุกต์/แพทย์แผนปัจจุบันพิจารณา โดยขนาดสูงสุดไม่เกิน 20 หยด/วัน - หากอาการดีขึ้น จากการติดตามอาการและประเมินผลให้ปรับขนาดยาลดลง ครั้งละ 1 หยด ทุก 1 สัปดาห์ หรือเป็นระยะเวลาตามแพทย์แผนไทย/ แพทย์แผนไทยประยุกต์/แพทย์แผนปัจจุบันพิจารณา",
@@ -1422,14 +1516,15 @@
     "side_effects": "ง่วงนอน ปากแห้ง เวียนศีรษะ คลื่นไส้",
     "drug_interaction": "• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "cannabinoid-class pharmacodynamic evidence",
-    "references": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7"
+    "references": "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7",
+    "has_cannabis": true
   },
   {
     "id": "herb97-96",
     "index": 96,
     "name": "ยาประสะกัญชา",
     "dosage_form": "ยาแคปซูล ยาผง (รพ.) ยาแคปซูล (รพ.)",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "ในยาผง 2,000 กรัม ประกอบด้วย เหง้าขิงแห้ง ดอกดีปลีแก่นจันทน์แดงหรือแก่นจันทน์ขาว ใบสะเดา ใบคนทีเขมา อย่างละ 125 กรัม เมล็ดพริกไทยล่อน 250 กรัมใบกัญชา 1,000 กรัม",
     "indication": "ช่วยให้นอนหลับ",
     "dosage_usage": "รับประทานครั้งละ 1-2 กรัม ก่อนนอน ควรเริ่มจากขนาดต่ำแล้วจึงค่อย ๆ ปรับเพิ่มขนาดยา น้ำกระสายยาที่ใช้ได้แก่ น้ำมะพร้าว น้ำผึ้งรวง น้ำส้มซ่า น้ำตาลทราย กระทือสด น้ำเบญจทับทิม โดยเลือกให้เหมาะสมกับโรคหรืออาการของผู้ป่วย อาทิเช่น - กรณีที่มีอาการอ่อนเพลีย ไม่มีกำลัง ให้ใช้น้ำมะพร้าว น้ำผึ้งรวง หรือน้ำตาลทราย - กรณีที่มีเสมหะในคอให้ใช้น้ำส้มซ่า - กรณีมีอาการอาหารไม่ย่อย ท้องอืด ท้องเฟ้อ ให้ใช้น้ำกระทือสด - กรณีมีอาการท้องเสีย ให้ใช้น้ำเบญจทับทิมต้ม - กรณีหาน้ำกระสายยาไม่ได้ ให้ใช้น้ำสุกครึ่งแก้ว (60 ซีซี) แทน",
@@ -1437,14 +1532,15 @@
     "side_effects": "ไม่ระบุในเอกสาร",
     "drug_interaction": "• ยาต้านการแข็งตัวของเลือด/ยาต้านเกล็ดเลือด เช่น warfarin, clopidogrel, DOACs: อาจเพิ่มความเสี่ยงเลือดออก; ควรเฝ้าระวังอาการเลือดออก และติดตาม INR เมื่อใช้ warfarin\n• ยากดระบบประสาทส่วนกลาง เช่น benzodiazepines, ยานอนหลับ, opioids, ยาต้านฮิสตามีนที่ทำให้ง่วง และยากันชักบางชนิด: อาจเสริมอาการง่วงซึม เวียนศีรษะ การทรงตัวผิดปกติ และกดการหายใจ\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง",
     "evidence_level": "คำเตือน/ข้อควรระวังจากบัญชียาหลักแห่งชาติด้านสมุนไพร; คำเตือนระดับตำรับ + cannabinoid-class pharmacodynamic evidence; indirect constituent-based evidence; human piperine PK; cannabinoid-class pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://ndi.fda.moph.go.th/ndi_news_detail/index/396\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/",
+    "has_cannabis": true
   },
   {
     "id": "herb97-97",
     "index": 97,
     "name": "ยาศุขไสยาศน์",
     "dosage_form": "ยาแคปซูล ยาผง",
-    "category": "บัญชีรายการยาเฉพาะ",
+    "category": "บัญชีรายการยาเฉพาะ (มีส่วนผสมของกัญชา)",
     "ingredients": "ในยา 78 กรัม ประกอบด้วย ใบกัญชา 12 กรัม ดอกดีปลี 11 กรัม เหง้าขิงแห้ง 10 กรัม เมล็ดพริกไทย 9 กรัม ดอกบุนนาค 8 กรัม ลูกจันทน์ 7 กรัม โกฐกระดูก 6 กรัม เทียนดำ 5 กรัม เปลือกต้นสมุลแว้ง 4 กรัม หัสคุณเทศ 3 กรัม ใบสะเดา 2 กรัม การบูร 1 กรัม",
     "indication": "ช่วยให้นอนหลับ เจริญอาหาร",
     "dosage_usage": "สำหรับอาการนอนไม่หลับ รับประทานครั้งละ 0.5 - 2 กรัม วันละ 1 ครั้ง ก่อนนอน สำหรับอาการเบื่ออาหารรับประทานครั้งละ 0.5 - 2 กรัม วันละ 1 - 2 ครั้ง ก่อนอาหาร น้ำกระสายยา - น้ำผึ้งรวง 1 ช้อนชา (5 ซีซี) - ถ้าหาน้ำกระสายยาไม่ได้ ให้ใช้น้ำสุกครึ่งแก้ว (60 ซีซี) แทน",
@@ -1452,6 +1548,7 @@
     "side_effects": "อาจทำให้เกิดอาการปากแห้ง คอแห้ง หน้าแดงได้",
     "drug_interaction": "• ยากดระบบประสาทส่วนกลาง เช่น benzodiazepines, ยานอนหลับ, opioids, ยาต้านฮิสตามีนที่ทำให้ง่วง และยากันชักบางชนิด: อาจเสริมอาการง่วงซึม เวียนศีรษะ การทรงตัวผิดปกติ และกดการหายใจ\n• warfarin/ยาต้านเกล็ดเลือด: การศึกษา crossover ในคนไม่พบผลสำคัญต่อ warfarin PK/PD แต่ขิงขนาดสูงมีฤทธิ์ต้านเกล็ดเลือด; จึงควรเฝ้าระวังเลือดออกมากกว่าจัดเป็น interaction ที่พิสูจน์แล้ว\n• ยาที่มี therapeutic index แคบและเป็น CYP3A4/P-gp substrates (เช่น carbamazepine, phenytoin, theophylline, propranolol): piperine จากพริกไทย/ดีปลีมี human PK evidence ว่าสามารถเพิ่ม systemic exposure ของยาบางชนิด แต่สำหรับตำรับนี้เป็นการอนุมานจากส่วนประกอบและไม่ทราบว่าปริมาณ piperine ถึงระดับที่เกิด interaction หรือไม่; ใช้เป็นคำเตือนให้เฝ้าระวัง ไม่ใช่ข้อห้ามเด็ดขาด\n• ยากดระบบประสาทส่วนกลาง (benzodiazepines, hypnotics, opioids, sedating antihistamines และแอลกอฮอล์): อาจเสริม sedation/เวียนศีรษะ/การทรงตัวผิดปกติ; หลีกเลี่ยงการใช้ซ้อนหลายตัวและงดขับรถหากง่วง\n• ยาศุขไสยาศน์มีข้อมูลระดับตำรับสนับสนุนฤทธิ์ sedative/hypnotic-like; จึงมี biological plausibility ต่อการเสริมฤทธิ์ยากด CNS มากกว่าการอนุมานจาก THC เพียงอย่างเดียว",
     "evidence_level": "คำเตือนระดับตำรับ + cannabinoid-class pharmacodynamic evidence; human crossover study + human platelet study; indirect constituent-based evidence; human piperine PK; cannabinoid-class pharmacodynamic evidence; formula-level preclinical pharmacodynamic evidence",
-    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/38389972/"
+    "references": "https://ndi.fda.moph.go.th/ndi_news_detail/index/344\nhttps://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=628f9609-6583-49be-be77-b64cfbc46fd7\nhttps://pubmed.ncbi.nlm.nih.gov/15801937/\nhttps://pubmed.ncbi.nlm.nih.gov/9175175/\nhttps://pubmed.ncbi.nlm.nih.gov/27776366/\nhttps://pubmed.ncbi.nlm.nih.gov/1815977/\nhttps://pubmed.ncbi.nlm.nih.gov/38389972/",
+    "has_cannabis": true
   }
 ]
