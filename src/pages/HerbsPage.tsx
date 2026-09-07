@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Search, Leaf, ArrowLeft, AlertTriangle, Pill, X, BookOpen, Shield, FlaskConical, Beaker } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
+import { HERBS_97_DATA } from "@/lib/herbs97-service";
 
 type Herb = {
   id: string;
@@ -131,8 +132,31 @@ const HerbsPage = () => {
   };
 
   const loadFormulas = async () => {
-    const { data, error } = await supabase.from("thai_formulas").select("*").order("name_thai");
-    if (!error && data) setFormulas(data as Formula[]);
+    const { data } = await supabase.from("thai_formulas").select("*").order("name_thai");
+    const dbFormulas = (data || []) as Formula[];
+
+    const existingNames = new Set(dbFormulas.map((f) => f.name_thai.trim()));
+    const additionalFormulas: Formula[] = HERBS_97_DATA
+      .filter((h) => !existingNames.has(h.name.trim()))
+      .map((h) => ({
+        id: h.id,
+        name_thai: h.name,
+        name_english: null,
+        formula_code: `NLEM-${String(h.index).padStart(3, "0")}`,
+        category: h.category || "ตำรับยาแผนไทย",
+        is_in_nlem: true,
+        indication: h.indication || null,
+        ingredients: h.ingredients ? [h.ingredients] : [],
+        preparation: h.dosage_form || null,
+        dosage: h.dosage_usage || null,
+        usage_instructions: h.dosage_usage || null,
+        precautions: h.precautions_contraindications ? [h.precautions_contraindications] : [],
+        contraindications: [],
+        drug_interactions: h.drug_interaction ? [h.drug_interaction] : [],
+        properties: [],
+      }));
+
+    setFormulas([...dbFormulas, ...additionalFormulas]);
   };
 
   const categories = activeTab === "herbs" ? HERB_CATEGORIES : FORMULA_CATEGORIES;

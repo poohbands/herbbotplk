@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, type KnowledgeSettings } from "./knowledge-settings";
+import { searchHerbs97ByName, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 
 // พจนานุกรมอาการภาษาไทยเพื่อจับคู่สมุนไพร
 const SYMPTOM_MAP = [
@@ -552,6 +553,9 @@ export async function processLocalChat(
   // 2. ค้นหาสมุนไพรและตำรับที่เกี่ยวข้องกับคำถาม
   const nq = normalizeThaiName(question);
 
+  // 2.0 ค้นหาจากฐานข้อมูล 97 รายการ (ไฟล์ 97 herb.xlsx) โดยเน้นชื่อยาใน Column A ทั้งตรงและใกล้เคียง
+  const matched97Herbs = searchHerbs97ByName(question);
+
   // 2.1 ตรวจหาชื่อตำรับยาที่ผู้ใช้เอ่ยถึงโดยตรงในคำถาม
   const exactMatchedFormulas = allFormulas.filter((f) => {
     if (!f.name_thai) return false;
@@ -575,8 +579,6 @@ export async function processLocalChat(
   // ก) ถ้าผู้ใช้เอ่ยชื่อตำรับยาชัดเจน (เช่น "ยาจันทน์ลีลาใช้ลดไข้ได้ไหม")
   if (exactMatchedFormulas.length > 0) {
     matchedFormulas = exactMatchedFormulas.slice(0, 4);
-    // จะใส่สมุนไพรเดี่ยวเข้ามาด้วยเฉพาะกรณีที่ผู้ใช้เอ่ยชื่อสมุนไพรนั้นในคำถามด้วยเท่านั้น (เช่น "กินยาจันทน์ลีลากับฟ้าทะลายโจรได้ไหม")
-    // ไม่ดึงสมุนไพรเดี่ยวแปลกปลอม (เช่น ตะไคร้) มาโดยเด็ดขาด!
     matchedHerbs = exactMatchedHerbs.slice(0, 4);
   }
   // ข) ถ้าผู้ใช้เอ่ยชื่อสมุนไพรเดี่ยวชัดเจน (เช่น "ขมิ้นชันกินร่วมกับ warfarin ได้ไหม")
@@ -620,6 +622,11 @@ export async function processLocalChat(
 
   if (enableInternal) {
     contextText += "ข้อมูลอ้างอิงจากฐานข้อมูลสมุนไพรและตำรับยา สสจ.พิษณุโลก:\n";
+
+    // แทรกข้อมูลจาก 97 herb.xlsx ที่จับคู่ได้จากชื่อยาใน Column A
+    if (matched97Herbs.length > 0) {
+      contextText += formatHerb97ForAiContext(matched97Herbs);
+    }
     if (matchedHerbs.length > 0) {
       contextText += "\n[สมุนไพรที่เกี่ยวข้อง]\n";
       matchedHerbs.forEach((h) => {
@@ -823,15 +830,24 @@ export async function processLocalChat(
     answer.includes("ไม่สามารถตอบคำถามนอกเหนือจากนี้ได้");
 
   // 6. รวบรวม Sources Payload ทั้งภายในและภายนอก (PubMed & ThaiJO)
-  let internalSources = enableInternal
+  const rawInternalSources = enableInternal
     ? [
+        ...matched97Herbs.map((h) => ({ type: "formula", id: h.id, name: h.name })),
         ...matchedHerbs.map((h) => ({ type: "herb", id: h.id, name: h.name_thai })),
         ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
       ]
     : [];
-  if (exactMatchedFormulas.length > 0 && exactMatchedHerbs.length === 0) {
+
+  const seenSourceNames = new Set<string>();
+  let internalSources = rawInternalSources.filter((s) => {
+    if (!s.name || seenSourceNames.has(s.name)) return false;
+    seenSourceNames.add(s.name);
+    return true;
+  });
+
+  if (exactMatchedFormulas.length > 0 && exactMatchedHerbs.length === 0 && matched97Herbs.length === 0) {
     internalSources = internalSources.filter((s) => s.type === "formula");
-  } else if (exactMatchedHerbs.length > 0 && exactMatchedFormulas.length === 0) {
+  } else if (exactMatchedHerbs.length > 0 && exactMatchedFormulas.length === 0 && matched97Herbs.length === 0) {
     internalSources = internalSources.filter((s) => s.type === "herb");
   }
 
