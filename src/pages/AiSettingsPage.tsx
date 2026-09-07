@@ -40,6 +40,10 @@ const DEFAULT_RECOMMENDATIONS: Record<string, { desc: string; guideUrl?: string 
     desc: "Alibaba DashScope (Qwen Plus/Turbo) — รองรับภาษาไทยได้ดีมาก",
     guideUrl: "https://www.alibabacloud.com",
   },
+  kobai: {
+    desc: "KOB AI (kob-ai.dev) — AI Gateway รองรับหลากหลายโมเดล (Claude 3.5 Sonnet, GPT-4o, DeepSeek)",
+    guideUrl: "https://www.kob-ai.dev/",
+  },
 };
 
 const AiSettingsPage = () => {
@@ -87,6 +91,13 @@ const AiSettingsPage = () => {
           if (loc.base_url) {
             it.base_url = loc.base_url;
           }
+        }
+      });
+      // เพิ่มผู้ให้บริการที่มีใน local แต่ยังไม่มีในฐานข้อมูล Edge Function (เช่น kobai)
+      local.forEach((loc) => {
+        const exists = items.some((it) => it.provider_key === loc.provider_key || it.id === loc.id);
+        if (!exists) {
+          items.push(loc);
         }
       });
       items.sort((a, b) => a.priority - b.priority);
@@ -461,6 +472,30 @@ const AiSettingsPage = () => {
                                 { id: "gemini-2.5-flash", label: "2.5 Flash (แนะนำ ⚡ ล่าสุด)" },
                                 { id: "gemini-1.5-flash", label: "1.5 Flash" },
                                 { id: "gemini-1.5-flash-8b", label: "1.5-8B (ประหยัด)" },
+                              ].map((m) => (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => handleFieldChange(item.id, "model_name", m.id)}
+                                  className={`px-1.5 py-0.5 rounded border text-[10px] font-mono cursor-pointer transition-colors ${
+                                    item.model_name === m.id
+                                      ? "border-primary bg-primary/10 text-primary font-bold"
+                                      : "border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                                  }`}
+                                >
+                                  {m.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {item.provider_key === "kobai" && (
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1 text-[11px]">
+                              <span className="text-muted-foreground text-[10px]">เลือกรวดเร็ว:</span>
+                              {[
+                                { id: "claude-3-5-sonnet", label: "Claude 3.5 Sonnet (แนะนำ)" },
+                                { id: "gpt-4o", label: "GPT-4o" },
+                                { id: "deepseek-chat", label: "DeepSeek Chat" },
+                                { id: "gemini-1.5-pro", label: "Gemini 1.5 Pro" },
                               ].map((m) => (
                                 <button
                                   key={m.id}

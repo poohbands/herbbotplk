@@ -27,9 +27,11 @@ export function sanitizeKey(k?: string | null): string {
 
 const rawGeminiEnv = (import.meta.env.VITE_GEMINI_API_KEY as string | undefined)?.trim() || "";
 const rawDeepseekEnv = (import.meta.env.VITE_DEEPSEEK_API_KEY as string | undefined)?.trim() || "";
+const rawKobaiEnv = (import.meta.env.VITE_KOBAI_API_KEY as string | undefined)?.trim() || "";
 
 const ENV_GEMINI_KEY = isValidAsciiKey(rawGeminiEnv) ? rawGeminiEnv : "";
 const ENV_DEEPSEEK_KEY = isValidAsciiKey(rawDeepseekEnv) ? rawDeepseekEnv : "";
+const ENV_KOBAI_KEY = isValidAsciiKey(rawKobaiEnv) ? rawKobaiEnv : "";
 
 export const DEFAULT_PROVIDERS: ProviderItem[] = [
   {
@@ -74,6 +76,17 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
     priority: 4,
     has_key: false,
   },
+  {
+    id: "kobai-default",
+    name: "KOB AI",
+    provider_key: "kobai",
+    base_url: "https://www.kob-ai.dev/v1",
+    model_name: "claude-3-5-sonnet",
+    is_active: Boolean(ENV_KOBAI_KEY),
+    priority: 5,
+    has_key: Boolean(ENV_KOBAI_KEY),
+    api_key: ENV_KOBAI_KEY || undefined,
+  },
 ];
 
 const STORAGE_KEY = "herbbot_ai_providers";
@@ -99,6 +112,27 @@ export function getLocalProviders(): ProviderItem[] {
           deep.has_key = true;
         }
       }
+      if (ENV_KOBAI_KEY) {
+        const kob = parsed.find((p: ProviderItem) => p.provider_key === "kobai");
+        if (kob && (!kob.api_key || kob.api_key === "__CLEAR__")) {
+          kob.api_key = ENV_KOBAI_KEY;
+          kob.has_key = true;
+        }
+      }
+
+      // ตรวจสอบว่ามี provider ใดใน DEFAULT_PROVIDERS ที่ยังไม่มีใน parsed หรือไม่ (เช่น kobai ที่เพิ่งเพิ่ม)
+      for (const def of DEFAULT_PROVIDERS) {
+        const exists = parsed.some(
+          (p: ProviderItem) => p.provider_key === def.provider_key || p.id === def.id
+        );
+        if (!exists) {
+          parsed.push({
+            ...def,
+            priority: parsed.length + 1,
+          });
+        }
+      }
+
       return parsed;
     }
   } catch (e) {
@@ -190,10 +224,15 @@ export async function testProviderDirectly(provider: {
 
   const endpoint = url.endsWith("/chat/completions") ? url : `${url}/chat/completions`;
   const isGoogle = url.includes("google") || provider.base_url?.includes("generativelanguage");
+  const isKobAi = url.includes("kob-ai") || provider.base_url?.includes("kob-ai");
 
-  const modelsToTry = [model || (isGoogle ? "gemini-flash-latest" : "deepseek-chat")];
+  const modelsToTry = [model || (isGoogle ? "gemini-flash-latest" : isKobAi ? "claude-3-5-sonnet" : "deepseek-chat")];
   if (isGoogle) {
     ["gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"].forEach((cand) => {
+      if (!modelsToTry.includes(cand)) modelsToTry.push(cand);
+    });
+  } else if (isKobAi) {
+    ["claude-3-5-sonnet", "gpt-4o", "deepseek-chat", "gemini-1.5-pro"].forEach((cand) => {
       if (!modelsToTry.includes(cand)) modelsToTry.push(cand);
     });
   }
