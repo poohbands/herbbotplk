@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Plus, Pencil, Trash2, BookOpen, Search, ExternalLink, Globe, Database, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Pencil, Trash2, BookOpen, Search, ExternalLink, Globe, Database, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,7 @@ const KnowledgeManager = () => {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [saving, setSaving] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const [knowledgeSettings, setKnowledgeSettings] = useState<KnowledgeSettings>(() => getKnowledgeSettings());
 
@@ -170,21 +171,65 @@ const KnowledgeManager = () => {
       animate={{ opacity: 1, y: 0 }}
       className="bg-card rounded-xl border border-primary/20 p-5 shadow-herbal"
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-        <div>
-          <h3 className="text-base font-semibold font-thai text-foreground flex items-center gap-2">
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
             <BookOpen className="w-5 h-5 text-primary" />
-            คลังความรู้ (Knowledge Base)
-          </h3>
-          <p className="text-xs text-muted-foreground mt-1">
-            เพิ่ม/แก้ไขเอกสารความรู้ที่ระบบ AI จะดึงมาใช้ตอบผู้ใช้อัตโนมัติ
-          </p>
+          </div>
+          <div>
+            <h3 className="text-base font-semibold font-thai text-foreground flex items-center gap-2">
+              คลังความรู้ (Knowledge Base)
+              <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">
+                {docs.length} รายการ
+              </span>
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isExpanded
+                ? "คลิกเพื่อย่อปิดคลังความรู้"
+                : "คลิกเพื่อขยายดูรายละเอียดคลังความรู้ จัดการเอกสาร และตั้งค่าแหล่งข้อมูล AI"}
+            </p>
+          </div>
         </div>
-        <Button onClick={openNew} className="gap-2">
-          <Plus className="w-4 h-4" /> เพิ่มความรู้ใหม่
-        </Button>
+
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {isExpanded && (
+            <Button onClick={openNew} size="sm" className="gap-1.5 h-8 text-xs">
+              <Plus className="w-3.5 h-3.5" /> เพิ่มความรู้ใหม่
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="h-8 text-xs gap-1.5 font-thai border-primary/30 text-primary hover:bg-primary/10"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-4 h-4" />
+                ย่อคลังความรู้
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                ขยายคลังความรู้
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden pt-5"
+          >
       {/* กล่องเมนูเปิด-ปิดแหล่งข้อมูลสำหรับ AI (External APA 7 & Internal DB) */}
       <div className="bg-muted/40 rounded-xl border border-border p-4 mb-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -391,6 +436,9 @@ const KnowledgeManager = () => {
           ))}
         </div>
       )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
