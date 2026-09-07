@@ -744,7 +744,7 @@ const ChatPage = () => {
                           {msg.sources.internal && msg.sources.internal.length > 0 && (
                             <div className="space-y-1.5">
                               {msg.sources.internal.map((s) => {
-                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.id)}`;
+                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.id || s.name)}&name=${encodeURIComponent(s.name || "")}`;
                                 return (
                                   <div
                                     key={`${s.type}-${s.id}`}

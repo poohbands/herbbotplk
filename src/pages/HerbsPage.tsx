@@ -61,27 +61,85 @@ const HerbsPage = () => {
     loadFormulas();
   }, []);
 
-  // Auto-open modal if URL has ?herb=... or ?formula=...
+  // Auto-open modal if URL has ?herb=... or ?formula=... or ?id=... or ?q=...
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const herbParam = params.get("herb");
-    const formulaParam = params.get("formula");
+    const herbParam = params.get("herb")?.trim();
+    const formulaParam = params.get("formula")?.trim();
+    const nameParam = params.get("name")?.trim();
+    const idParam = (params.get("id") || params.get("q"))?.trim();
 
-    if (herbParam && herbs.length > 0) {
-      const found = herbs.find(
-        (h) => h.id === herbParam || h.name_thai === herbParam || h.name_english?.toLowerCase() === herbParam.toLowerCase()
-      );
-      if (found) {
-        setActiveTab("herbs");
-        setSelectedHerb(found);
-      }
-    } else if (formulaParam && formulas.length > 0) {
-      const found = formulas.find(
-        (f) => f.id === formulaParam || f.name_thai === formulaParam || f.name_english?.toLowerCase() === formulaParam.toLowerCase()
-      );
+    const target = (nameParam || formulaParam || herbParam || idParam || "").toLowerCase();
+    if (!target) return;
+
+    // ฟังก์ชันช่วยทำความสะอาดชื่อเพื่อเทียบชื่อยา/สมุนไพรภาษาไทย
+    const normalizeName = (name: string) =>
+      name
+        .trim()
+        .toLowerCase()
+        .replace(/^ยา(น้ำมัน|สเปรย์|ทา|ขี้ผึ้ง|สารสกัด(จาก)?)?/, "")
+        .replace(/[\s\-_,()]+/g, "");
+
+    const normTarget = normalizeName(target);
+
+    // 1. ถ้ามี ?formula= ให้ค้นหาใน formulas ก่อน
+    if (formulaParam && formulas.length > 0) {
+      const found = formulas.find((f) => {
+        if (f.id === formulaParam || f.id.toLowerCase() === target) return true;
+        if (f.name_thai === formulaParam || f.name_thai.toLowerCase() === target) return true;
+        if (f.name_english?.toLowerCase() === target) return true;
+        const normName = normalizeName(f.name_thai);
+        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
+      });
       if (found) {
         setActiveTab("formulas");
         setSelectedFormula(found);
+        return;
+      }
+    }
+
+    // 2. ถ้ามี ?herb= ให้ค้นหาใน herbs ก่อน
+    if (herbParam && herbs.length > 0) {
+      const found = herbs.find((h) => {
+        if (h.id === herbParam || h.id.toLowerCase() === target) return true;
+        if (h.name_thai === herbParam || h.name_thai.toLowerCase() === target) return true;
+        if (h.name_english?.toLowerCase() === target || h.name_scientific?.toLowerCase() === target) return true;
+        const normName = normalizeName(h.name_thai);
+        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
+      });
+      if (found) {
+        setActiveTab("herbs");
+        setSelectedHerb(found);
+        return;
+      }
+    }
+
+    // 3. Fallback: ถ้าค้นหาตรงกลุ่มไม่พบ ให้ค้นหาข้ามกลุ่ม (Cross-collection fallback)
+    if (formulas.length > 0) {
+      const foundFormula = formulas.find((f) => {
+        if (f.id === target || f.id.toLowerCase() === target) return true;
+        if (f.name_thai.toLowerCase() === target) return true;
+        const normName = normalizeName(f.name_thai);
+        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
+      });
+      if (foundFormula) {
+        setActiveTab("formulas");
+        setSelectedFormula(foundFormula);
+        return;
+      }
+    }
+
+    if (herbs.length > 0) {
+      const foundHerb = herbs.find((h) => {
+        if (h.id === target || h.id.toLowerCase() === target) return true;
+        if (h.name_thai.toLowerCase() === target) return true;
+        const normName = normalizeName(h.name_thai);
+        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
+      });
+      if (foundHerb) {
+        setActiveTab("herbs");
+        setSelectedHerb(foundHerb);
+        return;
       }
     }
   }, [herbs, formulas]);
