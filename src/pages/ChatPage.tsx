@@ -747,7 +747,7 @@ const ChatPage = () => {
                           {msg.sources.internal && msg.sources.internal.length > 0 && (
                             <div className="space-y-1.5">
                               {msg.sources.internal.map((s) => {
-                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.id || s.name)}&name=${encodeURIComponent(s.name || "")}`;
+                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.name || s.id)}&name=${encodeURIComponent(s.name || "")}&id=${encodeURIComponent(s.id || "")}`;
                                 return (
                                   <div
                                     key={`${s.type}-${s.id}`}
@@ -956,14 +956,28 @@ const ChatPage = () => {
                             </div>
                             <div className="text-[11px] text-muted-foreground space-y-2 pl-0.5">
                               {(msg.sources?.internal || []).map((s) => {
-                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.id)}`;
+                                const url = `${window.location.origin}/herbs?${s.type}=${encodeURIComponent(s.name || s.id)}&name=${encodeURIComponent(s.name || "")}&id=${encodeURIComponent(s.id || "")}`;
                                 return (
                                   <div
-                                    key={`apa-internal-${s.id}`}
+                                    key={`apa-internal-${s.id}-${s.name}`}
                                     className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                                   >
                                     <p className="leading-relaxed flex-1">
-                                      สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). <em>{s.type === "herb" ? "ฐานข้อมูลสมุนไพร" : "ฐานข้อมูลตำรับยาแผนไทย"}: {s.name}</em>. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
+                                      สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568).{" "}
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          openExternal(url);
+                                        }}
+                                        className="text-primary hover:underline font-medium"
+                                        title="คลิกเพื่อเปิดเอกสารข้อมูลสมุนไพร/ตำรับยา"
+                                      >
+                                        <em>{s.type === "herb" ? "ฐานข้อมูลสมุนไพร" : "ฐานข้อมูลตำรับยาแผนไทย"}: {s.name}</em>
+                                      </a>
+                                      . กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
                                     </p>
                                     <button
                                       type="button"

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Search, Leaf, ArrowLeft, AlertTriangle, Pill, X, BookOpen, Shield, FlaskConical, Beaker } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ type Herb = {
 
 type Formula = {
   id: string;
+  herb97_id?: string;
   name_thai: string;
   name_english: string | null;
   formula_code: string | null;
@@ -39,15 +41,82 @@ type Formula = {
   contraindications: string[] | null;
   drug_interactions: string[] | null;
   properties: string[] | null;
+  references?: string | null;
+  evidence_level?: string | null;
 };
 
 const HERB_CATEGORIES = ["ทั้งหมด", "สมุนไพรในบัญชียาหลัก", "สมุนไพรเครื่องเทศ", "สมุนไพรลดน้ำตาล"];
 const FORMULA_CATEGORIES = ["ทั้งหมด", "ตำรับยาหอม", "ตำรับยาแก้ไข้", "ตำรับยาแก้ท้อง", "ตำรับยาสตรี", "ตำรับยาบำรุง", "ตำรับยาระบาย", "ตำรับยาแก้ไอ"];
 
+/** ฟังก์ชันถอดรหัส URL พารามิเตอร์อย่างปลอดภัย (รองรับ single & double encoding) */
+const safeDecode = (val: string | null | undefined): string => {
+  if (!val) return "";
+  try {
+    let decoded = decodeURIComponent(val.trim());
+    if (decoded.includes("%")) {
+      try {
+        decoded = decodeURIComponent(decoded);
+      } catch {}
+    }
+    return decoded.trim();
+  } catch {
+    return (val || "").trim();
+  }
+};
+
+/** ฟังก์ชันทำความสะอาดชื่อภาษาไทยเพื่อใช้เปรียบเทียบ */
+const cleanThai = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/^(ยา)?(น้ำมัน|สเปรย์|ทา|ขี้ผึ้ง)?(สารสกัด(จาก)?)?/, "")
+    .replace(/[\s\-_,()\/\\:.\[\]]+/g, "")
+    .trim();
+
+/** ฟังก์ชันสกัดคีย์เวิร์ดสำคัญ (เช่น อัตราส่วน 1:1, 20:1 และคำสำคัญ) */
+const extractTokens = (s: string): string[] => {
+  const lower = s.toLowerCase();
+  const tokens: string[] = [];
+
+  const ratios = lower.match(/\d+:\d+/g);
+  if (ratios) tokens.push(...ratios);
+
+  const words = lower
+    .replace(/\d+:\d+/g, " ")
+    .split(/[\s\-_,()\/\\:.\[\]]+/)
+    .map((w) => cleanThai(w) || w)
+    .filter((w) => w.length >= 2);
+
+  tokens.push(...words);
+  return Array.from(new Set(tokens.filter(Boolean)));
+};
+
+/** เตรียมข้อมูลเริ่มต้นจาก 97 รายการในหน่วยความจำทันที (ไม่ต้องรอ Supabase เพื่อให้เปิด Modal ได้ทันที 100%) */
+const INITIAL_FORMULAS: Formula[] = HERBS_97_DATA.map((h) => ({
+  id: h.id,
+  herb97_id: h.id,
+  name_thai: h.name,
+  name_english: null,
+  formula_code: `NLEM-${String(h.index).padStart(3, "0")}`,
+  category: h.category || "ตำรับยาแผนไทย",
+  is_in_nlem: true,
+  indication: h.indication || null,
+  ingredients: h.ingredients ? [h.ingredients] : [],
+  preparation: h.dosage_form || null,
+  dosage: h.dosage_usage || null,
+  usage_instructions: h.dosage_usage || null,
+  precautions: h.precautions_contraindications ? [h.precautions_contraindications] : [],
+  contraindications: [],
+  drug_interactions: h.drug_interaction ? [h.drug_interaction] : [],
+  properties: [],
+  references: h.references || null,
+  evidence_level: h.evidence_level || null,
+}));
+
 const HerbsPage = () => {
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<"herbs" | "formulas">("herbs");
   const [herbs, setHerbs] = useState<Herb[]>([]);
-  const [formulas, setFormulas] = useState<Formula[]>([]);
+  const [formulas, setFormulas] = useState<Formula[]>(INITIAL_FORMULAS);
   const [filtered, setFiltered] = useState<Herb[]>([]);
   const [filteredFormulas, setFilteredFormulas] = useState<Formula[]>([]);
   const [search, setSearch] = useState("");
@@ -61,88 +130,148 @@ const HerbsPage = () => {
     loadFormulas();
   }, []);
 
-  // Auto-open modal if URL has ?herb=... or ?formula=... or ?id=... or ?q=...
+  const handleCloseModal = () => {
+    setSelectedHerb(null);
+    setSelectedFormula(null);
+    if (window.location.search) {
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  };
+
+  // Auto-open modal if URL has ?herb=... or ?formula=... or ?name=... or ?id=... or ?q=...
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const herbParam = params.get("herb")?.trim();
-    const formulaParam = params.get("formula")?.trim();
-    const nameParam = params.get("name")?.trim();
-    const idParam = (params.get("id") || params.get("q"))?.trim();
+    const params = new URLSearchParams(location.search);
+    const herbParam = safeDecode(params.get("herb"));
+    const formulaParam = safeDecode(params.get("formula"));
+    const nameParam = safeDecode(params.get("name"));
+    const idParam = safeDecode(params.get("id") || params.get("q"));
 
-    const target = (nameParam || formulaParam || herbParam || idParam || "").toLowerCase();
-    if (!target) return;
+    const rawTarget = nameParam || formulaParam || herbParam || idParam;
+    if (!rawTarget) return;
 
-    // ฟังก์ชันช่วยทำความสะอาดชื่อเพื่อเทียบชื่อยา/สมุนไพรภาษาไทย
-    const normalizeName = (name: string) =>
-      name
-        .trim()
-        .toLowerCase()
-        .replace(/^ยา(น้ำมัน|สเปรย์|ทา|ขี้ผึ้ง|สารสกัด(จาก)?)?/, "")
-        .replace(/[\s\-_,()]+/g, "");
+    const target = rawTarget.toLowerCase();
+    const normTarget = cleanThai(rawTarget);
 
-    const normTarget = normalizeName(target);
+    // ตรวจสอบว่า target, formulaParam, herbParam หรือ idParam ตรงกับรายการใน HERBS_97_DATA หรือไม่
+    const direct97 = HERBS_97_DATA.find((h) => {
+      const hid = h.id.toLowerCase();
+      return (
+        hid === target ||
+        (idParam && hid === idParam.toLowerCase()) ||
+        (formulaParam && hid === formulaParam.toLowerCase()) ||
+        (herbParam && hid === herbParam.toLowerCase()) ||
+        h.name.toLowerCase() === target ||
+        cleanThai(h.name) === normTarget
+      );
+    });
 
-    // 1. ถ้ามี ?formula= ให้ค้นหาใน formulas ก่อน
-    if (formulaParam && formulas.length > 0) {
-      const found = formulas.find((f) => {
-        if (f.id === formulaParam || f.id.toLowerCase() === target) return true;
-        if (f.name_thai === formulaParam || f.name_thai.toLowerCase() === target) return true;
-        if (f.name_english?.toLowerCase() === target) return true;
-        const normName = normalizeName(f.name_thai);
-        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
-      });
-      if (found) {
+    const tokens = extractTokens(rawTarget);
+
+    const matchFormula = (f: Formula): boolean => {
+      const fid = f.id.toLowerCase();
+      const fHerb97Id = (f.herb97_id || "").toLowerCase();
+      const fName = f.name_thai.toLowerCase();
+      const normF = cleanThai(f.name_thai);
+
+      // 1. Direct ID / Herb97 ID match
+      if (idParam && (fid === idParam.toLowerCase() || fHerb97Id === idParam.toLowerCase())) return true;
+      if (formulaParam && (fid === formulaParam.toLowerCase() || fHerb97Id === formulaParam.toLowerCase())) return true;
+      if (direct97 && (fHerb97Id === direct97.id.toLowerCase() || fid === direct97.id.toLowerCase() || normF === cleanThai(direct97.name))) return true;
+
+      // 2. Exact name match
+      if (nameParam && (fName === nameParam.toLowerCase() || normF === cleanThai(nameParam))) return true;
+      if (formulaParam && (fName === formulaParam.toLowerCase() || normF === cleanThai(formulaParam))) return true;
+      if (fName === target || normF === normTarget) return true;
+      if (f.name_english && f.name_english.toLowerCase() === target) return true;
+
+      // 3. Substring containment match (เมื่อความยาวอักขระ >= 3)
+      if (normTarget.length >= 3 && (normF.includes(normTarget) || normTarget.includes(normF))) return true;
+
+      // 4. Token matching (เช่น คำค้นกัญชา THC:CBD 1:1 หรือ 20:1)
+      if (tokens.length >= 2 && tokens.every((t) => normF.includes(cleanThai(t)) || fName.includes(t.toLowerCase()))) return true;
+
+      return false;
+    };
+
+    const matchHerb = (h: Herb): boolean => {
+      const hid = h.id.toLowerCase();
+      const hName = h.name_thai.toLowerCase();
+      const normH = cleanThai(h.name_thai);
+
+      // 1. Direct ID match
+      if (idParam && hid === idParam.toLowerCase()) return true;
+      if (herbParam && hid === herbParam.toLowerCase()) return true;
+
+      // 2. Exact name match
+      if (nameParam && (hName === nameParam.toLowerCase() || normH === cleanThai(nameParam))) return true;
+      if (herbParam && (hName === herbParam.toLowerCase() || normH === cleanThai(herbParam))) return true;
+      if (hName === target || normH === normTarget) return true;
+      if (h.name_english && h.name_english.toLowerCase() === target) return true;
+      if (h.name_scientific && h.name_scientific.toLowerCase() === target) return true;
+
+      // 3. Local names
+      if (h.local_names?.some((ln) => {
+        const normLn = cleanThai(ln);
+        return normLn === normTarget || (normTarget.length >= 3 && normLn.includes(normTarget));
+      })) return true;
+
+      // 4. Substring containment match
+      if (normTarget.length >= 3 && (normH.includes(normTarget) || normTarget.includes(normH))) return true;
+
+      // 5. Token matching
+      if (tokens.length >= 2 && tokens.every((t) => normH.includes(cleanThai(t)) || hName.includes(t.toLowerCase()))) return true;
+
+      return false;
+    };
+
+    // ลำดับการค้นหาตาม Intent ของพารามิเตอร์:
+    // A. ถ้ามี formulaParam หรือระบุว่าเป็นตำรับยาจาก direct97 -> ค้นหาใน formulas ก่อน
+    if (formulaParam || direct97) {
+      const foundF = formulas.find(matchFormula);
+      if (foundF) {
         setActiveTab("formulas");
-        setSelectedFormula(found);
+        setSelectedFormula(foundF);
         return;
       }
-    }
-
-    // 2. ถ้ามี ?herb= ให้ค้นหาใน herbs ก่อน
-    if (herbParam && herbs.length > 0) {
-      const found = herbs.find((h) => {
-        if (h.id === herbParam || h.id.toLowerCase() === target) return true;
-        if (h.name_thai === herbParam || h.name_thai.toLowerCase() === target) return true;
-        if (h.name_english?.toLowerCase() === target || h.name_scientific?.toLowerCase() === target) return true;
-        const normName = normalizeName(h.name_thai);
-        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
-      });
-      if (found) {
+      const foundH = herbs.find(matchHerb);
+      if (foundH) {
         setActiveTab("herbs");
-        setSelectedHerb(found);
+        setSelectedHerb(foundH);
         return;
       }
     }
 
-    // 3. Fallback: ถ้าค้นหาตรงกลุ่มไม่พบ ให้ค้นหาข้ามกลุ่ม (Cross-collection fallback)
-    if (formulas.length > 0) {
-      const foundFormula = formulas.find((f) => {
-        if (f.id === target || f.id.toLowerCase() === target) return true;
-        if (f.name_thai.toLowerCase() === target) return true;
-        const normName = normalizeName(f.name_thai);
-        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
-      });
-      if (foundFormula) {
+    // B. ถ้ามี herbParam -> ค้นหาใน herbs ก่อน
+    if (herbParam) {
+      const foundH = herbs.find(matchHerb);
+      if (foundH) {
+        setActiveTab("herbs");
+        setSelectedHerb(foundH);
+        return;
+      }
+      const foundF = formulas.find(matchFormula);
+      if (foundF) {
         setActiveTab("formulas");
-        setSelectedFormula(foundFormula);
+        setSelectedFormula(foundF);
         return;
       }
     }
 
-    if (herbs.length > 0) {
-      const foundHerb = herbs.find((h) => {
-        if (h.id === target || h.id.toLowerCase() === target) return true;
-        if (h.name_thai.toLowerCase() === target) return true;
-        const normName = normalizeName(h.name_thai);
-        return normName === normTarget || (normName.length >= 3 && (normName.includes(normTarget) || normTarget.includes(normName)));
-      });
-      if (foundHerb) {
-        setActiveTab("herbs");
-        setSelectedHerb(foundHerb);
-        return;
-      }
+    // C. กรณีมีเฉพาะ nameParam หรือ idParam หรือค้นหาทั่วไป:
+    const foundFormula = formulas.find(matchFormula);
+    if (foundFormula) {
+      setActiveTab("formulas");
+      setSelectedFormula(foundFormula);
+      return;
     }
-  }, [herbs, formulas]);
+
+    const foundHerb = herbs.find(matchHerb);
+    if (foundHerb) {
+      setActiveTab("herbs");
+      setSelectedHerb(foundHerb);
+      return;
+    }
+  }, [herbs, formulas, location.search]);
 
   useEffect(() => {
     setCategory("ทั้งหมด");
@@ -184,37 +313,69 @@ const HerbsPage = () => {
   }, [herbs, formulas, search, category, activeTab]);
 
   const loadHerbs = async () => {
-    const { data, error } = await supabase.from("herbs").select("*").order("name_thai");
-    if (!error && data) setHerbs(data as Herb[]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase.from("herbs").select("*").order("name_thai");
+      if (!error && data) setHerbs(data as Herb[]);
+    } catch (e) {
+      console.error("loadHerbs error:", e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadFormulas = async () => {
-    const { data } = await supabase.from("thai_formulas").select("*").order("name_thai");
-    const dbFormulas = (data || []) as Formula[];
+    try {
+      const { data, error } = await supabase.from("thai_formulas").select("*").order("name_thai");
+      if (error) {
+        console.error("Error loading formulas from supabase:", error);
+        return;
+      }
+      const dbFormulas = (data || []) as Formula[];
 
-    const existingNames = new Set(dbFormulas.map((f) => f.name_thai.trim()));
-    const additionalFormulas: Formula[] = HERBS_97_DATA
-      .filter((h) => !existingNames.has(h.name.trim()))
-      .map((h) => ({
-        id: h.id,
-        name_thai: h.name,
-        name_english: null,
-        formula_code: `NLEM-${String(h.index).padStart(3, "0")}`,
-        category: h.category || "ตำรับยาแผนไทย",
-        is_in_nlem: true,
-        indication: h.indication || null,
-        ingredients: h.ingredients ? [h.ingredients] : [],
-        preparation: h.dosage_form || null,
-        dosage: h.dosage_usage || null,
-        usage_instructions: h.dosage_usage || null,
-        precautions: h.precautions_contraindications ? [h.precautions_contraindications] : [],
-        contraindications: [],
-        drug_interactions: h.drug_interaction ? [h.drug_interaction] : [],
-        properties: [],
-      }));
+      const mappedDbFormulas: Formula[] = dbFormulas.map((df) => {
+        const match97 = HERBS_97_DATA.find(
+          (h) => h.name.trim() === df.name_thai.trim() || cleanThai(h.name) === cleanThai(df.name_thai)
+        );
+        return {
+          ...df,
+          herb97_id: match97?.id,
+          references: match97?.references || (df as any).references || null,
+          evidence_level: match97?.evidence_level || (df as any).evidence_level || null,
+        };
+      });
 
-    setFormulas([...dbFormulas, ...additionalFormulas]);
+      const existingNames = new Set(mappedDbFormulas.map((f) => f.name_thai.trim()));
+      const existingHerb97Ids = new Set(
+        mappedDbFormulas.map((f) => f.herb97_id).filter(Boolean)
+      );
+
+      const additionalFormulas: Formula[] = HERBS_97_DATA
+        .filter((h) => !existingNames.has(h.name.trim()) && !existingHerb97Ids.has(h.id))
+        .map((h) => ({
+          id: h.id,
+          herb97_id: h.id,
+          name_thai: h.name,
+          name_english: null,
+          formula_code: `NLEM-${String(h.index).padStart(3, "0")}`,
+          category: h.category || "ตำรับยาแผนไทย",
+          is_in_nlem: true,
+          indication: h.indication || null,
+          ingredients: h.ingredients ? [h.ingredients] : [],
+          preparation: h.dosage_form || null,
+          dosage: h.dosage_usage || null,
+          usage_instructions: h.dosage_usage || null,
+          precautions: h.precautions_contraindications ? [h.precautions_contraindications] : [],
+          contraindications: [],
+          drug_interactions: h.drug_interaction ? [h.drug_interaction] : [],
+          properties: [],
+          references: h.references || null,
+          evidence_level: h.evidence_level || null,
+        }));
+
+      setFormulas([...mappedDbFormulas, ...additionalFormulas]);
+    } catch (e) {
+      console.error("loadFormulas error:", e);
+    }
   };
 
   const categories = activeTab === "herbs" ? HERB_CATEGORIES : FORMULA_CATEGORIES;
@@ -423,7 +584,7 @@ const HerbsPage = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-start justify-center p-4 pt-10 overflow-y-auto"
-            onClick={() => setSelectedHerb(null)}
+            onClick={handleCloseModal}
           >
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -438,7 +599,7 @@ const HerbsPage = () => {
                     <img src={selectedHerb.image_url} alt={selectedHerb.name_thai} className="h-full w-auto object-contain" />
                   </div>
                 )}
-                <button onClick={() => setSelectedHerb(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-foreground">
+                <button onClick={handleCloseModal} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-foreground">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -497,7 +658,7 @@ const HerbsPage = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-foreground/40 backdrop-blur-sm flex items-start justify-center p-4 pt-10 overflow-y-auto"
-            onClick={() => setSelectedFormula(null)}
+            onClick={handleCloseModal}
           >
             <motion.div
               initial={{ opacity: 0, y: 30, scale: 0.97 }}
@@ -507,7 +668,7 @@ const HerbsPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="relative p-6">
-                <button onClick={() => setSelectedFormula(null)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground">
+                <button onClick={handleCloseModal} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-muted/50 border border-border flex items-center justify-center text-muted-foreground hover:text-foreground">
                   <X className="w-4 h-4" />
                 </button>
 
@@ -583,6 +744,26 @@ const HerbsPage = () => {
                     <div className="bg-herb-terracotta/5 border border-herb-terracotta/20 rounded-lg p-4">
                       <h4 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-1.5"><Pill className="w-4 h-4 text-herb-terracotta" /> ปฏิกิริยากับยาแผนปัจจุบัน</h4>
                       <ul className="space-y-1.5">{selectedFormula.drug_interactions.map((d, i) => <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-herb-terracotta mt-0.5">💊</span><span>{d}</span></li>)}</ul>
+                    </div>
+                  )}
+
+                  {/* References */}
+                  {selectedFormula.references && (
+                    <div className="bg-muted/40 border border-border rounded-lg p-3">
+                      <h4 className="text-xs font-semibold text-foreground mb-1">🔗 แหล่งข้อมูลอ้างอิง</h4>
+                      <div className="space-y-1">
+                        {selectedFormula.references.split("\n").filter(Boolean).map((ref, idx) => (
+                          <a
+                            key={idx}
+                            href={ref.trim()}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline block break-all"
+                          >
+                            {ref.trim()}
+                          </a>
+                        ))}
+                      </div>
                     </div>
                   )}
 
