@@ -1,11 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Cpu } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
 import { processLocalChat, hasLocalProviderKey } from "@/lib/local-chat-service";
+import {
+  getCurrentActiveProviderStatus,
+  type ActiveApiStatus,
+} from "@/lib/ai-providers-storage";
 import {
   getKnowledgeSettings,
   KNOWLEDGE_SETTINGS_EVENT,
@@ -169,15 +173,27 @@ const ChatPage = () => {
   const [selectedKnowledgeDoc, setSelectedKnowledgeDoc] = useState<KnowledgeSource | null>(null);
   const [fetchingKnowledgeContent, setFetchingKnowledgeContent] = useState(false);
   const [knowledgeSettings, setKnowledgeSettings] = useState<KnowledgeSettings>(() => getKnowledgeSettings());
+  const [activeApiStatus, setActiveApiStatus] = useState<ActiveApiStatus>(() => getCurrentActiveProviderStatus());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const refreshApiStatus = () => {
+      setActiveApiStatus(getCurrentActiveProviderStatus());
+    };
+
+    refreshApiStatus();
+    // อัปเดตสถานะผู้ให้บริการ AI อัตโนมัติทุก 5 นาที (300,000 ms)
+    const interval = setInterval(refreshApiStatus, 5 * 60 * 1000);
+
     const handleSettingsChange = () => {
       setKnowledgeSettings(getKnowledgeSettings());
+      refreshApiStatus();
     };
+
     window.addEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
     window.addEventListener("storage", handleSettingsChange);
     return () => {
+      clearInterval(interval);
       window.removeEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
       window.removeEventListener("storage", handleSettingsChange);
     };
@@ -546,6 +562,23 @@ const ChatPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* กล่องเล็กบอกสถานะ API AI มุมขวาบน (อัปเดตอัตโนมัติทุก 5 นาที) */}
+            <a
+              href="/admin/ai-settings"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition-all shadow-xs group"
+              title={`ใช้งานผู้ให้บริการ AI: ${activeApiStatus.name} (${activeApiStatus.model_name}) | อัปเดตล่าสุด: ${activeApiStatus.updatedAtText} น. (ระบบอัปเดตสถานะอัตโนมัติทุก 5 นาที)`}
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <Cpu className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 group-hover:rotate-12 transition-transform" />
+              <span className="font-semibold">{activeApiStatus.name}</span>
+              <span className="hidden sm:inline-block text-[10px] bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 px-1.5 py-0.5 rounded-md font-mono">
+                {activeApiStatus.model_name}
+              </span>
+            </a>
+
             {messages.length > 0 && (
               <button
                 onClick={() => { setMessages([]); setSessionId(null); setInput(""); }}

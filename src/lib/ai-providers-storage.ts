@@ -115,6 +115,45 @@ export function saveLocalProviders(providers: ProviderItem[]): void {
   }
 }
 
+export type ActiveApiStatus = {
+  name: string;
+  model_name: string;
+  provider_key: string;
+  priority: number;
+  is_active: boolean;
+  updatedAtText: string;
+};
+
+export function getCurrentActiveProviderStatus(): ActiveApiStatus {
+  const local = getLocalProviders();
+  const active = local
+    .filter((p) => p.is_active && !!p.api_key && p.api_key.trim() !== "" && p.api_key !== "__CLEAR__")
+    .sort((a, b) => a.priority - b.priority);
+
+  const timeStr = new Date().toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+
+  if (active.length > 0) {
+    const top = active[0];
+    return {
+      name: top.name,
+      model_name: top.model_name,
+      provider_key: top.provider_key,
+      priority: top.priority,
+      is_active: true,
+      updatedAtText: timeStr,
+    };
+  }
+
+  return {
+    name: "Google Gemini",
+    model_name: "gemini-2.5-flash",
+    provider_key: "gemini",
+    priority: 1,
+    is_active: false,
+    updatedAtText: timeStr,
+  };
+}
+
 export function getActiveLocalProvider(): ProviderItem | null {
   const providers = getLocalProviders();
   const active = providers
