@@ -1169,9 +1169,14 @@ const ChatPage = () => {
               <Send className="w-4 h-4" />
             </button>
           </form>
-          <p className="text-xs text-muted-foreground text-center mt-2">
-            ⚕️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
-          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mt-2 text-[11px] text-muted-foreground">
+            <span className="text-center sm:text-left">
+              ⚕️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
+            </span>
+            <span className="font-mono text-[10px] bg-muted/60 px-2 py-0.5 rounded border border-border/50 text-muted-foreground shrink-0 select-none">
+              V1.1 07092026
+            </span>
+          </div>
         </div>
       </div>
 
