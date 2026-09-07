@@ -7,6 +7,8 @@ import AdminLogin from "@/components/AdminLogin";
 import QAReport from "@/components/QAReport";
 import KnowledgeManager from "@/components/KnowledgeManager";
 import DataImporter from "@/components/DataImporter";
+import MaintenanceControlCard from "@/components/MaintenanceControlCard";
+import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
 
 const COLORS = ["hsl(145, 45%, 28%)", "hsl(15, 50%, 45%)", "hsl(38, 70%, 50%)", "hsl(145, 35%, 45%)", "hsl(25, 30%, 35%)"];
 const SEVERITY_COLORS: Record<string, string> = {
@@ -73,6 +75,7 @@ const AdminPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <AdminMaintenanceBanner />
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container max-w-7xl mx-auto flex items-center justify-between py-3 px-4">
           <div className="flex items-center gap-3">
@@ -103,6 +106,9 @@ const AdminPage = () => {
       </header>
 
       <div className="container max-w-7xl mx-auto px-4 py-6 space-y-6">
+        {/* Maintenance Mode Control Card for Admin */}
+        <MaintenanceControlCard />
+
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <Leaf className="w-8 h-8 text-primary animate-pulse-soft" />

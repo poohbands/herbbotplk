@@ -4,6 +4,9 @@ import { Search, Leaf, ArrowLeft, AlertTriangle, Pill, X, BookOpen, Shield, Flas
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { HERBS_97_DATA } from "@/lib/herbs97-service";
+import { useMaintenanceMode } from "@/lib/maintenance-service";
+import MaintenanceOverlay from "@/components/MaintenanceOverlay";
+import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
 
 type Herb = {
   id: string;
@@ -381,8 +384,15 @@ const HerbsPage = () => {
   const categories = activeTab === "herbs" ? HERB_CATEGORIES : FORMULA_CATEGORIES;
   const count = activeTab === "herbs" ? filtered.length : filteredFormulas.length;
 
+  const { isMaintenance, message: maintenanceMsg, isAdmin } = useMaintenanceMode();
+
+  if (isMaintenance && !isAdmin) {
+    return <MaintenanceOverlay message={maintenanceMsg} />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
+      <AdminMaintenanceBanner />
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20">
         <div className="container max-w-6xl mx-auto flex items-center justify-between py-3 px-4">

@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLogin from "@/components/AdminLogin";
+import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -250,6 +251,7 @@ const AiSettingsPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-12">
+      <AdminMaintenanceBanner />
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
         <div className="container max-w-5xl mx-auto flex items-center justify-between py-3 px-4">

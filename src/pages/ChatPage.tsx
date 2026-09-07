@@ -18,6 +18,9 @@ import {
 } from "@/lib/knowledge-settings";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useMaintenanceMode } from "@/lib/maintenance-service";
+import MaintenanceOverlay from "@/components/MaintenanceOverlay";
+import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; year?: string; journal: string; url: string };
@@ -551,8 +554,15 @@ const ChatPage = () => {
     }
   };
 
+  const { isMaintenance, message: maintenanceMsg, isAdmin } = useMaintenanceMode();
+
+  if (isMaintenance && !isAdmin) {
+    return <MaintenanceOverlay message={maintenanceMsg} />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <AdminMaintenanceBanner />
       {/* Header */}
       <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container max-w-4xl mx-auto flex items-center justify-between py-3 px-4">
