@@ -47,22 +47,25 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/herbal-chat`
 /** เปิดลิงก์ภายนอกในแท็บใหม่เสมอ โดยไม่เปลี่ยนหน้าปัจจุบัน */
 function openExternal(url: string) {
   try {
-    const win = window.open(url, "_blank", "noopener,noreferrer");
+    const finalUrl = url.startsWith("/") ? `${window.location.origin}${url}` : url;
+    const win = window.open(finalUrl, "_blank", "noopener,noreferrer");
     if (win) return;
   } catch {
     /* ignore */
   }
   try {
     // fallback: ใช้ anchor target=_blank (ไม่แตะ location ของหน้าปัจจุบัน)
+    const finalUrl = url.startsWith("/") ? `${window.location.origin}${url}` : url;
     const a = document.createElement("a");
-    a.href = url;
+    a.href = finalUrl;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);
     a.click();
     a.remove();
   } catch {
-    void copyLink(url);
+    const finalUrl = url.startsWith("/") ? `${window.location.origin}${url}` : url;
+    void copyLink(finalUrl);
     toast.info("เบราว์เซอร์บล็อกการเปิดแท็บใหม่ — คัดลอกลิงก์ให้แล้ว");
   }
 }
