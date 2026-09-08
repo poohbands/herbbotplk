@@ -13,7 +13,7 @@ const SYMPTOM_MAP = [
   { match: /ท้องเสีย|ถ่ายเหลว|ลงท้อง|อุจจาระร่วง|บิด|มวนท้อง/, terms: ["ท้องเสีย", "แก้ท้องเสีย", "บิด", "สมานลำไส้"] },
   { match: /ท้องผูก|ถ่ายยาก|ไม่ถ่าย|ระบาย|อุจจาระแข็ง/, terms: ["ท้องผูก", "ระบาย", "ยาระบาย", "ขับถ่าย"] },
   { match: /คลื่นไส้|อาเจียน|เมารถ|เมาเรือ|พะอืดพะอม|วิงเวียน/, terms: ["คลื่นไส้", "อาเจียน", "เมารถ", "วิงเวียน", "เป็นลม"] },
-  { match: /ปวดเมื่อย|กล้ามเนื้อ|เคล็ด|ขัดยอก|ฟกช้ำ|เอ็น|ข้อ|ปวดหลัง|ปวดเอว|ข้อเข่า|ปวดข้อ/, terms: ["ปวดเมื่อย", "กล้ามเนื้อ", "ฟกช้ำ", "คลายกล้ามเนื้อ", "ข้อ", "เส้นเอ็น", "ข้อเข่าเสื่อม"] },
+  { match: /ปวดเมื่อย|กล้ามเนื้อ|เคล็ด|ขัดยอก|ฟกช้ำ|เส้นเอ็น|เอ็นอักเสบ|ปวดหลัง|ปวดเอว|ข้อเข่า|ปวดข้อ|ข้ออักเสบ|ข้อบวม|รูมาตอยด์/, terms: ["ปวดเมื่อย", "กล้ามเนื้อ", "ฟกช้ำ", "คลายกล้ามเนื้อ", "ปวดข้อ", "เส้นเอ็น", "ข้อเข่าเสื่อม"] },
   { match: /นอนไม่หลับ|เครียด|วิตกกังวล|สะดุ้ง|หลับยาก|กระสับกระส่าย|พักผ่อนน้อย/, terms: ["นอนไม่หลับ", "ช่วยให้นอนหลับ", "คลายเครียด", "บำรุงหัวใจ", "สงบประสาท"] },
   { match: /ริดสีดวง|ริดสีดวงทวาร|ติ่งทวาร|ถ่ายเป็นเลือด/, terms: ["ริดสีดวง", "ริดสีดวงทวาร"] },
   { match: /เบาหวาน|น้ำตาลในเลือด|คุมน้ำตาล/, terms: ["เบาหวาน", "ลดน้ำตาล", "น้ำตาลในเลือด"] },
@@ -534,19 +534,19 @@ export async function processLocalChat(
       ? supabase
           .from("herbs")
           .select("id, name_thai, name_english, name_scientific, properties, dosage, usage_instructions, precautions, contraindications, drug_interactions")
-          .limit(60)
+          .limit(300)
       : Promise.resolve({ data: [] }),
     enableInternal
       ? supabase
           .from("thai_formulas")
           .select("id, name_thai, name_english, indication, ingredients, dosage, usage_instructions, precautions, contraindications, drug_interactions")
-          .limit(60)
+          .limit(300)
       : Promise.resolve({ data: [] }),
     enableInternal
       ? supabase
           .from("knowledge_documents")
           .select("id, title, category, content, source, source_url")
-          .limit(10)
+          .limit(15)
       : Promise.resolve({ data: [] }),
     enableExternal && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
   ]);
@@ -584,12 +584,28 @@ export async function processLocalChat(
   // ก) ถ้าผู้ใช้เอ่ยชื่อตำรับยาชัดเจน (เช่น "ยาจันทน์ลีลาใช้ลดไข้ได้ไหม")
   if (exactMatchedFormulas.length > 0) {
     matchedFormulas = exactMatchedFormulas.slice(0, 4);
+    // จะใส่สมุนไพรเดี่ยวเข้ามาด้วยเฉพาะกรณีที่ผู้ใช้เอ่ยชื่อสมุนไพรนั้นในคำถามด้วยเท่านั้น (เช่น "กินยาจันทน์ลีลากับฟ้าทะลายโจรได้ไหม")
     matchedHerbs = exactMatchedHerbs.slice(0, 4);
   }
   // ข) ถ้าผู้ใช้เอ่ยชื่อสมุนไพรเดี่ยวชัดเจน (เช่น "ขมิ้นชันกินร่วมกับ warfarin ได้ไหม")
   else if (exactMatchedHerbs.length > 0) {
     matchedHerbs = exactMatchedHerbs.slice(0, 4);
-    matchedFormulas = [];
+    // ค้นเฉพาะตำรับยาที่สัมพันธ์กับสมุนไพรตัวนี้โดยตรง (ชื่อตำรับมีชื่อสมุนไพร หรือมีสมุนไพรนี้ในส่วนประกอบ)
+    // ห้ามดึงตำรับยาแปลกปลอมตามอาการเด็ดขาด!
+    matchedFormulas = allFormulas.filter((f) => {
+      const fn = (f.name_thai || "").toLowerCase();
+      const nfn = normalizeThaiName(f.name_thai || "");
+      const ingText = (f.ingredients || []).join(" ").toLowerCase();
+      return exactMatchedHerbs.some((h) => {
+        const hn = (h.name_thai || "").toLowerCase();
+        const nhn = normalizeThaiName(h.name_thai || "");
+        return (
+          fn.includes(hn) ||
+          nfn.includes(nhn) ||
+          (ingText && ingText.includes(hn))
+        );
+      });
+    }).slice(0, 3);
   }
   // ค) ถ้าผู้ใช้ไม่ได้เอ่ยชื่อสมุนไพรหรือตำรับเลย (ถามตามอาการ เช่น "นอนไม่หลับ", "ท้องอืด จุกเสียด")
   else {
@@ -857,7 +873,6 @@ export async function processLocalChat(
         ...matchedFormulas.map((f) => ({ type: "formula", id: f.id, name: f.name_thai })),
       ]
     : [];
-
   const seenSourceNames = new Set<string>();
   let internalSources = rawInternalSources.filter((s) => {
     if (!s.name || seenSourceNames.has(s.name)) return false;
@@ -865,10 +880,22 @@ export async function processLocalChat(
     return true;
   });
 
-  if (exactMatchedFormulas.length > 0 && exactMatchedHerbs.length === 0 && matched97Herbs.length === 0) {
-    internalSources = internalSources.filter((s) => s.type === "formula");
-  } else if (exactMatchedHerbs.length > 0 && exactMatchedFormulas.length === 0 && matched97Herbs.length === 0) {
-    internalSources = internalSources.filter((s) => s.type === "herb");
+  if (exactMatchedFormulas.length > 0 && exactMatchedHerbs.length === 0) {
+    const fNames = exactMatchedFormulas.map((f) => f.name_thai);
+    internalSources = internalSources.filter(
+      (s) => s.type === "formula" && fNames.some((fn) => s.name.toLowerCase().includes(fn.toLowerCase()) || fn.toLowerCase().includes(s.name.toLowerCase())),
+    );
+  } else if (exactMatchedHerbs.length > 0) {
+    const hNames = exactMatchedHerbs.map((h) => h.name_thai);
+    internalSources = internalSources.filter((s) => {
+      if (s.type === "herb") {
+        return hNames.some((hn) => s.name.toLowerCase().includes(hn.toLowerCase()) || hn.toLowerCase().includes(s.name.toLowerCase()));
+      }
+      if (s.type === "formula") {
+        return hNames.some((hn) => s.name.toLowerCase().includes(hn.toLowerCase()));
+      }
+      return true;
+    });
   }
 
   const sourcesPayload: any = isOutOfScope

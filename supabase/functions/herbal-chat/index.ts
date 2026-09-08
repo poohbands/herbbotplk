@@ -263,7 +263,7 @@ const SYMPTOM_MAP: { match: RegExp; terms: string[] }[] = [
   { match: /ท้องเสีย|ท้องร่วง|ถ่ายเหลว/, terms: ["ท้องเสีย", "ท้องร่วง", "บรรเทาอาการท้องเสีย"] },
   { match: /ไข้|ตัวร้อน|fever/, terms: ["ไข้", "ลดไข้", "แก้ไข้"] },
   { match: /ไอ|เจ็บคอ|ขับเสมหะ|เสมหะ|หวัด/, terms: ["ไอ", "เจ็บคอ", "เสมหะ", "หวัด"] },
-  { match: /ปวดเมื่อย|เคล็ด|ขัดยอก|ปวดหลัง|ปวดกล้ามเนื้อ|ปวดข้อ|ข้อเข่า/, terms: ["ปวดเมื่อย", "ปวด", "เคล็ด", "ข้อ", "กล้ามเนื้อ"] },
+  { match: /ปวดเมื่อย|เคล็ด|ขัดยอก|ปวดหลัง|ปวดกล้ามเนื้อ|ปวดข้อ|ข้อเข่า|ข้ออักเสบ|ข้อบวม/, terms: ["ปวดเมื่อย", "เคล็ด", "ปวดข้อ", "ข้อเข่า", "กล้ามเนื้อ"] },
   { match: /คลื่นไส้|อาเจียน|เมารถ|แพ้ท้อง/, terms: ["คลื่นไส้", "อาเจียน"] },
   { match: /ริดสีดวง/, terms: ["ริดสีดวง"] },
   { match: /ผื่น|คัน|กลาก|เกลื้อน|แผล|ผิวหนัง|เริม|งูสวัด/, terms: ["ผิวหนัง", "แผล", "ผื่น", "คัน", "กลาก", "เกลื้อน", "เริม", "งูสวัด"] },
@@ -360,11 +360,13 @@ async function findRelevantHerbs(supabase: any, question: string, intent?: Quest
   }
 
   // (2) ค้นด้วยอาการ/ข้อบ่งใช้/สรรพคุณ (รวมคำอาการที่ AI สกัดมาจากคำถาม)
-  // หมายเหตุ: หากผู้ใช้ระบุชื่อตำรับยาโดยตรงแล้ว และไม่ได้เอ่ยชื่อสมุนไพรเดี่ยว ห้ามดึงสมุนไพรเดี่ยวแปลกปลอม (เช่น ตะไคร้) มาใส่
+  // หมายเหตุ: หากผู้ใช้ระบุชื่อตำรับยาหรือสมุนไพรเดี่ยวโดยตรงแล้ว ห้ามดึงสมุนไพรเดี่ยวหรือตำรับยาแปลกปลอมตามอาการมาใส่โดยเด็ดขาด!
+  const hasSpecificTarget = nameMatchedHerbNames.length > 0 || nameMatchedFormulaNames.length > 0;
   const symptomTerms = symptomTermsFor(`${question} ${(intent?.symptoms || []).join(" ")}`, intent?.symptoms || []);
-  if (symptomTerms.length > 0) {
+
+  if (symptomTerms.length > 0 && (!hasSpecificTarget || listMode || intent?.type === "symptom")) {
     const limit = listMode ? MAX_LIST_RESULTS : 6;
-    if (nameMatchedHerbNames.length === 0 || nameMatchedFormulaNames.length > 0) {
+    if (nameMatchedHerbNames.length === 0) {
       let count = 0;
       for (const f of (allFormulas || []) as FormulaRow[]) {
         if (count >= limit) break;
@@ -372,7 +374,7 @@ async function findRelevantHerbs(supabase: any, question: string, intent?: Quest
         if (symptomTerms.some((t) => text.includes(t.toLowerCase()))) { addFormula(f); count++; }
       }
     }
-    if (nameMatchedFormulaNames.length === 0 || nameMatchedHerbNames.length > 0) {
+    if (nameMatchedFormulaNames.length === 0) {
       let hcount = 0;
       for (const h of (allHerbs || []) as HerbRow[]) {
         if (hcount >= limit) break;
@@ -1321,9 +1323,19 @@ serve(async (req) => {
         ]
       : [];
     if (nameMatchedFormulaNames.length > 0 && nameMatchedHerbNames.length === 0) {
-      internalSources = internalSources.filter((s) => s.type === "formula");
-    } else if (nameMatchedHerbNames.length > 0 && nameMatchedFormulaNames.length === 0) {
-      internalSources = internalSources.filter((s) => s.type === "herb");
+      internalSources = internalSources.filter(
+        (s) => s.type === "formula" && nameMatchedFormulaNames.some((fn) => s.name.toLowerCase().includes(fn.toLowerCase()) || fn.toLowerCase().includes(s.name.toLowerCase())),
+      );
+    } else if (nameMatchedHerbNames.length > 0) {
+      internalSources = internalSources.filter((s) => {
+        if (s.type === "herb") {
+          return nameMatchedHerbNames.some((hn) => s.name.toLowerCase().includes(hn.toLowerCase()) || hn.toLowerCase().includes(s.name.toLowerCase()));
+        }
+        if (s.type === "formula") {
+          return nameMatchedHerbNames.some((hn) => s.name.toLowerCase().includes(hn.toLowerCase()));
+        }
+        return true;
+      });
     }
     const knowledgeSources: KnowledgeSource[] = enableInternal
       ? knowledge.map((k) => ({
