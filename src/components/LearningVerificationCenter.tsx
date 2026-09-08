@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   ShieldCheck,
   CheckCircle2,
@@ -16,6 +16,8 @@ import {
   Plus,
   AlertTriangle,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,6 +61,7 @@ export const LearningVerificationCenter = () => {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   // Form states for Review & Edit
   const [editQuestion, setEditQuestion] = useState("");
@@ -184,46 +187,115 @@ export const LearningVerificationCenter = () => {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Header & Stats Card */}
-      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl gradient-herbal flex items-center justify-center text-primary-foreground shadow-herbal">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold font-thai text-foreground flex items-center gap-2">
-                ศูนย์เรียนรู้และตรวจสอบความรู้ (AI Learning & Verification Center)
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                ระบบตรวจสอบความถูกต้องโดยผู้เชี่ยวชาญ (Human-in-the-loop) ก่อนนำมาใช้ตอบปัญหาในอนาคต
-              </p>
-            </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-card rounded-2xl border border-border p-5 shadow-sm space-y-4"
+    >
+      {/* Header with Collapsible Toggle Button */}
+      <div
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl gradient-herbal flex items-center justify-center text-primary-foreground shadow-herbal shrink-0">
+            <ShieldCheck className="w-5 h-5" />
           </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadQueue}
-              className="text-xs gap-1 h-8"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>รีเฟรช</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => setIsAddOpen(true)}
-              className="text-xs gap-1 h-8 gradient-herbal text-primary-foreground shadow-herbal"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>เพิ่ม Q&A ตรวจทาน</span>
-            </Button>
+          <div>
+            <h2 className="text-base font-bold font-thai text-foreground flex items-center gap-2 flex-wrap">
+              ศูนย์เรียนรู้และตรวจสอบความรู้ (AI Learning & Verification Center)
+              <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full">
+                {stats.total} รายการ
+              </span>
+              {stats.pending > 0 && (
+                <span className="text-[11px] font-normal text-amber-700 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <Clock className="w-2.5 h-2.5" /> รอตรวจ {stats.pending}
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isExpanded
+                ? "คลิกเพื่อย่อปิดศูนย์เรียนรู้และตรวจสอบความรู้"
+                : "คลิกเพื่อขยายดูรายการคำถาม-คำตอบ ตรวจสอบความถูกต้อง และรับรองความรู้ AI"}
+            </p>
           </div>
         </div>
 
-        {/* Stats Grid */}
+        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          {isExpanded && (
+            <div className="hidden sm:flex items-center gap-2 mr-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadQueue}
+                className="text-xs gap-1 h-8"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>รีเฟรช</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setIsAddOpen(true)}
+                className="text-xs gap-1 h-8 gradient-herbal text-primary-foreground shadow-herbal"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>เพิ่ม Q&A ตรวจทาน</span>
+              </Button>
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="gap-1.5 h-8 text-xs border-primary/30 text-primary hover:bg-primary/10 font-thai font-medium"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-4 h-4" />
+                <span>ย่อศูนย์เรียนรู้</span>
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                <span>ขยายศูนย์เรียนรู้</span>
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden space-y-4 pt-2"
+          >
+            {/* Mobile Actions when expanded */}
+            <div className="flex sm:hidden items-center gap-2 pt-1 border-t border-border/40">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadQueue}
+                className="text-xs gap-1 h-8 flex-1"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>รีเฟรช</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setIsAddOpen(true)}
+                className="text-xs gap-1 h-8 gradient-herbal text-primary-foreground shadow-herbal flex-1"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>เพิ่ม Q&A ตรวจทาน</span>
+              </Button>
+            </div>
+
+            {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-2">
           <div className="bg-muted/40 rounded-xl p-3 border border-border/50">
             <span className="text-[11px] text-muted-foreground block">ทั้งหมดในระบบ</span>
@@ -308,9 +380,8 @@ export const LearningVerificationCenter = () => {
             </Select>
           </div>
         </div>
-      </div>
 
-      {/* Queue List */}
+        {/* Queue List */}
       <div className="space-y-2.5">
         {filteredList.length === 0 ? (
           <div className="bg-card rounded-2xl border border-border p-8 text-center text-muted-foreground space-y-2">
@@ -437,6 +508,9 @@ export const LearningVerificationCenter = () => {
           })
         )}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Review & Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
@@ -600,7 +674,7 @@ export const LearningVerificationCenter = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 };
 
