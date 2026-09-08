@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { findRelevantThaiJo, normalizeThaiName } from "../lib/local-chat-service";
+import {
+  findRelevantThaiJo,
+  normalizeThaiName,
+  findRelevantMahidolDdi,
+  extractQuestionEntities,
+  validateAndPruneSources,
+} from "../lib/local-chat-service";
 
 describe("Reference and Citation Accuracy (Strict Relevance)", () => {
   describe("ThaiJO Catalog matching (findRelevantThaiJo)", () => {
@@ -170,6 +176,146 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
       expect(normalizeThaiName("ตำรับยาจันทน์ลีลา")).toBe("จันทนลีลา");
       expect(normalizeThaiName("จันทน์ลีลา")).toBe("จันทนลีลา");
       expect(normalizeThaiName("ฟ้าทะลายโจร")).toBe("ฟ้าทะลายโจร");
+    });
+  });
+
+  describe("Mahidol Herb-Drug Interaction (DDI) Exact Matching & Citation Verification", () => {
+    const mockMahidolDocs = [
+      {
+        id: "m1",
+        title: "อันตรกิริยาระหว่าง กระชายดำ กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: กระชายดำ\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: มาก",
+        source_url: "https://medplant.mahidol.ac.th/1",
+      },
+      {
+        id: "m2",
+        title: "อันตรกิริยาระหว่าง กระเทียม กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: กระเทียม\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: มาก",
+        source_url: "https://medplant.mahidol.ac.th/2",
+      },
+      {
+        id: "m3",
+        title: "อันตรกิริยาระหว่าง กล้วย กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: กล้วย\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: น้อย",
+        source_url: "https://medplant.mahidol.ac.th/3",
+      },
+      {
+        id: "m4",
+        title: "อันตรกิริยาระหว่าง โกจิเบอร์รี กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: โกจิเบอร์รี\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: มาก",
+        source_url: "https://medplant.mahidol.ac.th/4",
+      },
+      {
+        id: "m5",
+        title: "อันตรกิริยาระหว่าง ขมิ้น กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: ขมิ้น\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: มาก\n• ผลของการเกิดอันตรกิริยา: เพิ่มระดับของยาในเลือด แต่ไม่ส่งผลต่ออัตราการแข็งตัวของเลือด",
+        source_url: "https://medplant.mahidol.ac.th/5",
+      },
+      {
+        id: "m6",
+        title: "อันตรกิริยาระหว่าง ขิง กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: ขิง\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: มาก",
+        source_url: "https://medplant.mahidol.ac.th/6",
+      },
+      {
+        id: "m7",
+        title: "อันตรกิริยาระหว่าง มะม่วง กับ Warfarin (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: มะม่วง\n• ยาแผนปัจจุบัน: Warfarin\n• ความรุนแรง: ปานกลาง",
+        source_url: "https://medplant.mahidol.ac.th/7",
+      },
+      {
+        id: "m8",
+        title: "อันตรกิริยาระหว่าง ขมิ้น กับ Clopidogrel (ม.มหิดล)",
+        category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+        content: "• สมุนไพร: ขมิ้น\n• ยาแผนปัจจุบัน: Clopidogrel\n• ความรุนแรง: มาก",
+        source_url: "https://medplant.mahidol.ac.th/8",
+      },
+    ];
+
+    it("extractQuestionEntities extracts ขมิ้น from ขมิ้นชัน and warfarin from Warfarin", () => {
+      const q = "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?";
+      const entities = extractQuestionEntities(q);
+      expect(entities.herbs).toContain("ขมิ้น");
+      expect(entities.drugs).toContain("warfarin");
+      expect(entities.isDdiIntent).toBe(true);
+    });
+
+    it("extractQuestionEntities extracts entities from Thai drug name วาร์ฟาริน", () => {
+      const q = "ทานยาวาร์ฟารินอยู่ ดื่มน้ำขิงได้ไหม";
+      const entities = extractQuestionEntities(q);
+      expect(entities.herbs).toContain("ขิง");
+      expect(entities.drugs).toContain("warfarin");
+    });
+
+    it("findRelevantMahidolDdi returns ONLY ขมิ้น กับ Warfarin when user asks about ขมิ้นชัน + Warfarin", () => {
+      const q = "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?";
+      const results = findRelevantMahidolDdi(q, mockMahidolDocs);
+
+      expect(results.length).toBe(1);
+      expect(results[0].title).toBe("อันตรกิริยาระหว่าง ขมิ้น กับ Warfarin (ม.มหิดล)");
+
+      // Must NOT contain any unrelated herbs
+      expect(results.some((r) => r.title.includes("กระชายดำ"))).toBe(false);
+      expect(results.some((r) => r.title.includes("กระเทียม"))).toBe(false);
+      expect(results.some((r) => r.title.includes("กล้วย"))).toBe(false);
+      expect(results.some((r) => r.title.includes("โกจิเบอร์รี"))).toBe(false);
+      expect(results.some((r) => r.title.includes("ขิง"))).toBe(false);
+      expect(results.some((r) => r.title.includes("มะม่วง"))).toBe(false);
+      expect(results.some((r) => r.title.includes("Clopidogrel"))).toBe(false);
+    });
+
+    it("findRelevantMahidolDdi returns ONLY ขมิ้น กับ Warfarin for long detailed clinical question", () => {
+      const q = "ผู้ป่วยที่รับประทาน warfarin อยู่ หากต้องการใช้ขมิ้นชันร่วมด้วย มีข้อมูลอันตรกิริยาระหว่างยาหรือข้อควรระวังอย่างไร";
+      const results = findRelevantMahidolDdi(q, mockMahidolDocs);
+
+      expect(results.length).toBe(1);
+      expect(results[0].title).toBe("อันตรกิริยาระหว่าง ขมิ้น กับ Warfarin (ม.มหิดล)");
+      expect(results.some((r) => r.title.includes("กล้วย"))).toBe(false);
+      expect(results.some((r) => r.title.includes("มะม่วง"))).toBe(false);
+    });
+
+    it("findRelevantMahidolDdi returns all warfarin interactions when user asks generally about warfarin herbs", () => {
+      const q = "คนกินยา Warfarin ห้ามกินสมุนไพรอะไรบ้าง";
+      const results = findRelevantMahidolDdi(q, mockMahidolDocs);
+
+      expect(results.length).toBeGreaterThan(1);
+      // All returned documents must be for Warfarin
+      results.forEach((r) => {
+        expect(r.title).toContain("Warfarin");
+      });
+    });
+
+    it("findRelevantMahidolDdi returns 0 results when question is not about DDI (e.g. fever reduction with chanleela)", () => {
+      const q = "ยาจันทน์ลีลาใช้ลดไข้ได้ไหม";
+      const results = findRelevantMahidolDdi(q, mockMahidolDocs);
+      expect(results.length).toBe(0);
+    });
+
+    it("validateAndPruneSources strips unrelated herbs from sourcesPayload", () => {
+      const question = "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?";
+      const answer = "ขมิ้นชันอาจมีผลเพิ่มระดับยาวาร์ฟารินในเลือด ควรระมัดระวังในการใช้";
+      const rawSources = {
+        internal: [],
+        pubmed: [],
+        thaijo: [],
+        knowledge: mockMahidolDocs, // contains all 8 docs
+      };
+
+      const pruned = validateAndPruneSources(question, answer, rawSources);
+
+      // Must strictly contain ONLY the turmeric document
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].title).toBe("อันตรกิริยาระหว่าง ขมิ้น กับ Warfarin (ม.มหิดล)");
+      expect(pruned.knowledge.some((k) => k.title.includes("กระชายดำ"))).toBe(false);
+      expect(pruned.knowledge.some((k) => k.title.includes("มะม่วง"))).toBe(false);
+      expect(pruned.knowledge.some((k) => k.title.includes("กล้วย"))).toBe(false);
     });
   });
 });

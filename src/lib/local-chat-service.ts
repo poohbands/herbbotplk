@@ -112,6 +112,306 @@ export type ThaiJoItem = {
   url: string;
 };
 
+// รายชื่อสมุนไพรทั้งหมดที่มีในฐานข้อมูล DDI มหิดล (68 ชนิด)
+export const MAHIDOL_HERBS: string[] = [
+  "HOPS", "กระชาย", "กระชายดำ", "กระเจี๊ยบแดง", "กระเทียม", "กล้วย", "กะเพรา", "กานพลู",
+  "ขมิ้น", "ขมิ้นอ้อย", "ขิง", "ขึ้นฉ่าย", "คะน้าเม็กซิโก", "คำฝอย", "งา", "ชะเอมเทศ",
+  "ดาวเรืองฝรั่ง", "ดีปลี", "ทองพันชั่ง", "ทับทิม", "บอระเพ็ด", "บัวบก", "ปลาไหลเผือก",
+  "ปัญจขันธ์", "ผักกาดแดง", "ผักชี", "ฝรั่ง", "พญาปล้องทอง", "พญาสัตตบรรณ", "พรมมิ",
+  "พริกไทย", "พุทรา", "ฟ้าทะลายโจร", "มะขาม", "มะขามป้อม", "มะขามเทศ", "มะขามแขก",
+  "มะพร้าว", "มะม่วง", "มะระขี้นก", "มะรุม", "มะละกอ", "มังคุด", "ยอ", "ยี่หร่า",
+  "ลินิน", "ลูกซัด", "ลูกใต้ใบ", "สมอไทย", "สับปะรด", "สายน้ำผึ้ง", "สาหร่าย",
+  "หญ้าฝรั่น", "หญ้าละออง", "หญ้าหนวดแมว", "หญ้าหวาน", "องุ่น", "อินทนิลน้ำ", "อินทผลัม",
+  "เจตมูลเพลิงแดง", "เถาวัลย์เปรียง", "เทียนกิ่ง", "เทียนเกล็ดหอย", "เสาวรส", "เห็ดหลินจือ",
+  "แปะก๊วย", "โกจิเบอร์รี", "โสม",
+];
+
+// พจนานุกรมจับคู่คำพ้องในภาษาไทยสู่ชื่อสมุนไพรในฐานข้อมูลมหิดล
+export const HERB_SYNONYMS_TO_MAHIDOL: Record<string, string> = {
+  "ขมิ้นชัน": "ขมิ้น",
+  "เหง้าขมิ้นชัน": "ขมิ้น",
+  "ขมิ้นสด": "ขมิ้น",
+  "ใบบัวบก": "บัวบก",
+  "ดอกคำฝอย": "คำฝอย",
+  "ใบแปะก๊วย": "แปะก๊วย",
+  "สารสกัดแปะก๊วย": "แปะก๊วย",
+  "โสมเกาหลี": "โสม",
+  "โสมคน": "โสม",
+  "เก๋ากี้": "โกจิเบอร์รี",
+  "โกจิเบอร์รี่": "โกจิเบอร์รี",
+  "กระชายขาว": "กระชาย",
+  "กระชายแกง": "กระชาย",
+  "น้ำขิง": "ขิง",
+  "เหง้าขิง": "ขิง",
+  "มะระ": "มะระขี้นก",
+};
+
+/** สกัดชื่อสมุนไพรและยาแผนปัจจุบันที่อยู่ในคำถามอย่างละเอียด */
+export function extractQuestionEntities(
+  question: string,
+  matchedHerbs: any[] = []
+): {
+  herbs: string[];
+  drugs: string[];
+  isGeneralHerbsQuestion: boolean;
+  isGeneralDrugsQuestion: boolean;
+  isDdiIntent: boolean;
+} {
+  const qLower = (question || "").toLowerCase();
+  const detectedHerbs = new Set<string>();
+
+  // 1. ตรวจสอบสมุนไพรจาก matchedHerbs ที่ตรวจพบในระบบ
+  for (const mh of matchedHerbs) {
+    const name = (mh.name_thai || mh.name || "").trim();
+    if (!name) continue;
+    if (HERB_SYNONYMS_TO_MAHIDOL[name]) {
+      detectedHerbs.add(HERB_SYNONYMS_TO_MAHIDOL[name]);
+    }
+    for (const h of MAHIDOL_HERBS) {
+      if (name.toLowerCase() === h.toLowerCase() || name.includes(h) || h.includes(name)) {
+        detectedHerbs.add(h);
+      }
+    }
+  }
+
+  // 2. ตรวจสอบคำพ้อง (Synonyms) ในคำถาม
+  for (const [syn, target] of Object.entries(HERB_SYNONYMS_TO_MAHIDOL)) {
+    if (qLower.includes(syn.toLowerCase())) {
+      detectedHerbs.add(target);
+    }
+  }
+
+  // 3. ตรวจสอบชื่อสมุนไพรมหิดล โดยเรียงจากคำยาวไปคำสั้นเพื่อป้องกันการจับคู่ผิด
+  const sortedMahidolHerbs = [...MAHIDOL_HERBS].sort((a, b) => b.length - a.length);
+  for (const h of sortedMahidolHerbs) {
+    const hLower = h.toLowerCase();
+    if (qLower.includes(hLower)) {
+      // ข้อยกเว้นสำหรับคำประสม
+      if (h === "กระชาย" && qLower.includes("กระชายดำ") && !qLower.includes("กระชายขาว") && !qLower.includes("กระชายแกง")) {
+        continue;
+      }
+      if (h === "ขมิ้น" && qLower.includes("ขมิ้นอ้อย") && !qLower.includes("ขมิ้นชัน")) {
+        continue;
+      }
+      if (h === "มะขาม" && (qLower.includes("มะขามป้อม") || qLower.includes("มะขามแขก") || qLower.includes("มะขามเทศ"))) {
+        continue;
+      }
+      detectedHerbs.add(h);
+    }
+  }
+
+  // 4. ตรวจสอบชื่อยาแผนปัจจุบัน
+  const detectedDrugs = new Set<string>();
+  for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
+    if (qLower.includes(thai.toLowerCase())) {
+      const cleanEn = en.split(/\s+OR\s+/i)[0].trim().toLowerCase();
+      detectedDrugs.add(cleanEn);
+    }
+  }
+
+  // ตรวจจับชื่อยาภาษาอังกฤษในคำถาม (เช่น warfarin, aspirin, paracetamol ฯลฯ)
+  const englishWords = qLower.match(/[a-z]{3,}/g) || [];
+  for (const word of englishWords) {
+    if (!["and", "the", "for", "with", "not", "can", "use", "herb", "drug", "take", "daily", "how", "what"].includes(word)) {
+      detectedDrugs.add(word);
+    }
+  }
+
+  const isGeneralHerbsQuestion =
+    /(?:ห้ามกินสมุนไพรอะไร|สมุนไพรอะไรบ้าง|สมุนไพรตัวไหน|มียาสมุนไพรตัวไหน|สมุนไพรใดบ้าง|สมุนไพรที่มีผล|สมุนไพรที่ตีกับ)/.test(qLower);
+
+  const isGeneralDrugsQuestion =
+    /(?:ห้ามกินกับยาอะไร|ยาอะไรบ้าง|ยาตัวไหน|มียาใดบ้าง|ยาแผนปัจจุบันอะไร|อันตรกิริยากับยา|ตีกับยาอะไร|มีผลกับยาอะไร)/.test(qLower);
+
+  const isDdiIntent =
+    detectedDrugs.size > 0 ||
+    isGeneralDrugsQuestion ||
+    isGeneralHerbsQuestion ||
+    /(?:อันตรกิริยา|ตีกัน|กินร่วม|ร่วมกับ|กินคู่|ทานคู่|พร้อมยา|กับยา)/.test(qLower);
+
+  return {
+    herbs: Array.from(detectedHerbs),
+    drugs: Array.from(detectedDrugs),
+    isGeneralHerbsQuestion,
+    isGeneralDrugsQuestion,
+    isDdiIntent,
+  };
+}
+
+/** ค้นหาข้อมูลอันตรกิริยา ม.มหิดล ที่ตรงกับคำถามอย่างแม่นยำ 100% (Strict Entity Matching) */
+export function findRelevantMahidolDdi(
+  question: string,
+  allDocs: any[],
+  matchedHerbs: any[] = []
+): any[] {
+  if (!allDocs || allDocs.length === 0) return [];
+
+  const { herbs, drugs, isGeneralHerbsQuestion, isGeneralDrugsQuestion, isDdiIntent } =
+    extractQuestionEntities(question, matchedHerbs);
+
+  // หากไม่มีเจตนาเรื่องอันตรกิริยาหรือไม่ระบุตัวยา/สมุนไพร ไม่ดึง DDI
+  if (!isDdiIntent && herbs.length === 0 && drugs.length === 0) {
+    return [];
+  }
+
+  const matched: any[] = [];
+  const seenPairs = new Set<string>();
+
+  for (const doc of allDocs) {
+    const title = doc.title || "";
+    const m = title.match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\(ม\.มหิดล\))?$/);
+    const docHerb = m ? m[1].trim() : "";
+    const docDrug = m ? m[2].trim() : "";
+    const docDrugLower = docDrug.toLowerCase();
+
+    // Deduplicate same herb-drug pair
+    const pairKey = `${docHerb}::${docDrugLower}`;
+    if (seenPairs.has(pairKey)) continue;
+
+    const herbMatches =
+      herbs.length > 0 &&
+      herbs.some((h) => {
+        const hLower = h.toLowerCase();
+        const docHerbLower = docHerb.toLowerCase();
+        return (
+          docHerbLower === hLower ||
+          docHerbLower.includes(hLower) ||
+          hLower.includes(docHerbLower)
+        );
+      });
+
+    const drugMatches =
+      drugs.length > 0 &&
+      drugs.some((d) => {
+        const dLower = d.toLowerCase();
+        return (
+          docDrugLower === dLower ||
+          docDrugLower.includes(dLower) ||
+          dLower.includes(docDrugLower)
+        );
+      });
+
+    if (herbs.length > 0 && drugs.length > 0) {
+      // 1. ระบุทั้งสมุนไพรและยา (เช่น "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?")
+      // ต้องตรงทั้งสมุนไพร และ ยา เท่านั้น! ห้ามหลุดสมุนไพรอื่นเด็ดขาด!
+      if (herbMatches && drugMatches) {
+        seenPairs.add(pairKey);
+        matched.push(doc);
+      }
+    } else if (herbs.length > 0 && (drugs.length === 0 || isGeneralDrugsQuestion)) {
+      // 2. ระบุเฉพาะสมุนไพร ถามถึงยา เช่น "ขมิ้นชันมีอันตรกิริยากับยาอะไรบ้าง"
+      if (herbMatches && (isGeneralDrugsQuestion || isDdiIntent)) {
+        seenPairs.add(pairKey);
+        matched.push(doc);
+      }
+    } else if (drugs.length > 0 && (herbs.length === 0 || isGeneralHerbsQuestion)) {
+      // 3. ระบุเฉพาะยา ถามถึงสมุนไพร เช่น "คนกิน warfarin ห้ามกินสมุนไพรอะไรบ้าง"
+      if (drugMatches && (isGeneralHerbsQuestion || isDdiIntent)) {
+        seenPairs.add(pairKey);
+        matched.push(doc);
+      }
+    }
+  }
+
+  // เรียงตามระดับความรุนแรง (มาก -> ปานกลาง -> น้อย)
+  const severityScore = (c: string) => {
+    if (c.includes("ความรุนแรง: มาก")) return 3;
+    if (c.includes("ความรุนแรง: ปานกลาง")) return 2;
+    if (c.includes("ความรุนแรง: น้อย")) return 1;
+    return 0;
+  };
+
+  matched.sort((a, b) => severityScore(b.content || "") - severityScore(a.content || ""));
+
+  return herbs.length > 0 && drugs.length > 0 ? matched.slice(0, 5) : matched.slice(0, 8);
+}
+
+/** ตรวจสอบและคัดกรองอ้างอิงอย่างเข้มงวดก่อนแสดงผล (Strict Pre-Response Reference Validation) */
+export function validateAndPruneSources(
+  question: string,
+  answer: string,
+  sources: {
+    internal?: any[];
+    pubmed?: any[];
+    thaijo?: any[];
+    knowledge?: any[];
+  }
+): {
+  internal: any[];
+  pubmed: any[];
+  thaijo: any[];
+  knowledge: any[];
+} {
+  const { herbs, drugs, isGeneralHerbsQuestion, isGeneralDrugsQuestion } =
+    extractQuestionEntities(question);
+  const qLower = (question || "").toLowerCase();
+  const aLower = (answer || "").toLowerCase();
+
+  // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล)
+  const rawKnowledge = sources.knowledge || [];
+  const validKnowledge: any[] = [];
+  const seenKnowledgeTitles = new Set<string>();
+
+  for (const k of rawKnowledge) {
+    const title = (k.title || "").trim();
+    if (!title || seenKnowledgeTitles.has(title)) continue;
+
+    if (k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)") {
+      const m = title.match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\(ม\.มหิดล\))?$/);
+      const docHerb = m ? m[1].trim() : "";
+      const docDrug = m ? m[2].trim() : "";
+
+      // ถ้าผู้ใช้ระบุสมุนไพรเฉพาะเจาะจง สมุนไพรในเอกสารต้องตรงกับที่ถาม
+      if (herbs.length > 0) {
+        const herbMatch = herbs.some(
+          (h) =>
+            docHerb.toLowerCase() === h.toLowerCase() ||
+            docHerb.toLowerCase().includes(h.toLowerCase()) ||
+            h.toLowerCase().includes(docHerb.toLowerCase())
+        );
+        if (!herbMatch) {
+          continue; // ตัดสมุนไพรที่ไม่เกี่ยวข้องทิ้งทันที
+        }
+      }
+
+      // ถ้าผู้ใช้ระบุยาเฉพาะเจาะจง ยาในเอกสารต้องตรงกับที่ถาม
+      if (drugs.length > 0) {
+        const drugMatch = drugs.some(
+          (d) =>
+            docDrug.toLowerCase() === d.toLowerCase() ||
+            docDrug.toLowerCase().includes(d.toLowerCase()) ||
+            d.toLowerCase().includes(docDrug.toLowerCase())
+        );
+        if (!drugMatch) {
+          continue; // ตัดยาที่ไม่เกี่ยวข้องทิ้งทันที
+        }
+      }
+
+      // สมุนไพรหรือยาในเอกสารนี้ ต้องปรากฏในคำถาม หรือคำตอบของ AI
+      const herbInText =
+        qLower.includes(docHerb.toLowerCase()) ||
+        aLower.includes(docHerb.toLowerCase());
+      const drugInText =
+        qLower.includes(docDrug.toLowerCase()) ||
+        aLower.includes(docDrug.toLowerCase());
+
+      if (!herbInText && !drugInText && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion) {
+        continue;
+      }
+    }
+
+    seenKnowledgeTitles.add(title);
+    validKnowledge.push(k);
+  }
+
+  return {
+    internal: sources.internal || [],
+    pubmed: sources.pubmed || [],
+    thaijo: sources.thaijo || [],
+    knowledge: validKnowledge,
+  };
+}
+
 /** normalize ชื่อยาไทยเพื่อเทียบแบบยืดหยุ่น (ตัดคำนำหน้า/เว้นวรรค/ไม้ทัณฑฆาต/ศ-ษ→ส) */
 export function normalizeThaiName(s: string): string {
   return (s || "")
@@ -439,14 +739,14 @@ drugs:
 3. ระบุชื่อสมุนไพร/ตำรับยา, สรรพคุณ, ขนาดและวิธีใช้, ข้อห้าม และข้อควรระวัง
 4. ให้คำเตือนเสมอว่า "ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ โดยเฉพาะหญิงตั้งครรภ์ หญิงให้นมบุตร ผู้ป่วยโรคไต/โรคตับ"
 5. **การแสดงเอกสารอ้างอิงตามแบบ APA 7th Edition (สำคัญที่สุด):**
-   ก่อนจบคำตอบ ให้เขียนหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบมาตรฐาน APA 7 ให้ครบถ้วนทุกรายการที่มีใน CONTEXT (ทั้งงานวิจัยสากล PubMed, งานวิจัยไทย ThaiJO, ฐานข้อมูล สสจ.พิษณุโลก และแนวทาง สธ.):
+   ก่อนจบคำตอบ ให้เขียนหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบมาตรฐาน APA 7 เฉพาะรายการที่เกี่ยวข้องโดยตรงกับคำถามและนำมาใช้ตอบจริง:
     - กรณีอ้างอิงฐานข้อมูลสมุนไพร/ตำรับยาไทย สสจ.พิษณุโลก (ต้องระบุลิงก์เปิดดูข้อมูลยาเสมอ เพื่อให้ผู้ใช้กดดูรายละเอียดได้ทันที):
       สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). *[ฐานข้อมูลสมุนไพรและตำรับยาไทย: [ชื่อสมุนไพร/ตำรับ]](/herbs?name=[ชื่อสมุนไพร/ตำรับ])*. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
-    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
+    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น):
       ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL
-    - กรณีอ้างอิงงานวิจัยสากล PubMed (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
+    - กรณีอ้างอิงงานวิจัยสากล PubMed (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
      Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
-   - กรณีอ้างอิงงานวิจัยไทย ThaiJO (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
+   - กรณีอ้างอิงงานวิจัยไทย ThaiJO (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
      Author. (Year/ม.ป.ป.). Title. *Journal*. URL
    - กรณีอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร:
      คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
@@ -457,9 +757,9 @@ drugs:
    - **ห้ามใส่ URL ภายนอกหรือ PMID ที่ไม่ได้อยู่ใน CONTEXT เด็ดขาด** (ยกเว้นลิงก์ภายในของระบบ /herbs?name=... สำหรับฐานข้อมูล สสจ.พิษณุโลก) หากแต่ง URL ภายนอกขึ้นเองจะทำให้ผู้ใช้เสียความเชื่อถือ
    - ห้ามสร้างชื่อผู้แต่ง ชื่อวารสาร หรือชื่อบทความขึ้นเอง
    - หากไม่มีแหล่งอ้างอิงงานวิจัยใน CONTEXT ให้อ้างอิงเฉพาะ "ฐานข้อมูล สสจ.พิษณุโลก" (พร้อมลิงก์ /herbs?name=...) และ "คู่มือกรมการแพทย์แผนไทยฯ"
-7. **ความถูกต้องตรงประเด็นของเอกสารอ้างอิง (Strict Relevance - สำคัญมากที่สุด):**
-   - ห้ามนำเอกสารอ้างอิงของสมุนไพรอื่นที่ไม่ได้ถูกถามมาแสดงโดยเด็ดขาด เช่น หากผู้ใช้ถามเรื่อง "ยาจันทน์ลีลา" ต้องอ้างอิงเฉพาะข้อมูลยาจันทน์ลีลา ห้ามใส่เอกสารอ้างอิงของ "ฟ้าทะลายโจร" หรือ "ตะไคร้" หรือสมุนไพรอื่นที่ไม่เกี่ยวข้อง
-   - ให้อ้างอิงเฉพาะข้อมูลที่ตรงกับสิ่งที่ตอบเท่านั้น หากข้อมูลใดใน CONTEXT ไม่เกี่ยวกับคำถามของผู้ใช้ ห้ามนำมาเขียนในหัวข้อเอกสารอ้างอิง
+7. **ความถูกต้องตรงประเด็นของเอกสารอ้างอิง (Strict Relevance & No Unrelated Herbs - สำคัญมากที่สุด):**
+   - **กฎเหล็กเด็ดขาด:** ห้ามนำสมุนไพรหรือยาอื่นที่ผู้ใช้ไม่ได้ถามมาเขียนลงในคำตอบหรือในรายการอ้างอิงเด็ดขาด! ตัวอย่างเช่น หากผู้ใช้ถามเรื่อง "ขมิ้นชัน กับ Warfarin" ให้ตอบและอ้างอิงเฉพาะข้อมูลของ "ขมิ้น/ขมิ้นชัน กับ Warfarin" เท่านั้น ห้ามนำสมุนไพรอื่น (เช่น กระชายดำ กระเทียม กล้วย โกจิเบอร์รี ขิง มะม่วง ฯลฯ) มากล่าวถึงหรือใส่ในรายการอ้างอิงเป็นอันขาด
+   - ให้อ้างอิงเฉพาะข้อมูลที่ตรงกับสิ่งที่ถามและใช้ตอบจริงเท่านั้น ข้อมูลใดใน CONTEXT ที่ไม่ตรงกับสิ่งที่ผู้ใช้ระบุในคำถาม ห้ามนำมาเขียนในคำตอบหรือหัวข้อเอกสารอ้างอิงเด็ดขาด
 8. ท้ายคำตอบ ต้องลงท้ายด้วยแท็กโครงสร้างข้อมูล:
 [METADATA]
 category: <herbal_info | drug_interaction | dosage | side_effects | general>
@@ -558,7 +858,7 @@ export async function processLocalChat(
           .from("knowledge_documents")
           .select("id, title, category, content, source, source_url")
           .eq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")
-          .limit(500)
+          .limit(1000)
       : Promise.resolve({ data: [] }),
     enableExternal && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
   ]);
@@ -698,32 +998,11 @@ export async function processLocalChat(
   // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
   let matchedMahidol: any[] = [];
   if (enableMahidol && allMahidolDdi.length > 0) {
-    const qLower = question.toLowerCase();
-    matchedMahidol = allMahidolDdi.filter((doc) => {
-      const titleLower = (doc.title || "").toLowerCase();
-      const contentLower = (doc.content || "").toLowerCase();
-      // Check herb match
-      const herbMatch =
-        matchedHerbs.some((h) => {
-          const hn = (h.name_thai || "").toLowerCase();
-          const nhn = normalizeThaiName(h.name_thai || "");
-          return titleLower.includes(hn) || (nhn.length >= 3 && normalizeThaiName(doc.title).includes(nhn));
-        }) ||
-        (exactMatchedHerbs.length > 0 &&
-          exactMatchedHerbs.some((h) => {
-            const hn = (h.name_thai || "").toLowerCase();
-            return titleLower.includes(hn);
-          })) ||
-        qLower.includes("อันตรกิริยา") ||
-        qLower.includes("กินร่วม") ||
-        qLower.includes("ร่วมกับ");
-
-      if (!herbMatch && matchedHerbs.length > 0) return false;
-
-      // Check drug or herb keyword in title or content
-      const words = qLower.split(/[\s,+/]+/).filter((w) => w.length >= 2);
-      return words.some((w) => titleLower.includes(w) || contentLower.includes(w));
-    }).slice(0, 8);
+    matchedMahidol = findRelevantMahidolDdi(
+      question,
+      allMahidolDdi,
+      [...exactMatchedHerbs, ...matchedHerbs]
+    );
 
     if (matchedMahidol.length > 0) {
       contextText += "\n[ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน — ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล]\n";
@@ -952,7 +1231,7 @@ export async function processLocalChat(
     });
   }
 
-  const sourcesPayload: any = isOutOfScope
+  const rawSourcesPayload: any = isOutOfScope
     ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
     : {
         internal: internalSources,
@@ -992,9 +1271,14 @@ export async function processLocalChat(
       );
     }
     if (knowledgeItems.length > 0) {
-      sourcesPayload.knowledge = knowledgeItems;
+      rawSourcesPayload.knowledge = knowledgeItems;
     }
   }
+
+  // ตรวจสอบและคัดกรองอ้างอิงอย่างเข้มงวดก่อนส่งออก (Strict Reference Validation & Pruning)
+  const sourcesPayload = isOutOfScope
+    ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
+    : validateAndPruneSources(question, answer, rawSourcesPayload);
 
   const finalResponse = `${answer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
 

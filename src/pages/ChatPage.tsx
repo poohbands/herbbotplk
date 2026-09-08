@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
-import { processLocalChat, hasLocalProviderKey } from "@/lib/local-chat-service";
+import { processLocalChat, hasLocalProviderKey, validateAndPruneSources } from "@/lib/local-chat-service";
 import {
   getCurrentActiveProviderStatus,
   type ActiveApiStatus,
@@ -413,7 +413,7 @@ const ChatPage = () => {
         cleanContent = parsed.cleanContent;
         category = parsed.category;
         severity = parsed.severity;
-        sources = parsed.sources;
+        sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources) : parsed.sources;
 
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -513,7 +513,7 @@ const ChatPage = () => {
             cleanContent = parsed.cleanContent;
             category = parsed.category;
             severity = parsed.severity;
-            sources = parsed.sources;
+            sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources) : parsed.sources;
 
             setMessages((prev) =>
               prev.map((m, i) =>
