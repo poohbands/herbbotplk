@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Cpu } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Cpu, ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { useMaintenanceMode } from "@/lib/maintenance-service";
 import MaintenanceOverlay from "@/components/MaintenanceOverlay";
 import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
+import { recordUserFeedback, getFeedbackForMessage, type FeedbackType } from "@/lib/learning-verification-service";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; year?: string; journal: string; url: string };
@@ -181,7 +182,35 @@ const ChatPage = () => {
   const [fetchingKnowledgeContent, setFetchingKnowledgeContent] = useState(false);
   const [knowledgeSettings, setKnowledgeSettings] = useState<KnowledgeSettings>(() => getKnowledgeSettings());
   const [activeApiStatus, setActiveApiStatus] = useState<ActiveApiStatus>(() => getCurrentActiveProviderStatus());
+  const [feedbackStates, setFeedbackStates] = useState<Record<string, FeedbackType>>({});
+  const [feedbackModalMsg, setFeedbackModalMsg] = useState<{ id: string; question: string; answer: string } | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleThumbsUp = (msgId: string, question: string, answer: string) => {
+    recordUserFeedback(msgId, question, answer, "helpful");
+    setFeedbackStates((prev) => ({ ...prev, [msgId]: "helpful" }));
+    toast.success("ขอบคุณสำหรับข้อเสนอแนะ! ระบบจะนำไปเรียนรู้เพื่อปรับปรุงคำตอบให้ดียิ่งขึ้น");
+  };
+
+  const handleThumbsDown = (msgId: string, question: string, answer: string) => {
+    setFeedbackModalMsg({ id: msgId, question, answer });
+    setFeedbackComment("");
+  };
+
+  const submitNegativeFeedback = () => {
+    if (!feedbackModalMsg) return;
+    recordUserFeedback(
+      feedbackModalMsg.id,
+      feedbackModalMsg.question,
+      feedbackModalMsg.answer,
+      "unhelpful",
+      feedbackComment
+    );
+    setFeedbackStates((prev) => ({ ...prev, [feedbackModalMsg.id]: "unhelpful" }));
+    toast.info("บันทึกรายงานแล้ว ทีมงานและผู้เชี่ยวชาญจะนำไปตรวจสอบความถูกต้องครับ");
+    setFeedbackModalMsg(null);
+  };
 
   useEffect(() => {
     const refreshApiStatus = () => {
@@ -660,22 +689,38 @@ const ChatPage = () => {
         ) : (
           <div className="space-y-4">
             <AnimatePresence>
-              {messages.map((msg) => (
-                <motion.div
-                  key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                >
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                      msg.role === "user"
-                        ? "gradient-herbal text-primary-foreground rounded-br-md"
-                        : "bg-card border border-border shadow-sm rounded-bl-md"
-                    }`}
+              {messages.map((msg, idx) => {
+                const isVerifiedResponse =
+                  msg.role === "assistant" &&
+                  (msg.content.includes("ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว") ||
+                    msg.content.includes("Verified Clinical Knowledge"));
+                const prevMsg = idx > 0 ? messages[idx - 1] : undefined;
+                const questionText = prevMsg?.role === "user" ? prevMsg.content : "";
+                const currentFeedback =
+                  feedbackStates[msg.id] || getFeedbackForMessage(msg.id)?.feedback;
+
+                return (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
-                    {msg.role === "assistant" ? (
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                        msg.role === "user"
+                          ? "gradient-herbal text-primary-foreground rounded-br-md"
+                          : "bg-card border border-border shadow-sm rounded-bl-md"
+                      }`}
+                    >
+                      {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none text-foreground">
+                        {isVerifiedResponse && (
+                          <div className="flex items-center gap-1.5 mb-2.5 pb-2 border-b border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-xs font-medium not-prose">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>คำตอบนี้ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว</span>
+                          </div>
+                        )}
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
@@ -1107,9 +1152,47 @@ const ChatPage = () => {
                         </div>
                       )
                     )}
+
+                    {/* User Feedback Action Bar */}
+                    {msg.role === "assistant" && (
+                      <div className="flex items-center justify-between gap-2 pt-2 mt-3 border-t border-border/40 text-[11px] text-muted-foreground select-none">
+                        <span className="text-[10px] text-muted-foreground/80">
+                          คำตอบนี้มีประโยชน์หรือไม่?
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleThumbsUp(msg.id, questionText, msg.content)}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-colors cursor-pointer text-[10px] ${
+                              currentFeedback === "helpful"
+                                ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold"
+                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                            }`}
+                            title="มีประโยชน์และถูกต้อง"
+                          >
+                            <ThumbsUp className="w-3 h-3" />
+                            <span>มีประโยชน์</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleThumbsDown(msg.id, questionText, msg.content)}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-colors cursor-pointer text-[10px] ${
+                              currentFeedback === "unhelpful"
+                                ? "bg-rose-500/20 text-rose-700 dark:text-rose-300 font-semibold"
+                                : "hover:bg-muted text-muted-foreground hover:text-foreground"
+                            }`}
+                            title="ข้อมูลไม่ครบถ้วน หรือขอให้ผู้เชี่ยวชาญตรวจสอบ"
+                          >
+                            <ThumbsDown className="w-3 h-3" />
+                            <span>ขอตรวจสอบ</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </AnimatePresence>
 
             {isLoading && (
@@ -1283,6 +1366,44 @@ const ChatPage = () => {
               className="text-xs"
             >
               ปิดหน้าต่าง
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog ส่งข้อเสนอแนะและแจ้งขอตรวจสอบความถูกต้อง */}
+      <Dialog open={!!feedbackModalMsg} onOpenChange={(open) => { if (!open) setFeedbackModalMsg(null); }}>
+        <DialogContent className="max-w-md border-border bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
+              <ThumbsDown className="w-4 h-4 text-rose-500" />
+              <span>ขอให้ผู้เชี่ยวชาญตรวจสอบความถูกต้อง</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground">
+              คำถามและคำตอบนี้จะถูกส่งไปยังศูนย์ตรวจสอบความรู้ เพื่อให้เภสัชกรและแพทย์แผนไทยตรวจทานและปรับปรุงคำตอบให้ถูกต้อง
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50 space-y-1">
+              <span className="font-semibold block text-foreground">คำถาม: {feedbackModalMsg?.question}</span>
+            </div>
+            <div className="space-y-1">
+              <span className="text-xs font-medium text-foreground block">ข้อเสนอแนะหรือข้อมูลที่ต้องการแก้ไข (ไม่บังคับ):</span>
+              <textarea
+                value={feedbackComment}
+                onChange={(e) => setFeedbackComment(e.target.value)}
+                placeholder="เช่น ขนาดยายังไม่ชัดเจน, ข้อมูลไม่ครบถ้วน, มีข้อห้ามใช้เพิ่มเติม..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-xs resize-none focus:outline-none focus:ring-1 focus:ring-primary font-thai"
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-row justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setFeedbackModalMsg(null)} className="text-xs">
+              ยกเลิก
+            </Button>
+            <Button size="sm" onClick={submitNegativeFeedback} className="text-xs gradient-herbal text-primary-foreground shadow-herbal">
+              ส่งให้ผู้เชี่ยวชาญตรวจสอบ
             </Button>
           </DialogFooter>
         </DialogContent>

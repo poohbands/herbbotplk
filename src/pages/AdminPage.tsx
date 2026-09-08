@@ -9,6 +9,7 @@ import KnowledgeManager from "@/components/KnowledgeManager";
 import DataImporter from "@/components/DataImporter";
 import MaintenanceControlCard from "@/components/MaintenanceControlCard";
 import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
+import LearningVerificationCenter from "@/components/LearningVerificationCenter";
 
 const COLORS = ["hsl(145, 45%, 28%)", "hsl(15, 50%, 45%)", "hsl(38, 70%, 50%)", "hsl(145, 35%, 45%)", "hsl(25, 30%, 35%)"];
 const SEVERITY_COLORS: Record<string, string> = {
@@ -316,6 +317,9 @@ const AdminPage = () => {
                 )}
               </motion.div>
             </div>
+
+            {/* AI Learning & Verification Center */}
+            <LearningVerificationCenter />
 
             {/* Q&A Report */}
             <QAReport />

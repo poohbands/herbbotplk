@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { Search, Leaf, ArrowLeft, AlertTriangle, Pill, X, BookOpen, Shield, FlaskConical, Beaker } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
-import { HERBS_97_DATA } from "@/lib/herbs97-service";
+import { HERBS_97_DATA, CANNABIS_ALIASES, normalizePhoneticThai } from "@/lib/herbs97-service";
 import { useMaintenanceMode } from "@/lib/maintenance-service";
 import MaintenanceOverlay from "@/components/MaintenanceOverlay";
 import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
@@ -302,14 +302,72 @@ const HerbsPage = () => {
       if (category !== "ทั้งหมด") result = result.filter((f) => f.category === category);
       if (search.trim()) {
         const q = search.toLowerCase();
-        result = result.filter(
-          (f) =>
+        const phoneticQ = normalizePhoneticThai(q);
+        const searchTokens = q.split(/[\s,+/]+/).filter((t) => t.length > 0);
+
+        // หา cannabis aliases ที่ตรงกับคำค้นหา
+        const matchingAliasIndices = new Set<number>();
+        for (const cDef of CANNABIS_ALIASES) {
+          const matchAlias = cDef.aliases.some((al) => {
+            const alLower = al.toLowerCase();
+            const alPhonetic = normalizePhoneticThai(al);
+            return (
+              q.includes(alLower) ||
+              alLower.includes(q) ||
+              (phoneticQ.length >= 3 && alPhonetic.includes(phoneticQ))
+            );
+          });
+          const matchTokens =
+            cDef.tokens.length >= 2 &&
+            cDef.tokens.every((t) => q.includes(t.toLowerCase()));
+          if (matchAlias || matchTokens) {
+            matchingAliasIndices.add(cDef.index);
+          }
+        }
+
+        result = result.filter((f) => {
+          // 1. ตรวจสอบข้อความตรงหรือมี substring
+          if (
             f.name_thai.toLowerCase().includes(q) ||
             f.name_english?.toLowerCase().includes(q) ||
             f.indication?.toLowerCase().includes(q) ||
             f.ingredients?.some((i) => i.toLowerCase().includes(q)) ||
             f.properties?.some((p) => p.toLowerCase().includes(q))
-        );
+          ) {
+            return true;
+          }
+
+          // 2. ตรวจสอบผ่าน Cannabis Aliases
+          const fHerbIndex = f.herb97_id
+            ? parseInt(f.herb97_id.replace("herb97-", ""), 10)
+            : NaN;
+          if (!isNaN(fHerbIndex) && matchingAliasIndices.has(fHerbIndex)) {
+            return true;
+          }
+
+          // 3. ตรวจสอบด้วยเสียงอ่านภาษาไทย (Phonetic matching เช่น สุขไสยาศน์ -> ยาศุขไสยาศน์)
+          const fPhonetic = normalizePhoneticThai(f.name_thai);
+          if (
+            phoneticQ.length >= 3 &&
+            (fPhonetic.includes(phoneticQ) || phoneticQ.includes(fPhonetic))
+          ) {
+            return true;
+          }
+
+          // 4. ตรวจสอบด้วยกลุ่ม Token แยกคำ
+          if (
+            searchTokens.length >= 2 &&
+            searchTokens.every(
+              (tok) =>
+                f.name_thai.toLowerCase().includes(tok) ||
+                f.indication?.toLowerCase().includes(tok)
+            )
+          ) {
+            return true;
+          }
+
+          return false;
+        });
       }
       setFilteredFormulas(result);
     }
@@ -464,6 +522,26 @@ const HerbsPage = () => {
             ))}
           </div>
         </div>
+
+        {activeTab === "herbs" && /กัญชา|cannabis/i.test(search) && (
+          <div className="mb-4 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-2.5 text-amber-900 dark:text-amber-200">
+              <span className="text-lg">🌿</span>
+              <span>
+                <strong>กำลังค้นหายากัญชา?</strong> ตำรับยากัญชาทางการแพทย์ทั้ง 11 ตำรับ (เช่น ยาศุขไสยาศน์, น้ำมันกัญชา 1:1, ยาแก้ลมแก้เส้น) จัดอยู่ในแท็บ <strong>"ตำรับยาแผนไทย"</strong>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveTab("formulas");
+              }}
+              className="px-3.5 py-1.5 rounded-xl gradient-herbal text-primary-foreground font-medium text-xs shadow-herbal hover:opacity-95 transition-opacity cursor-pointer shrink-0 text-center"
+            >
+              ดูตำรับยากัญชา (11 ตำรับ) &rarr;
+            </button>
+          </div>
+        )}
 
         <p className="text-sm text-muted-foreground mb-4">
           พบ {count} รายการ {search && `สำหรับ "${search}"`}

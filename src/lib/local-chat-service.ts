@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, type KnowledgeSettings } from "./knowledge-settings";
 import { searchHerbs97ByName, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
+import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
 
 // พจนานุกรมอาการภาษาไทยเพื่อจับคู่สมุนไพร
 const SYMPTOM_MAP = [
@@ -683,6 +684,18 @@ export async function processLocalChat(
     }
   }
 
+  // 3.5 ตรวจสอบข้อมูลที่ผ่านการตรวจทานและรับรองความถูกต้องแล้ว (Verified Clinical Knowledge)
+  const verifiedMatch = findVerifiedAnswer(question);
+  if (verifiedMatch.found && verifiedMatch.verifiedAnswer) {
+    contextText =
+      `\n[ข้อมูลที่ผ่านการตรวจทานและรับรองความถูกต้องแล้ว (Verified Clinical Knowledge)]:\n` +
+      `• เรื่อง/คำถาม: ${verifiedMatch.docTitle || question}\n` +
+      `• เนื้อหาที่ได้รับการรับรอง: ${verifiedMatch.verifiedAnswer}\n` +
+      `• หน่วยงานที่รับรอง: ${verifiedMatch.source || "กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก สสจ.พิษณุโลก"}\n` +
+      `• คำสั่งพิเศษ: ข้อมูลนี้ผ่านการตรวจทานความถูกต้อง 100% จากผู้เชี่ยวชาญ ให้นำเนื้อหานี้มาตอบผู้ใช้เป็นหลัก และระบุว่า "ข้อมูลนี้ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว"\n\n` +
+      contextText;
+  }
+
   if (!contextText.trim()) {
     contextText = "ไม่พบข้อมูลเฉพาะเจาะจงสำหรับคำถามนี้ในฐานข้อมูลภายใน ในส่วนอ้างอิงให้ระบุเฉพาะ 'ฐานข้อมูล สสจ.พิษณุโลก' และ 'คู่มือกรมการแพทย์แผนไทยฯ' โดยไม่ต้องใส่ URL ห้ามแต่งข้อมูลหรืออ้างอิงขึ้นเอง หากไม่มีข้อมูลในระบบ ให้แจ้งผู้ใช้อย่างตรงไปตรงมาว่าไม่มีข้อมูลในฐานข้อมูลปัจจุบัน และแนะนำให้ปรึกษาแพทย์แผนไทยหรือเภสัชกรโดยตรง";
   }
@@ -884,6 +897,15 @@ export async function processLocalChat(
   }
 
   const finalResponse = `${answer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
+
+  // บันทึกคำถาม-คำตอบลงคิวเรียนรู้และตรวจสอบความถูกต้องสำหรับแอดมิน
+  if (!isOutOfScope && answer.trim()) {
+    try {
+      addToLearningQueue(question, answer);
+    } catch {
+      // ignore
+    }
+  }
 
   if (onChunk) {
     onChunk(finalResponse);

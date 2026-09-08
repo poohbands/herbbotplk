@@ -20,10 +20,176 @@ export interface Herb97Item {
 export const HERBS_97_DATA: Herb97Item[] = dataset as Herb97Item[];
 
 /**
- * รายชื่อตำรับยาที่มีส่วนผสมของกัญชาทั้งหมดจาก 97 รายการ
+ * รายการคำเรียกเสมือน (Aliases), สัญลักษณ์, และคีย์เวิร์ดของตำรับยากัญชาทางการแพทย์ทั้ง 11 ตำรับ
+ */
+export interface CannabisAliasDefinition {
+  index: number;
+  aliases: string[];
+  tokens: string[];
+}
+
+export const CANNABIS_ALIASES: CannabisAliasDefinition[] = [
+  {
+    index: 26,
+    aliases: [
+      "ยาทาขมิ้นชันและกัญชา",
+      "ทาขมิ้นชันและกัญชา",
+      "ยาทากัญชา",
+      "ขมิ้นชันกัญชา",
+      "ขมิ้นชันและกัญชา",
+      "ยาทาสมุนไพรกัญชา",
+    ],
+    tokens: ["ขมิ้นชัน", "กัญชา", "ยาทา"],
+  },
+  {
+    index: 31,
+    aliases: [
+      "ยาน้ำมันสารสกัดกัญชา THC",
+      "น้ำมันสารสกัดกัญชา THC",
+      "น้ำมันกัญชา THC",
+      "น้ำมันกัญชา delta-9",
+      "น้ำมันกัญชาเดลต้า9",
+      "น้ำมันกัญชา 0.5",
+      "น้ำมันกัญชา 3",
+      "น้ำมันกัญชาหยด",
+      "THC 0.5",
+      "THC 3",
+      "THC หยด",
+    ],
+    tokens: ["thc", "delta-9", "เดลต้า", "0.5", "3"],
+  },
+  {
+    index: 58,
+    aliases: ["ยาแก้ลมแก้เส้น", "แก้ลมแก้เส้น", "ลมแก้เส้น"],
+    tokens: ["แก้ลม", "แก้เส้น", "ลมแก้เส้น"],
+  },
+  {
+    index: 64,
+    aliases: ["ยาทำลายพระสุเมรุ", "ทำลายพระสุเมรุ", "พระสุเมรุ"],
+    tokens: ["ทำลายพระสุเมรุ", "พระสุเมรุ"],
+  },
+  {
+    index: 66,
+    aliases: [
+      "ยาน้ำมันกัญชาทั้งห้า",
+      "น้ำมันกัญชาทั้งห้า",
+      "กัญชาทั้งห้า",
+      "น้ำมันทั้งห้า",
+      "ทั้งห้า",
+    ],
+    tokens: ["ทั้งห้า", "กัญชาทั้งห้า"],
+  },
+  {
+    index: 67,
+    aliases: [
+      "ยาน้ำมันสารสกัดกัญชา 1:1",
+      "น้ำมันกัญชา 1:1",
+      "น้ำมันกัญชา 1 ต่อ 1",
+      "กัญชา 1:1",
+      "กัญชา 1 ต่อ 1",
+      "THC:CBD 1:1",
+      "CBD:THC 1:1",
+      "THC CBD 1:1",
+      "สารสกัดกัญชา 1:1",
+      "น้ำมันสารสกัดกัญชา 1:1",
+      "1:1",
+      "1 ต่อ 1",
+    ],
+    tokens: ["1:1", "1ต่อ1", "thc", "cbd"],
+  },
+  {
+    index: 79,
+    aliases: [
+      "ยาอัมฤตย์โอสถ",
+      "อัมฤตย์โอสถ",
+      "อมฤตโอสถ",
+      "อัมฤตโอสถ",
+      "อมฤตย์โอสถ",
+    ],
+    tokens: ["อัมฤต", "อมฤต", "โอสถ"],
+  },
+  {
+    index: 94,
+    aliases: [
+      "ยาน้ำมันสารสกัดกัญชา CBD 20:1",
+      "น้ำมันกัญชา CBD 20:1",
+      "กัญชา CBD 20:1",
+      "น้ำมันกัญชา CBD",
+      "CBD:THC 20:1",
+      "CBD 20:1",
+      "CBD 100",
+      "CBD 100 มิลลิกรัม",
+      "CBD 100 mg",
+      "กัญชา 20:1",
+      "กัญชา 20 ต่อ 1",
+      "น้ำมันกัญชา 20 ต่อ 1",
+      "20:1",
+      "20 ต่อ 1",
+    ],
+    tokens: ["20:1", "20ต่อ1", "cbd", "100"],
+  },
+  {
+    index: 95,
+    aliases: [
+      "ยาน้ำมันกัญชาที่ผลิตจากช่อดอก",
+      "น้ำมันกัญชาช่อดอก",
+      "กัญชาช่อดอก",
+      "น้ำมันช่อดอก",
+      "ช่อดอกกัญชา",
+      "THC 2.0",
+      "THC 2",
+      "น้ำมันกัญชา THC 2",
+    ],
+    tokens: ["ช่อดอก", "2.0", "2มก"],
+  },
+  {
+    index: 96,
+    aliases: ["ยาประสะกัญชา", "ประสะกัญชา"],
+    tokens: ["ประสะกัญชา", "ประสะ"],
+  },
+  {
+    index: 97,
+    aliases: [
+      "ยาศุขไสยาศน์",
+      "ศุขไสยาศน์",
+      "สุขไสยาศน์",
+      "ศุขไสยาสน์",
+      "สุขไสยาสน์",
+      "ยาแก้การนอนไม่หลับกัญชา",
+    ],
+    tokens: ["ศุขไสยาศน์", "สุขไสยาศน์", "ศุขไสยาสน์", "สุขไสยาสน์", "ศุขไสย", "สุขไสย"],
+  },
+];
+
+/**
+ * รายชื่อตำรับยาที่มีส่วนผสมของกัญชาทั้งหมดจาก 97 รายการ (11 ตำรับ)
  */
 export function getCannabisMedicines(): Herb97Item[] {
   return HERBS_97_DATA.filter((item) => item.has_cannabis === true);
+}
+
+/**
+ * แปลงตัวสะกดภาษาไทยตามเสียงอ่าน เพื่อรองรับคำที่มีความหลากหลายในการสะกด (Phonetic normalization)
+ * เช่น ศ/ษ -> ส, ฤ -> รึ, ภ -> พ, ธ/ฑ/ฒ -> ท
+ */
+export function normalizePhoneticThai(text: string): string {
+  if (!text) return "";
+  return text
+    .toLowerCase()
+    .replace(/[ศษ]/g, "ส")
+    .replace(/ฤๅ?/g, "รึ")
+    .replace(/[ภ]/g, "พ")
+    .replace(/[ธฑฒ]/g, "ท")
+    .replace(/[ฌ]/g, "ช")
+    .replace(/[ญ]/g, "ย")
+    .replace(/[ฎ]/g, "ด")
+    .replace(/[ฏ]/g, "ต")
+    .replace(/[ฐ]/g, "ท")
+    .replace(/[ณ]/g, "น")
+    .replace(/[ฆ]/g, "ค")
+    .replace(/.[์\u0E4C]/g, "") // ตัดพยัญชนะที่มีทัณฑฆาตกำกับ เช่น น์, ย์, ร์
+    .replace(/[์่้๊๋็]/g, "") // ตัดวรรณยุกต์และไม้ไต่คู้
+    .replace(/[\s\-_,()/:.]+/g, "");
 }
 
 /**
@@ -32,48 +198,96 @@ export function getCannabisMedicines(): Herb97Item[] {
 export function normalizeDrugName(name: string): string {
   return name
     .trim()
-    .replace(/^ยา(น้ำมัน|สเปรย์|ทา|ขี้ผึ้ง|สารสกัด(จาก)?)?/, "")
+    .replace(/^ยา(น้ำมัน|สารสกัด|สเปรย์|ทา|ขี้ผึ้ง|สารสกัด(จาก)?)?/, "")
     .replace(/\s+/g, "")
     .toLowerCase();
 }
 
 /**
  * ค้นหาข้อมูลยาจากไฟล์ 97 herb.xlsx (sheet ทั้งหมด 97 รายการ)
- * โดยเน้นการค้นหาชื่อยาใน Column A (name) ทั้งแบบตรงทุกตัวอักษรและชื่อใกล้เคียง
- * พิเศษ: หากมีการถามคำถามเกี่ยวกับ "กัญชา" ระบบจะตรวจสอบและดึงรายการยาที่มีส่วนผสมของกัญชาให้อัตโนมัติ
+ * โดยเน้นการค้นหาชื่อยาใน Column A (name) ทั้งแบบตรงทุกตัวอักษร, ชื่อย่อ, ชื่อทางเลือก (Aliases),
+ * และการสะกดคำแบบคล้ายเสียง (Phonetic Matching)
+ * พิเศษ: หากมีการถามคำถามเกี่ยวกับ "กัญชา" ระบบจะปลดล็อกเพดานจำกัดเพื่อให้ได้รับข้อมูลครบทุกตำรับ ไม่ตกหล่น
  */
 export function searchHerbs97ByName(query: string, maxResults = 6): Herb97Item[] {
   if (!query || typeof query !== "string") return [];
 
   const rawQ = query.trim().toLowerCase();
-  const cleanQ = rawQ.replace(/[\s\-_,()]+/g, "");
+  const cleanQ = rawQ.replace(/[\s\-_,()/:.]+/g, "");
+  const phoneticQ = normalizePhoneticThai(rawQ);
   const normalizedQ = normalizeDrugName(rawQ);
 
-  const isCannabisQuery = /กัญชา|cannabis|thc|cbd|สารสกัดกัญชา|น้ำมันกัญชา|ยากัญชา/i.test(rawQ);
+  const isCannabisQuery = /กัญชา|cannabis|thc|cbd|สารสกัดกัญชา|น้ำมันกัญชา|ยากัญชา|เดลต้า|ช่อดอก|1:1|1ต่อ1|20:1|20ต่อ1|ศุขไสย|สุขไสย|อัมฤต|อมฤต|ทำลายพระสุเมรุ|แก้ลมแก้เส้น|ประสะกัญชา/i.test(
+    rawQ
+  );
+
+  // กรณีคำถามเกี่ยวกับยากัญชา ให้ขยายขีดจำกัดผลลัพธ์เพื่อไม่ให้ตำรับที่ 7-11 ตกหล่น
+  const effectiveLimit = isCannabisQuery ? Math.max(maxResults, 12) : maxResults;
 
   const exactMatches: Herb97Item[] = [];
+  const aliasMatches: Herb97Item[] = [];
   const strongMatches: Herb97Item[] = [];
   const closeMatches: Herb97Item[] = [];
-  const cannabisMatches: Herb97Item[] = [];
+  const cannabisFallback: Herb97Item[] = [];
 
   for (const item of HERBS_97_DATA) {
     const rawName = item.name.toLowerCase();
-    const cleanName = rawName.replace(/[\s\-_,()]+/g, "");
+    const cleanName = rawName.replace(/[\s\-_,()/:.]+/g, "");
+    const phoneticName = normalizePhoneticThai(rawName);
     const baseName = normalizeDrugName(rawName);
 
-    // 1. ตรงทุกตัวอักษร หรือคำถามมีชื่อยาเต็มตรงเป๊ะ
+    // 1. ตรวจสอบชื่อตรงเป๊ะ (Exact match) หรือคำถามมีชื่อทางการตรงเป๊ะ
     if (rawQ === rawName || rawQ.includes(rawName) || cleanQ.includes(cleanName)) {
       exactMatches.push(item);
       continue;
     }
 
-    // 2. ตรงกับชื่อยาหลังตัดคำนำหน้า "ยา..." (เช่น ผู้ใช้ถาม "เทพจิตร", "ศุขไสยาศน์", "ขมิ้นชัน", "เบญจกูล")
+    // 2. ตรวจสอบผ่านระบบชื่อเรียกเสมือนของตำรับยากัญชา (Cannabis Aliases & Ratios)
+    if (item.has_cannabis) {
+      const aliasDef = CANNABIS_ALIASES.find((a) => a.index === item.index);
+      if (aliasDef) {
+        // ก) เทียบกับชื่อเสมือน (Aliases) เช่น "น้ำมันกัญชา 1:1", "สุขไสยาศน์", "อมฤตโอสถ"
+        const matchedAlias = aliasDef.aliases.some((al) => {
+          const cleanAl = al.toLowerCase().replace(/[\s\-_,()/:.]+/g, "");
+          const phoneticAl = normalizePhoneticThai(al);
+          return (
+            rawQ.includes(al.toLowerCase()) ||
+            cleanQ.includes(cleanAl) ||
+            phoneticQ.includes(phoneticAl)
+          );
+        });
+
+        if (matchedAlias) {
+          aliasMatches.push(item);
+          continue;
+        }
+
+        // ข) เทียบด้วยกลุ่ม Token เฉพาะ เช่น [thc, cbd, 1:1] หรือ [ช่อดอก, thc]
+        if (
+          aliasDef.tokens.length >= 2 &&
+          aliasDef.tokens.every((tok) => rawQ.includes(tok.toLowerCase()) || cleanQ.includes(tok.toLowerCase()))
+        ) {
+          aliasMatches.push(item);
+          continue;
+        }
+      }
+    }
+
+    // 3. ตรวจสอบชื่อยาหลังตัดคำนำหน้า "ยา..."
     if (baseName.length >= 3 && (rawQ.includes(baseName) || cleanQ.includes(baseName))) {
       strongMatches.push(item);
       continue;
     }
 
-    // 3. คำถามมีส่วนหนึ่งของชื่อยาตรงกับชื่อใน Column A (Substring/Close match)
+    // 4. ตรวจสอบแบบคล้ายเสียงอ่าน (Phonetic match เช่น สุขไสยาสน์ <-> ศุขไสยาศน์)
+    if (phoneticName.length >= 4 && phoneticQ.length >= 4) {
+      if (phoneticQ.includes(phoneticName) || phoneticName.includes(phoneticQ)) {
+        strongMatches.push(item);
+        continue;
+      }
+    }
+
+    // 5. คำถามมีส่วนหนึ่งของชื่อยาตรงกับชื่อใน Column A (Substring/Close match)
     if (cleanName.length >= 4 && cleanQ.length >= 4) {
       if (cleanName.includes(cleanQ) || cleanQ.includes(cleanName)) {
         closeMatches.push(item);
@@ -81,7 +295,7 @@ export function searchHerbs97ByName(query: string, maxResults = 6): Herb97Item[]
       }
     }
 
-    // 4. เปรียบเทียบความใกล้เคียงด้วยการซ้อนทับของกลุ่มคำ (Prefix / Stem)
+    // 6. ซ้อนทับด้วย Prefix / Stem
     if (baseName.length >= 4) {
       const prefix = baseName.slice(0, Math.min(baseName.length, 5));
       if (prefix.length >= 4 && (cleanQ.includes(prefix) || normalizedQ.includes(prefix))) {
@@ -90,22 +304,28 @@ export function searchHerbs97ByName(query: string, maxResults = 6): Herb97Item[]
       }
     }
 
-    // 5. ถ้าคำถามเกี่ยวกับกัญชา ให้รวบรวมยาที่มีส่วนผสมของกัญชาทั้งหมด
+    // 7. กรณีถามกัญชาทั่วไป ให้เก็บเป็น Fallback เพื่อนำเสนอข้อมูลครบทุกตำรับ
     if (isCannabisQuery && item.has_cannabis) {
-      cannabisMatches.push(item);
+      cannabisFallback.push(item);
     }
   }
 
-  // รวมผลลัพธ์โดยให้ความสำคัญกับ:
-  // Exact Match -> Strong Match -> Close Match -> Cannabis Medicines (กรณีถามกัญชา)
+  // รวมผลลัพธ์ตามลำดับความสำคัญ:
+  // Exact Match -> Specific Alias Match -> Strong/Phonetic Match -> Close Match -> All Cannabis Fallback
   const result: Herb97Item[] = [];
   const seenIds = new Set<string>();
 
-  for (const item of [...exactMatches, ...strongMatches, ...closeMatches, ...cannabisMatches]) {
+  for (const item of [
+    ...exactMatches,
+    ...aliasMatches,
+    ...strongMatches,
+    ...closeMatches,
+    ...cannabisFallback,
+  ]) {
     if (!seenIds.has(item.id)) {
       seenIds.add(item.id);
       result.push(item);
-      if (result.length >= maxResults) break;
+      if (result.length >= effectiveLimit) break;
     }
   }
 
@@ -118,7 +338,17 @@ export function searchHerbs97ByName(query: string, maxResults = 6): Herb97Item[]
 export function formatHerb97ForAiContext(items: Herb97Item[]): string {
   if (!items || items.length === 0) return "";
 
+  const cannabisItems = items.filter((i) => i.has_cannabis);
   let out = "\n[ข้อมูลเฉพาะจากบัญชียาสมุนไพร 97 รายการ (ไฟล์ 97 herb.xlsx)]:\n";
+
+  // หากมีตำรับยากัญชา ให้สรุปภาพรวมการสั่งจ่ายและข้อกำหนดกฎหมาย
+  if (cannabisItems.length > 0) {
+    out += `\n🌿 [ภาพรวมตำรับยากัญชาทางการแพทย์ในบัญชียาสมุนไพร (${cannabisItems.length} ตำรับ)]:`;
+    out += `\n• ตำรับยากัญชาทางการแพทย์ทุกตำรับต้องสั่งจ่ายโดยแพทย์หรือแพทย์แผนไทยที่มีใบอนุญาตรับรองจากกระทรวงสาธารณสุขเท่านั้น`;
+    out += `\n• ข้อห้ามใช้สากล: ห้ามใช้ในสตรีมีครรภ์ สตรีให้นมบุตร และผู้มีอายุต่ำกว่า 18 ปี`;
+    out += `\n• รายการตำรับที่เกี่ยวข้อง: ${cannabisItems.map((c) => `${c.index}. ${c.name}`).join(", ")}\n`;
+  }
+
   for (const item of items) {
     const cannabisTag = item.has_cannabis ? " [⚠️ ตำรับยาที่มีส่วนผสมของกัญชาทางการแพทย์]" : "";
     out += `\n--- ข้อมูลยา: ${item.name}${cannabisTag} (ลำดับที่ ${item.index} ในไฟล์ 97 herb.xlsx) ---\n`;
