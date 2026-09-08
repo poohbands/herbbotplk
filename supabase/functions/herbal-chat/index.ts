@@ -415,7 +415,7 @@ async function findRelevantHerbs(supabase: any, question: string, intent?: Quest
 
 
 /** ค้นหาเอกสารความรู้จากตาราง knowledge_documents ด้วย full-text search */
-async function findRelevantKnowledge(supabase: any, question: string): Promise<KnowledgeDoc[]> {
+async function findRelevantKnowledge(supabase: any, question: string, enableMahidol = true): Promise<KnowledgeDoc[]> {
   const q = question.trim();
   if (!q) return [];
 
@@ -429,22 +429,34 @@ async function findRelevantKnowledge(supabase: any, question: string): Promise<K
 
   const tsQuery = tokens.map((t) => `${t.replace(/[:&|!()<>]/g, "")}:*`).join(" | ");
 
-  const { data, error } = await supabase
+  let queryBuilder = supabase
     .from("knowledge_documents")
     .select("id, title, category, content, tags, source, source_url")
-    .eq("is_published", true)
+    .eq("is_published", true);
+
+  if (!enableMahidol) {
+    queryBuilder = queryBuilder.neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)");
+  }
+
+  const { data, error } = await queryBuilder
     .textSearch("search_vector", tsQuery, { config: "simple" })
-    .limit(5);
+    .limit(6);
 
   if (error) {
     console.error("[herbal-chat] knowledge search error:", error.message);
     // fallback: match by tag/title ilike
-    const { data: fallback } = await supabase
+    let fallbackBuilder = supabase
       .from("knowledge_documents")
       .select("id, title, category, content, tags, source, source_url")
-      .eq("is_published", true)
+      .eq("is_published", true);
+
+    if (!enableMahidol) {
+      fallbackBuilder = fallbackBuilder.neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)");
+    }
+
+    const { data: fallback } = await fallbackBuilder
       .or(tokens.slice(0, 3).map((t) => `title.ilike.%${t}%,content.ilike.%${t}%`).join(","))
-      .limit(5);
+      .limit(6);
     return (fallback || []) as KnowledgeDoc[];
   }
   return (data || []) as KnowledgeDoc[];
@@ -1185,6 +1197,7 @@ ${OUT_OF_SCOPE_REFUSAL_MESSAGE}
 - **แสดงเอกสารอ้างอิงตามมาตรฐาน APA 7th Edition:**
   ก่อนส่วนคำเตือน ให้แสดงหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบ APA 7:
   - ฐานข้อมูลภายใน (ต้องมีลิงก์เปิดดูข้อมูลยาเสมอ เพื่อให้ผู้ใช้กดดูรายละเอียดได้ทันที): สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). *[ฐานข้อมูลสมุนไพรและตำรับยาไทย: [ชื่อสมุนไพร/ตำรับ]](/herbs?name=[ชื่อสมุนไพร/ตำรับ])*. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
+  - ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ): ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL
   - บัญชียาหลักแห่งชาติ: คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
   - 10 กลุ่มอาการ: กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ*. กระทรวงสาธารณสุข.
   - งานวิจัย PubMed: Author, A. A. (Year). Title of article. *Journal*, Volume(Issue), Pages. https://pubmed.ncbi.nlm.nih.gov/PMID/
@@ -1216,6 +1229,7 @@ serve(async (req) => {
     const { messages, settings } = await req.json();
     const enableExternal = settings?.enable_external_research !== false;
     const enableInternal = settings?.enable_internal_db !== false;
+    const enableMahidol = settings?.enable_mahidol_ddi !== false;
 
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
     const question: string = lastUserMsg?.content || "";
@@ -1259,12 +1273,14 @@ serve(async (req) => {
       });
     }
 
-    // รันการค้นหาแบบขนาน (DB + knowledge) เฉพาะเมื่อเปิดใช้งานฐานข้อมูลภายใน
-    const knowledgeQuery = [question, ...intent.symptoms, ...intent.herbs].join(" ");
-    const [{ herbs, formulas, nameMatchedHerbNames, nameMatchedFormulaNames, listMode }, knowledge] = enableInternal
+    // รันการค้นหาแบบขนาน (DB + knowledge) เฉพาะเมื่อเปิดใช้งานฐานข้อมูลภายในหรือฐานข้อมูลมหิดล
+    const knowledgeQuery = [question, ...intent.symptoms, ...intent.herbs, ...intent.drugs].join(" ");
+    const [{ herbs, formulas, nameMatchedHerbNames, nameMatchedFormulaNames, listMode }, knowledge] = (enableInternal || enableMahidol)
       ? await Promise.all([
-          findRelevantHerbs(supabase, question, intent),
-          findRelevantKnowledge(supabase, knowledgeQuery),
+          enableInternal
+            ? findRelevantHerbs(supabase, question, intent)
+            : Promise.resolve({ herbs: [], formulas: [], nameMatchedHerbNames: [], nameMatchedFormulaNames: [], listMode: false }),
+          findRelevantKnowledge(supabase, knowledgeQuery, enableMahidol),
         ])
       : [
           { herbs: [], formulas: [], nameMatchedHerbNames: [], nameMatchedFormulaNames: [], listMode: false },
@@ -1337,7 +1353,7 @@ serve(async (req) => {
         return true;
       });
     }
-    const knowledgeSources: KnowledgeSource[] = enableInternal
+    const knowledgeSources: KnowledgeSource[] = (enableInternal || enableMahidol)
       ? knowledge.map((k) => ({
           id: k.id, title: k.title, category: k.category, content: k.content, source: k.source, source_url: k.source_url,
         }))
@@ -1350,7 +1366,7 @@ serve(async (req) => {
       enableInternal ? formulas : [],
       enableExternal ? pubmed : [],
       enableExternal ? extraHerbNames : [],
-      enableInternal ? knowledge : [],
+      (enableInternal || enableMahidol) ? knowledge : [],
       includeCommonDisease,
       aiFallback,
       enableExternal ? thaijo : []
@@ -1359,7 +1375,7 @@ serve(async (req) => {
       pubmed: enableExternal ? pubmed : [],
       thaijo: enableExternal ? thaijo : [],
       internal: enableInternal ? internalSources : [],
-      knowledge: enableInternal ? knowledgeSources : [],
+      knowledge: (enableInternal || enableMahidol) ? knowledgeSources : [],
       ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
@@ -1375,6 +1391,9 @@ serve(async (req) => {
     }
     if (!enableInternal) {
       settingsInstruction += "\n\n⚠️ คำสั่งพิเศษ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลภายในเว็บ ให้ตอบตามหลักวิชาการทั่วไปและการดูแลสุขภาพเบื้องต้น";
+    }
+    if (!enableMahidol) {
+      settingsInstruction += "\n\n⚠️ คำสั่งพิเศษ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล ห้ามนำข้อมูล DDI มหิดลมาอ้างอิง";
     }
 
     // ผลการจำแนกเจตนาเป็นตัวตัดสินว่าจะปฏิเสธหรือไม่ (โมเดลหลักไม่ต้องตัดสินเอง)

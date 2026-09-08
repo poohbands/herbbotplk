@@ -14,11 +14,17 @@ export type KnowledgeSettings = {
    * เปิด-ปิดการใช้ข้อมูลจากฐานข้อมูลภายในเว็บ (สมุนไพรเดี่ยว, ตำรับยาไทย, เอกสารความรู้ สสจ.พิษณุโลก)
    */
   enable_internal_db: boolean;
+
+  /**
+   * เปิด-ปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
+   */
+  enable_mahidol_ddi: boolean;
 };
 
 export const DEFAULT_KNOWLEDGE_SETTINGS: KnowledgeSettings = {
   enable_external_research: true,
   enable_internal_db: true,
+  enable_mahidol_ddi: true,
 };
 
 const STORAGE_KEY = "plk_knowledge_source_settings";
@@ -43,6 +49,10 @@ export function getKnowledgeSettings(): KnowledgeSettings {
         typeof parsed.enable_internal_db === "boolean"
           ? parsed.enable_internal_db
           : DEFAULT_KNOWLEDGE_SETTINGS.enable_internal_db,
+      enable_mahidol_ddi:
+        typeof parsed.enable_mahidol_ddi === "boolean"
+          ? parsed.enable_mahidol_ddi
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_mahidol_ddi,
     };
   } catch (e) {
     console.warn("Failed to read knowledge settings from localStorage:", e);

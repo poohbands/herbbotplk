@@ -16,14 +16,16 @@ describe("Knowledge Settings Management", () => {
     vi.restoreAllMocks();
   });
 
-  it("returns default settings (both true) when localStorage is empty", () => {
+  it("returns default settings (all true) when localStorage is empty", () => {
     const settings = getKnowledgeSettings();
     expect(settings).toEqual({
       enable_external_research: true,
       enable_internal_db: true,
+      enable_mahidol_ddi: true,
     });
     expect(DEFAULT_KNOWLEDGE_SETTINGS.enable_external_research).toBe(true);
     expect(DEFAULT_KNOWLEDGE_SETTINGS.enable_internal_db).toBe(true);
+    expect(DEFAULT_KNOWLEDGE_SETTINGS.enable_mahidol_ddi).toBe(true);
   });
 
   it("saves and loads enable_external_research toggle correctly", () => {
@@ -32,10 +34,12 @@ describe("Knowledge Settings Management", () => {
     const updated = saveKnowledgeSettings({ enable_external_research: false });
     expect(updated.enable_external_research).toBe(false);
     expect(updated.enable_internal_db).toBe(true);
+    expect(updated.enable_mahidol_ddi).toBe(true);
 
     const reloaded = getKnowledgeSettings();
     expect(reloaded.enable_external_research).toBe(false);
     expect(reloaded.enable_internal_db).toBe(true);
+    expect(reloaded.enable_mahidol_ddi).toBe(true);
 
     expect(dispatchSpy).toHaveBeenCalled();
     const eventArg = dispatchSpy.mock.calls[0][0] as CustomEvent;
@@ -43,6 +47,7 @@ describe("Knowledge Settings Management", () => {
     expect(eventArg.detail).toEqual({
       enable_external_research: false,
       enable_internal_db: true,
+      enable_mahidol_ddi: true,
     });
   });
 
@@ -52,17 +57,33 @@ describe("Knowledge Settings Management", () => {
     const reloaded = getKnowledgeSettings();
     expect(reloaded.enable_internal_db).toBe(false);
     expect(reloaded.enable_external_research).toBe(true);
+    expect(reloaded.enable_mahidol_ddi).toBe(true);
   });
 
-  it("can toggle both settings off and on independently", () => {
-    saveKnowledgeSettings({ enable_internal_db: false, enable_external_research: false });
+  it("saves and loads enable_mahidol_ddi toggle correctly", () => {
+    saveKnowledgeSettings({ enable_mahidol_ddi: false });
+
+    const reloaded = getKnowledgeSettings();
+    expect(reloaded.enable_mahidol_ddi).toBe(false);
+    expect(reloaded.enable_external_research).toBe(true);
+    expect(reloaded.enable_internal_db).toBe(true);
+  });
+
+  it("can toggle all three settings off and on independently", () => {
+    saveKnowledgeSettings({
+      enable_internal_db: false,
+      enable_external_research: false,
+      enable_mahidol_ddi: false,
+    });
     let current = getKnowledgeSettings();
     expect(current.enable_internal_db).toBe(false);
     expect(current.enable_external_research).toBe(false);
+    expect(current.enable_mahidol_ddi).toBe(false);
 
-    saveKnowledgeSettings({ enable_external_research: true });
+    saveKnowledgeSettings({ enable_mahidol_ddi: true });
     current = getKnowledgeSettings();
     expect(current.enable_internal_db).toBe(false);
-    expect(current.enable_external_research).toBe(true);
+    expect(current.enable_external_research).toBe(false);
+    expect(current.enable_mahidol_ddi).toBe(true);
   });
 });

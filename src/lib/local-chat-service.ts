@@ -440,9 +440,11 @@ drugs:
 4. ให้คำเตือนเสมอว่า "ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ โดยเฉพาะหญิงตั้งครรภ์ หญิงให้นมบุตร ผู้ป่วยโรคไต/โรคตับ"
 5. **การแสดงเอกสารอ้างอิงตามแบบ APA 7th Edition (สำคัญที่สุด):**
    ก่อนจบคำตอบ ให้เขียนหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบมาตรฐาน APA 7 ให้ครบถ้วนทุกรายการที่มีใน CONTEXT (ทั้งงานวิจัยสากล PubMed, งานวิจัยไทย ThaiJO, ฐานข้อมูล สสจ.พิษณุโลก และแนวทาง สธ.):
-   - กรณีอ้างอิงฐานข้อมูลสมุนไพร/ตำรับยาไทย สสจ.พิษณุโลก (ต้องระบุลิงก์เปิดดูข้อมูลยาเสมอ เพื่อให้ผู้ใช้กดดูรายละเอียดได้ทันที):
-     สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). *[ฐานข้อมูลสมุนไพรและตำรับยาไทย: [ชื่อสมุนไพร/ตำรับ]](/herbs?name=[ชื่อสมุนไพร/ตำรับ])*. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
-   - กรณีอ้างอิงงานวิจัยสากล PubMed (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
+    - กรณีอ้างอิงฐานข้อมูลสมุนไพร/ตำรับยาไทย สสจ.พิษณุโลก (ต้องระบุลิงก์เปิดดูข้อมูลยาเสมอ เพื่อให้ผู้ใช้กดดูรายละเอียดได้ทันที):
+      สำนักงานสาธารณสุขจังหวัดพิษณุโลก. (2568). *[ฐานข้อมูลสมุนไพรและตำรับยาไทย: [ชื่อสมุนไพร/ตำรับ]](/herbs?name=[ชื่อสมุนไพร/ตำรับ])*. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข.
+    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
+      ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL
+    - กรณีอ้างอิงงานวิจัยสากล PubMed (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
      Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
    - กรณีอ้างอิงงานวิจัยไทย ThaiJO (ถ้ามีใน CONTEXT ต้องใส่ทุกรายการ):
      Author. (Year/ม.ป.ป.). Title. *Journal*. URL
@@ -486,6 +488,7 @@ export async function processLocalChat(
   const currentSettings = settings || getKnowledgeSettings();
   const enableExternal = currentSettings.enable_external_research !== false;
   const enableInternal = currentSettings.enable_internal_db !== false;
+  const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
 
   // 0. ตรวจจับคำถามที่อยู่นอกขอบเขตชัดเจน (Fast short-circuit ตอบปฏิเสธทันที ไม่ต้องต่อ API)
   if (isBlatantlyOutOfScope(question, history)) {
@@ -523,11 +526,12 @@ export async function processLocalChat(
     }
   }
 
-  // 1. ดึงสมุนไพร/ตำรับยาจาก Supabase (ถ้าเปิดฐานข้อมูลภายใน) พร้อมกับค้น PubMed (ถ้าเปิดงานวิจัยภายนอก) แบบขนาน
+  // 1. ดึงสมุนไพร/ตำรับยาจาก Supabase (ถ้าเปิดฐานข้อมูลภายใน), ข้อมูล DDI ม.มหิดล, พร้อมกับค้น PubMed แบบขนาน
   const [
     herbsRes,
     formulasRes,
     knowledgeRes,
+    mahidolDdiRes,
     pubmedResults,
   ] = await Promise.all([
     enableInternal
@@ -546,7 +550,15 @@ export async function processLocalChat(
       ? supabase
           .from("knowledge_documents")
           .select("id, title, category, content, source, source_url")
+          .neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")
           .limit(15)
+      : Promise.resolve({ data: [] }),
+    enableMahidol
+      ? supabase
+          .from("knowledge_documents")
+          .select("id, title, category, content, source, source_url")
+          .eq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")
+          .limit(500)
       : Promise.resolve({ data: [] }),
     enableExternal && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
   ]);
@@ -554,6 +566,7 @@ export async function processLocalChat(
   const allHerbs = (herbsRes.data || []) as any[];
   const allFormulas = (formulasRes.data || []) as any[];
   const allKnowledge = (knowledgeRes.data || []) as any[];
+  const allMahidolDdi = (mahidolDdiRes.data || []) as any[];
 
   // 2. ค้นหาสมุนไพรและตำรับที่เกี่ยวข้องกับคำถาม
   const nq = normalizeThaiName(question);
@@ -682,6 +695,44 @@ export async function processLocalChat(
     }
   }
 
+  // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
+  let matchedMahidol: any[] = [];
+  if (enableMahidol && allMahidolDdi.length > 0) {
+    const qLower = question.toLowerCase();
+    matchedMahidol = allMahidolDdi.filter((doc) => {
+      const titleLower = (doc.title || "").toLowerCase();
+      const contentLower = (doc.content || "").toLowerCase();
+      // Check herb match
+      const herbMatch =
+        matchedHerbs.some((h) => {
+          const hn = (h.name_thai || "").toLowerCase();
+          const nhn = normalizeThaiName(h.name_thai || "");
+          return titleLower.includes(hn) || (nhn.length >= 3 && normalizeThaiName(doc.title).includes(nhn));
+        }) ||
+        (exactMatchedHerbs.length > 0 &&
+          exactMatchedHerbs.some((h) => {
+            const hn = (h.name_thai || "").toLowerCase();
+            return titleLower.includes(hn);
+          })) ||
+        qLower.includes("อันตรกิริยา") ||
+        qLower.includes("กินร่วม") ||
+        qLower.includes("ร่วมกับ");
+
+      if (!herbMatch && matchedHerbs.length > 0) return false;
+
+      // Check drug or herb keyword in title or content
+      const words = qLower.split(/[\s,+/]+/).filter((w) => w.length >= 2);
+      return words.some((w) => titleLower.includes(w) || contentLower.includes(w));
+    }).slice(0, 8);
+
+    if (matchedMahidol.length > 0) {
+      contextText += "\n[ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน — ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล]\n";
+      matchedMahidol.forEach((m) => {
+        contextText += `หัวข้อ: ${m.title}\n${m.content}\nลิงก์อ้างอิง: ${m.source_url}\n\n`;
+      });
+    }
+  }
+
   if (enableExternal) {
     // ใส่งานวิจัยสากลจาก PubMed เข้า Context
     if (pubmedResults.length > 0) {
@@ -723,6 +774,9 @@ export async function processLocalChat(
   }
   if (!enableInternal) {
     dynamicInstructions += "\n\n⚠️ หมายเหตุสำคัญ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลสมุนไพรและตำรับยาภายในเว็บ ให้ตอบตามหลักวิชาการและการดูแลตนเองทั่วไป";
+  }
+  if (!enableMahidol) {
+    dynamicInstructions += "\n\n⚠️ หมายเหตุสำคัญ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล ห้ามนำข้อมูล DDI มหิดลมาอ้างอิง";
   }
   if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
     dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
@@ -906,21 +960,40 @@ export async function processLocalChat(
         thaijo: enableExternal ? thaijoResults : [],
       };
 
-  if (
-    enableInternal &&
-    !isOutOfScope &&
-    matchedHerbs.length === 0 &&
-    matchedFormulas.length === 0 &&
-    allKnowledge.length > 0
-  ) {
-    sourcesPayload.knowledge = allKnowledge.slice(0, 2).map((k: any) => ({
-      id: k.id,
-      title: k.title,
-      category: k.category,
-      content: k.content,
-      source: k.source || "คู่มือ 10 กลุ่มอาการ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      source_url: k.source_url || undefined,
-    }));
+  if (!isOutOfScope) {
+    const knowledgeItems: any[] = [];
+    if (enableMahidol && matchedMahidol.length > 0) {
+      knowledgeItems.push(
+        ...matchedMahidol.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          category: m.category,
+          content: m.content,
+          source: m.source || "ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
+          source_url: m.source_url || undefined,
+        }))
+      );
+    }
+    if (
+      enableInternal &&
+      matchedHerbs.length === 0 &&
+      matchedFormulas.length === 0 &&
+      allKnowledge.length > 0
+    ) {
+      knowledgeItems.push(
+        ...allKnowledge.slice(0, 2).map((k: any) => ({
+          id: k.id,
+          title: k.title,
+          category: k.category,
+          content: k.content,
+          source: k.source || "คู่มือ 10 กลุ่มอาการ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
+          source_url: k.source_url || undefined,
+        }))
+      );
+    }
+    if (knowledgeItems.length > 0) {
+      sourcesPayload.knowledge = knowledgeItems;
+    }
   }
 
   const finalResponse = `${answer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;

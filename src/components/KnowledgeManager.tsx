@@ -87,6 +87,19 @@ const KnowledgeManager = () => {
     });
   };
 
+  const handleToggleMahidol = (checked: boolean) => {
+    const updated = saveKnowledgeSettings({ enable_mahidol_ddi: checked });
+    setKnowledgeSettings(updated);
+    toast({
+      title: checked
+        ? "เปิดการใช้ฐานข้อมูลอันตรกิริยา ม.มหิดล แล้ว"
+        : "ปิดการใช้ฐานข้อมูลอันตรกิริยา ม.มหิดล แล้ว",
+      description: checked
+        ? "AI จะใช้ข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน จากคณะเภสัชศาสตร์ ม.มหิดล พร้อมอ้างอิงลิงก์ตรง"
+        : "AI จะไม่ดึงข้อมูลอันตรกิริยายาจาก ม.มหิดล มาประกอบคำตอบ",
+    });
+  };
+
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -244,7 +257,7 @@ const KnowledgeManager = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* เมนูที่ 1: แหล่งข้อมูลวิจัยภายนอก (PubMed & ThaiJO) + อ้างอิง APA 7 */}
           <div
             className={`p-3.5 rounded-lg border transition-all ${
@@ -358,12 +371,70 @@ const KnowledgeManager = () => {
               />
             </div>
           </div>
+
+          {/* เมนูที่ 3: ฐานข้อมูลอันตรกิริยายา คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล */}
+          <div
+            className={`p-3.5 rounded-lg border transition-all ${
+              knowledgeSettings.enable_mahidol_ddi
+                ? "bg-card border-primary/30 shadow-xs"
+                : "bg-card/50 border-border opacity-70"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <BookOpen
+                    className={`w-4 h-4 ${
+                      knowledgeSettings.enable_mahidol_ddi
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                  <span className="text-sm font-medium text-foreground font-thai">
+                    3. อันตรกิริยาระหว่างยา ม.มหิดล (Herb-Drug Interaction)
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล ระดับความรุนแรง และข้อแนะนำทางการแพทย์
+                </p>
+                <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                  <Badge
+                    variant={
+                      knowledgeSettings.enable_mahidol_ddi
+                        ? "default"
+                        : "secondary"
+                    }
+                    className="text-[10px] px-1.5 py-0"
+                  >
+                    {knowledgeSettings.enable_mahidol_ddi
+                      ? "เปิดใช้งาน"
+                      : "ปิดใช้งาน"}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    ม.มหิดล
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    DDI Database
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    ลิงก์อ้างอิงตรง
+                  </Badge>
+                </div>
+              </div>
+              <Switch
+                checked={knowledgeSettings.enable_mahidol_ddi}
+                onCheckedChange={handleToggleMahidol}
+                aria-label="เปิด-ปิดฐานข้อมูลอันตรกิริยายา ม.มหิดล"
+              />
+            </div>
+          </div>
         </div>
 
         {!knowledgeSettings.enable_external_research &&
-          !knowledgeSettings.enable_internal_db && (
+          !knowledgeSettings.enable_internal_db &&
+          !knowledgeSettings.enable_mahidol_ddi && (
             <div className="text-xs text-destructive bg-destructive/10 p-2.5 rounded-md flex items-center gap-1.5">
-              ⚠️ คุณกำลังปิดทั้งฐานข้อมูลภายในและงานวิจัยภายนอก AI จะตอบด้วยความรู้ทั่วไปและแนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุขเท่านั้น
+              ⚠️ คุณกำลังปิดทุกแหล่งข้อมูล AI จะตอบด้วยความรู้ทั่วไปและแนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุขเท่านั้น
             </div>
           )}
       </div>
