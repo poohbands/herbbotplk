@@ -398,6 +398,19 @@ export function validateAndPruneSources(
       if (!herbInText && !drugInText && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion) {
         continue;
       }
+    } else if (k.category === "บัญชียาหลักแห่งชาติด้านสมุนไพร") {
+      // ตรวจสอบชื่อยาในเอกสารบัญชียาหลักแห่งชาติ (เช่น บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาขมิ้นชัน (พ.ศ. 2568))
+      const mDrug = title.match(/บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*(ยา[^\s(]+|[^\s(]+)/);
+      const docDrugName = mDrug ? mDrug[1].trim() : "";
+      const docDrugClean = docDrugName.replace(/^ยา/, "").trim();
+
+      const drugMentioned =
+        (docDrugName && (qLower.includes(docDrugName.toLowerCase()) || aLower.includes(docDrugName.toLowerCase()))) ||
+        (docDrugClean.length >= 2 && (qLower.includes(docDrugClean.toLowerCase()) || aLower.includes(docDrugClean.toLowerCase())));
+
+      if (!drugMentioned) {
+        continue; // ตัดเอกสารบัญชียาหลักที่ไม่เกี่ยวข้องทิ้ง
+      }
     }
 
     seenKnowledgeTitles.add(title);
@@ -748,9 +761,12 @@ drugs:
      Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
    - กรณีอ้างอิงงานวิจัยไทย ThaiJO (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
      Author. (Year/ม.ป.ป.). Title. *Journal*. URL
-   - กรณีอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร:
-     คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
-   - กรณีอ้างอิง 10 กลุ่มอาการ สธ.:
+    - กรณีอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร (ให้อ้างอิงปี พ.ศ. ตามรายการยาที่ระบุใน CONTEXT หรือเอกสารกำกับยา):
+      - สำหรับรายการยาที่ได้รับการปรับปรุง/เพิ่มเติมในฉบับล่าสุด (พ.ศ. 2568 เช่น ยาฟ้าทะลายโจร, ยาขมิ้นชันที่มีข้อบ่งใช้ Functional dyspepsia, ยาบำรุงน้ำนม, ยาศุขไสยาสน์, ยาประสะกัญชา, ยาไพลสูตร 2, ยาพริก 0.075, ยาทาพระเส้น, ยาตรีผลาแก้ท้องผูก ฯลฯ):
+        คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
+      - สำหรับรายการยาในบัญชียาหลักเดิม (พ.ศ. 2566):
+        คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2566). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2566*. ราชกิจจานุเบกษา.
+    - กรณีอ้างอิง 10 กลุ่มอาการ สธ.:
      กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ*. กระทรวงสาธารณสุข.
 6. **กฎเหล็ก: ห้ามสร้างหรือแต่งแหล่งอ้างอิงงานวิจัยเอง (No Hallucination — สำคัญที่สุด):**
    - อ้างอิงได้เฉพาะแหล่งข้อมูลที่มีอยู่ใน <CONTEXT> ที่ระบบให้มาเท่านั้น
@@ -851,7 +867,7 @@ export async function processLocalChat(
           .from("knowledge_documents")
           .select("id, title, category, content, source, source_url")
           .neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")
-          .limit(15)
+          .limit(200)
       : Promise.resolve({ data: [] }),
     enableMahidol
       ? supabase
@@ -1253,22 +1269,47 @@ export async function processLocalChat(
         }))
       );
     }
-    if (
-      enableInternal &&
-      matchedHerbs.length === 0 &&
-      matchedFormulas.length === 0 &&
-      allKnowledge.length > 0
-    ) {
-      knowledgeItems.push(
-        ...allKnowledge.slice(0, 2).map((k: any) => ({
-          id: k.id,
-          title: k.title,
-          category: k.category,
-          content: k.content,
-          source: k.source || "คู่มือ 10 กลุ่มอาการ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
-          source_url: k.source_url || undefined,
-        }))
-      );
+    if (enableInternal && allKnowledge.length > 0) {
+      if (matchedHerbs.length === 0 && matchedFormulas.length === 0) {
+        knowledgeItems.push(
+          ...allKnowledge.slice(0, 2).map((k: any) => ({
+            id: k.id,
+            title: k.title,
+            category: k.category,
+            content: k.content,
+            source: k.source || "คู่มือ 10 กลุ่มอาการ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
+            source_url: k.source_url || undefined,
+          }))
+        );
+      } else {
+        // ดึงเอกสาร NLEM หรือเอกสารความรู้ที่ตรงกับคำถาม/สมุนไพรเข้า sources
+        const matchedKnowledgeDocs = allKnowledge.filter((k: any) => {
+          const kt = (k.title || "").toLowerCase();
+          const qLower = question.toLowerCase();
+          if (k.category === "บัญชียาหลักแห่งชาติด้านสมุนไพร") {
+            const mDrug = kt.match(/บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*(ยา[^\s(]+|[^\s(]+)/);
+            const docDrugName = mDrug ? mDrug[1].trim() : "";
+            const docDrugClean = docDrugName.replace(/^ยา/, "").trim();
+            return (
+              (docDrugName && qLower.includes(docDrugName.toLowerCase())) ||
+              (docDrugClean.length >= 2 && qLower.includes(docDrugClean.toLowerCase()))
+            );
+          }
+          return kt.split(/\s+/).some((w: string) => w.length >= 3 && qLower.includes(w));
+        });
+        if (matchedKnowledgeDocs.length > 0) {
+          knowledgeItems.push(
+            ...matchedKnowledgeDocs.slice(0, 3).map((k: any) => ({
+              id: k.id,
+              title: k.title,
+              category: k.category,
+              content: k.content,
+              source: k.source || "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+              source_url: k.source_url || undefined,
+            }))
+          );
+        }
+      }
     }
     if (knowledgeItems.length > 0) {
       rawSourcesPayload.knowledge = knowledgeItems;

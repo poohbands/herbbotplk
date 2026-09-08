@@ -317,5 +317,38 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
       expect(pruned.knowledge.some((k) => k.title.includes("มะม่วง"))).toBe(false);
       expect(pruned.knowledge.some((k) => k.title.includes("กล้วย"))).toBe(false);
     });
+
+    it("validateAndPruneSources retains NLEM knowledge documents matching question and excludes unrelated ones", () => {
+      const question = "ยาขมิ้นชันในบัญชียาหลักแห่งชาติมีสรรพคุณอย่างไร";
+      const answer = "ยาขมิ้นชันในบัญชียาหลักแห่งชาติ พ.ศ. 2568 มีสรรพคุณบรรเทาอาการแน่นจุกเสียด และ Functional dyspepsia";
+      const rawSources = {
+        internal: [],
+        pubmed: [],
+        thaijo: [],
+        knowledge: [
+          {
+            id: "nlem-1",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาขมิ้นชัน (พ.ศ. 2568)",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ยาขมิ้นชัน บรรเทาอาการแน่นจุกเสียด",
+            source: "ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568",
+          },
+          {
+            id: "nlem-2",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาหอมเทพจิตร (พ.ศ. 2566)",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ยาหอมเทพจิตร แก้ลมวิงเวียน",
+            source: "ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2566",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(question, answer, rawSources);
+
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].title).toContain("ยาขมิ้นชัน");
+      expect(pruned.knowledge.some((k) => k.title.includes("ยาหอมเทพจิตร"))).toBe(false);
+    });
   });
 });
+
