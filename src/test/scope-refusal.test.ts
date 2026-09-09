@@ -36,6 +36,17 @@ describe("Out-of-scope refusal policy (หมอยาพิษณุโลก)"
       expect(isBlatantlyOutOfScope("ยาเบญจกูล มีข้อห้ามอะไรบ้าง")).toBe(false);
     });
 
+    it("keeps questions about system sources, references, and verification strictly in scope", () => {
+      expect(
+        isBlatantlyOutOfScope(
+          "ข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันที่ระบบใช้ตอบ สามารถตรวจสอบจากแหล่งอ้างอิงใดได้บ้าง?"
+        )
+      ).toBe(false);
+      expect(isBlatantlyOutOfScope("ระบบใช้แหล่งอ้างอิงอะไรบ้างในการตอบ")).toBe(false);
+      expect(isBlatantlyOutOfScope("ข้อมูลในระบบมาจากไหน น่าเชื่อถือแค่ไหน")).toBe(false);
+      expect(isBlatantlyOutOfScope("ฐานข้อมูลที่ระบบใช้มีอะไรบ้าง")).toBe(false);
+    });
+
     it("keeps follow-up turns in scope when history mentions herbs or drugs", () => {
       const history = [
         { role: "user", content: "ฟ้าทะลายโจรช่วยลดไข้ได้ไหม" },
