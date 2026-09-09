@@ -339,19 +339,19 @@ export function formatHerb97ForAiContext(items: Herb97Item[]): string {
   if (!items || items.length === 0) return "";
 
   const cannabisItems = items.filter((i) => i.has_cannabis);
-  let out = "\n[ข้อมูลเฉพาะจากบัญชียาสมุนไพร 97 รายการ (ไฟล์ 97 herb.xlsx)]:\n";
+  let out = "\n[ข้อมูลเภสัชกรรมและแนวทางการใช้ยาสมุนไพร]:\n";
 
   // หากมีตำรับยากัญชา ให้สรุปภาพรวมการสั่งจ่ายและข้อกำหนดกฎหมาย
   if (cannabisItems.length > 0) {
-    out += `\n🌿 [ภาพรวมตำรับยากัญชาทางการแพทย์ในบัญชียาสมุนไพร (${cannabisItems.length} ตำรับ)]:`;
+    out += `\n🌿 [ภาพรวมตำรับยากัญชาทางการแพทย์ (${cannabisItems.length} ตำรับ)]:`;
     out += `\n• ตำรับยากัญชาทางการแพทย์ทุกตำรับต้องสั่งจ่ายโดยแพทย์หรือแพทย์แผนไทยที่มีใบอนุญาตรับรองจากกระทรวงสาธารณสุขเท่านั้น`;
     out += `\n• ข้อห้ามใช้สากล: ห้ามใช้ในสตรีมีครรภ์ สตรีให้นมบุตร และผู้มีอายุต่ำกว่า 18 ปี`;
-    out += `\n• รายการตำรับที่เกี่ยวข้อง: ${cannabisItems.map((c) => `${c.index}. ${c.name}`).join(", ")}\n`;
+    out += `\n• รายการตำรับที่เกี่ยวข้อง: ${cannabisItems.map((c) => c.name).join(", ")}\n`;
   }
 
   for (const item of items) {
     const cannabisTag = item.has_cannabis ? " [⚠️ ตำรับยาที่มีส่วนผสมของกัญชาทางการแพทย์]" : "";
-    out += `\n--- ข้อมูลยา: ${item.name}${cannabisTag} (ลำดับที่ ${item.index} ในไฟล์ 97 herb.xlsx) ---\n`;
+    out += `\n--- ข้อมูลยา: ${item.name}${cannabisTag} ---\n`;
     if (item.has_cannabis) {
       out += `• หมายเหตุพิเศษ: ยานี้เป็นตำรับที่มีส่วนผสมจากกัญชาทางการแพทย์ ต้องสั่งจ่ายโดยแพทย์/แพทย์แผนไทยที่มีใบอนุญาต ห้ามใช้ในหญิงตั้งครรภ์ หญิงให้นมบุตร และผู้มีอายุต่ำกว่า 18 ปี\n`;
     }
