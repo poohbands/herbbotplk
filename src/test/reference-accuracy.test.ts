@@ -349,6 +349,31 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
       expect(pruned.knowledge[0].title).toContain("ยาขมิ้นชัน");
       expect(pruned.knowledge.some((k) => k.title.includes("ยาหอมเทพจิตร"))).toBe(false);
     });
+
+    it("validateAndPruneSources rewrites NLEM / ratchakitcha source_url to internal herbs page URL", () => {
+      const question = "ยาขมิ้นชันในบัญชียาหลักแห่งชาติ";
+      const answer = "ยาขมิ้นชันใช้บรรเทาอาการแน่นจุกเสียด";
+      const rawSources = {
+        internal: [],
+        pubmed: [],
+        thaijo: [],
+        knowledge: [
+          {
+            id: "nlem-1",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาขมิ้นชัน (พ.ศ. 2568)",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ยาขมิ้นชัน บรรเทาอาการแน่นจุกเสียด",
+            source: "ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ",
+            source_url: "https://ratchakitcha.soc.go.th/documents/123",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(question, answer, rawSources);
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].source_url).not.toContain("ratchakitcha.soc.go.th");
+      expect(pruned.knowledge[0].source_url).toBe(`/herbs?name=${encodeURIComponent("ยาขมิ้นชัน")}`);
+    });
   });
 });
 

@@ -84,6 +84,42 @@ async function copyLink(url: string) {
   }
 }
 
+/** สกัดชื่อยาหรือตัวยาจากหัวข้อเอกสารบัญชียาหลักแห่งชาติด้านสมุนไพร */
+function extractDrugNameFromKnowledge(title?: string | null): string {
+  if (!title) return "";
+  const m = title.match(/บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*(.+?)(?:\s*\(พ\.ศ\.|\s*$)/);
+  if (m) return m[1].trim();
+  return title
+    .replace(/^บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*/, "")
+    .replace(/\s*\(พ\.ศ\..*?\)$/, "")
+    .trim();
+}
+
+/** ตรวจสอบว่าเอกสารเป็นรายการในบัญชียาหลักแห่งชาติด้านสมุนไพรหรือไม่ */
+function isNlemKnowledge(k: KnowledgeSource): boolean {
+  return (
+    k.category === "บัญชียาหลักแห่งชาติด้านสมุนไพร" ||
+    Boolean(k.title && k.title.includes("บัญชียาหลักแห่งชาติ")) ||
+    Boolean(k.source && k.source.includes("บัญชียาหลักแห่งชาติ")) ||
+    Boolean(k.source_url && k.source_url.includes("ratchakitcha"))
+  );
+}
+
+/** ดึง URL ที่ปลอดภัยสำหรับแสดงผลเอกสารความรู้ (โดยชี้ไปที่ข้อมูลตัวยาภายในระบบ ไม่ชี้ไปที่ ratchakitcha) */
+function getKnowledgeLink(k: KnowledgeSource): string {
+  if (isNlemKnowledge(k)) {
+    const drugName = extractDrugNameFromKnowledge(k.title);
+    if (drugName) {
+      return `${window.location.origin}/herbs?name=${encodeURIComponent(drugName)}`;
+    }
+    return `${window.location.origin}/herbs`;
+  }
+  if (k.source_url && !k.source_url.includes("ratchakitcha.soc.go.th")) {
+    return k.source_url.startsWith("/") ? `${window.location.origin}${k.source_url}` : k.source_url;
+  }
+  return "";
+}
+
 const DEFAULT_CATEGORIES = [
   {
     icon: "🌿",
@@ -236,8 +272,27 @@ const ChatPage = () => {
   }, []);
 
   const handleOpenKnowledge = async (k: KnowledgeSource) => {
+    // 1. ถ้าเป็นรายการจากบัญชียาหลักแห่งชาติด้านสมุนไพร ให้เปิดข้อมูลตัวยาที่ค้นหาภายในระบบ ไม่ link ไปที่ ratchakitcha
+    if (isNlemKnowledge(k)) {
+      const drugName = extractDrugNameFromKnowledge(k.title);
+      const targetUrl = drugName
+        ? `${window.location.origin}/herbs?name=${encodeURIComponent(drugName)}`
+        : `${window.location.origin}/herbs`;
+      openExternal(targetUrl);
+      return;
+    }
+
+    // 2. ถ้าเป็นลิงก์ภายนอกอื่นที่ไม่ใช่ ratchakitcha ให้เปิดตามปกติ
     if (k.source_url && (k.source_url.startsWith("http://") || k.source_url.startsWith("https://"))) {
-      openExternal(k.source_url);
+      if (!k.source_url.includes("ratchakitcha.soc.go.th")) {
+        openExternal(k.source_url);
+        return;
+      }
+    }
+
+    // 3. ถ้าเป็นลิงก์ภายใน
+    if (k.source_url && k.source_url.startsWith("/herbs")) {
+      openExternal(`${window.location.origin}${k.source_url}`);
       return;
     }
     setSelectedKnowledgeDoc(k);
@@ -724,21 +779,36 @@ const ChatPage = () => {
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{
-                            a: ({ href, children }) => (
-                              <a
-                                href={href}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  if (href) openExternal(href);
-                                }}
-                                className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:text-primary/80 font-medium"
-                              >
-                                <span>{children}</span>
-                                <ExternalLink className="w-3 h-3 inline-block shrink-0" />
-                              </a>
-                            ),
+                            a: ({ href, children }) => {
+                              let targetUrl = href || "";
+                              if (targetUrl.includes("ratchakitcha.soc.go.th")) {
+                                const linkText =
+                                  typeof children === "string"
+                                    ? children
+                                    : Array.isArray(children)
+                                    ? children.map((c) => (typeof c === "string" ? c : "")).join("")
+                                    : "";
+                                const drugName = extractDrugNameFromKnowledge(linkText);
+                                targetUrl = drugName
+                                  ? `${window.location.origin}/herbs?name=${encodeURIComponent(drugName)}`
+                                  : `${window.location.origin}/herbs`;
+                              }
+                              return (
+                                <a
+                                  href={targetUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    if (targetUrl) openExternal(targetUrl);
+                                  }}
+                                  className="inline-flex items-center gap-1 text-primary underline underline-offset-2 hover:text-primary/80 font-medium"
+                                >
+                                  <span>{children}</span>
+                                  <ExternalLink className="w-3 h-3 inline-block shrink-0" />
+                                </a>
+                              );
+                            },
                             table: ({ children }) => (
                               <div className="my-3 overflow-x-auto rounded-lg border border-primary/20 shadow-xs">
                                 <table className="w-full text-left text-xs border-collapse">
@@ -948,12 +1018,12 @@ const ChatPage = () => {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-1.5 shrink-0">
-                                    {k.source_url && (
+                                    {getKnowledgeLink(k) && (
                                       <button
                                         type="button"
                                         aria-label="คัดลอกลิงก์"
-                                        title="คัดลอกลิงก์"
-                                        onClick={() => copyLink(k.source_url!)}
+                                        title={isNlemKnowledge(k) ? "คัดลอกลิงก์ข้อมูลตัวยา" : "คัดลอกลิงก์"}
+                                        onClick={() => copyLink(getKnowledgeLink(k))}
                                         className="p-1.5 rounded-md hover:bg-background text-muted-foreground transition-colors cursor-pointer"
                                       >
                                         <Copy className="w-3.5 h-3.5" />
@@ -963,7 +1033,7 @@ const ChatPage = () => {
                                       type="button"
                                       onClick={() => handleOpenKnowledge(k)}
                                       className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs transition-colors cursor-pointer"
-                                      title="เปิดอ่านเอกสารองค์ความรู้"
+                                      title={isNlemKnowledge(k) ? "เปิดข้อมูลตัวยาที่ค้นหา" : "เปิดอ่านเอกสารองค์ความรู้"}
                                     >
                                       <span>เปิดเอกสาร</span>
                                       <ExternalLink className="w-3 h-3" />
@@ -994,9 +1064,10 @@ const ChatPage = () => {
                                       ...(msg.sources?.thaijo || []).map(
                                         (t) => `${t.authors ? `${t.authors}. ` : ""}(${t.year || "ม.ป.ป."}). ${t.title}. ${t.journal}. ${t.url}`
                                       ),
-                                      ...(msg.sources?.knowledge || []).map(
-                                        (k) => `${k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). ${k.title}. กระทรวงสาธารณสุข.${k.source_url ? ` ${k.source_url}` : ""}`
-                                      ),
+                                      ...(msg.sources?.knowledge || []).map((k) => {
+                                        const docUrl = getKnowledgeLink(k);
+                                        return `${k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). ${k.title}. กระทรวงสาธารณสุข.${docUrl ? ` ${docUrl}` : ""}`;
+                                      }),
                                     ].join("\n\n");
                                     copyLink(allApa);
                                     toast.success("คัดลอกรายการอ้างอิง APA 7 ทั้งหมดแล้ว");
@@ -1073,42 +1144,47 @@ const ChatPage = () => {
                                   </button>
                                 </div>
                               ))}
-                              {(msg.sources?.knowledge || []).map((k) => (
-                                <div
-                                  key={`apa-knowledge-${k.id}`}
-                                  className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
-                                >
-                                  <p className="leading-relaxed flex-1">
-                                    {k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). <em>{k.title}</em>. กระทรวงสาธารณสุข.
-                                    {k.source_url && (
-                                      <>
-                                        {" "}
-                                        <a
-                                          href={k.source_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            openExternal(k.source_url!);
-                                          }}
-                                          className="text-primary hover:underline break-all"
-                                        >
-                                          {k.source_url}
-                                        </a>
-                                      </>
-                                    )}
-                                  </p>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenKnowledge(k)}
-                                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
-                                    title="เปิดอ่านเอกสารองค์ความรู้"
+                              {(msg.sources?.knowledge || []).map((k) => {
+                                const docUrl = getKnowledgeLink(k);
+                                const isNlem = isNlemKnowledge(k);
+                                return (
+                                  <div
+                                    key={`apa-knowledge-${k.id}`}
+                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
                                   >
-                                    <span>เปิดเอกสาร</span>
-                                    <ExternalLink className="w-2.5 h-2.5" />
-                                  </button>
-                                </div>
-                              ))}
+                                    <p className="leading-relaxed flex-1">
+                                      {k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). <em>{k.title}</em>. กระทรวงสาธารณสุข.
+                                      {docUrl && (
+                                        <>
+                                          {" "}
+                                          <a
+                                            href={docUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              openExternal(docUrl);
+                                            }}
+                                            className="text-primary hover:underline break-all"
+                                            title={isNlem ? "เปิดดูข้อมูลตัวยาในระบบ" : undefined}
+                                          >
+                                            {docUrl}
+                                          </a>
+                                        </>
+                                      )}
+                                    </p>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenKnowledge(k)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
+                                      title={isNlem ? "เปิดข้อมูลตัวยาที่ค้นหา" : "เปิดอ่านเอกสารองค์ความรู้"}
+                                    >
+                                      <span>เปิดเอกสาร</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                               </div>
                             </div>
                           )}

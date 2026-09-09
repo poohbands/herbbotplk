@@ -414,7 +414,26 @@ export function validateAndPruneSources(
     }
 
     seenKnowledgeTitles.add(title);
-    validKnowledge.push(k);
+
+    let docUrl = k.source_url;
+    const isNlem =
+      k.category === "บัญชียาหลักแห่งชาติด้านสมุนไพร" ||
+      title.includes("บัญชียาหลักแห่งชาติ") ||
+      (k.source && k.source.includes("บัญชียาหลักแห่งชาติ")) ||
+      (docUrl && docUrl.includes("ratchakitcha"));
+
+    if (isNlem) {
+      const mDrug = title.match(/บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*(.+?)(?:\s*\(พ\.ศ\.|\s*$)/);
+      const drugName = mDrug
+        ? mDrug[1].trim()
+        : title.replace(/^บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*/, "").replace(/\s*\(พ\.ศ\..*?\)$/, "").trim();
+      docUrl = drugName ? `/herbs?name=${encodeURIComponent(drugName)}` : "/herbs";
+    }
+
+    validKnowledge.push({
+      ...k,
+      source_url: docUrl,
+    });
   }
 
   return {
@@ -781,6 +800,7 @@ drugs:
    ก่อนจบคำตอบ ให้เขียนหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบมาตรฐาน APA 7 เฉพาะรายการเอกสารต้นทางหรือวิจัยที่เกี่ยวข้องโดยตรงกับคำถามและนำมาใช้ตอบจริง:
     - **ข้อกำหนดเรื่องฐานข้อมูลภายใน (สำคัญมาก):** ให้ยังคงใช้ข้อมูลสรรพคุณ ขนาด วิธีใช้ และข้อควรระวังจากฐานข้อมูลยาภายในตามปกติ แต่ **ไม่ต้องแสดงรายการอ้างอิง "สำนักงานสาธารณสุขจังหวัดพิษณุโลก" ในหัวข้อเอกสารอ้างอิง** (ให้ซ่อนรายการอ้างอิงของ สสจ.พิษณุโลก ไว้)
     - กรณีอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร (ให้อ้างอิงปี พ.ศ. ตามรายการยาที่ระบุใน CONTEXT หรือเอกสารกำกับยา):
+      - **ข้อกำหนดเรื่องการอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร (สำคัญมาก):** ห้ามใส่ลิงก์หรือ URL ไปยัง https://ratchakitcha.soc.go.th/ โดยเด็ดขาด หากจะระบุลิงก์หรือเมื่อผู้ใช้เปิดดูข้อมูลยา ให้ชี้ไปที่ข้อมูลตัวยาภายในระบบ (/herbs?name=ชื่อยา) หรืออ้างอิงเฉพาะชื่อประกาศและปี พ.ศ. เท่านั้น
       - สำหรับรายการยาที่ได้รับการปรับปรุง/เพิ่มเติมในฉบับล่าสุด (พ.ศ. 2568 เช่น ยาฟ้าทะลายโจร, ยาขมิ้นชันที่มีข้อบ่งใช้ Functional dyspepsia, ยาบำรุงน้ำนม, ยาศุขไสยาสน์, ยาประสะกัญชา, ยาไพลสูตร 2, ยาพริก 0.075, ยาทาพระเส้น, ยาตรีผลาแก้ท้องผูก ฯลฯ):
         คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
       - สำหรับรายการยาในบัญชียาหลักเดิม (พ.ศ. 2566):
@@ -1324,14 +1344,28 @@ export async function processLocalChat(
         });
         if (matchedKnowledgeDocs.length > 0) {
           knowledgeItems.push(
-            ...matchedKnowledgeDocs.slice(0, 3).map((k: any) => ({
-              id: k.id,
-              title: k.title,
-              category: k.category,
-              content: k.content,
-              source: k.source || "บัญชียาหลักแห่งชาติด้านสมุนไพร",
-              source_url: k.source_url || undefined,
-            }))
+            ...matchedKnowledgeDocs.slice(0, 3).map((k: any) => {
+              let docUrl = k.source_url || undefined;
+              const isNlem =
+                k.category === "บัญชียาหลักแห่งชาติด้านสมุนไพร" ||
+                (k.title && k.title.includes("บัญชียาหลักแห่งชาติ")) ||
+                (docUrl && docUrl.includes("ratchakitcha"));
+              if (isNlem) {
+                const mDrug = (k.title || "").match(/บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*(.+?)(?:\s*\(พ\.ศ\.|\s*$)/);
+                const drugName = mDrug
+                  ? mDrug[1].trim()
+                  : (k.title || "").replace(/^บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*/, "").replace(/\s*\(พ\.ศ\..*?\)$/, "").trim();
+                docUrl = drugName ? `/herbs?name=${encodeURIComponent(drugName)}` : "/herbs";
+              }
+              return {
+                id: k.id,
+                title: k.title,
+                category: k.category,
+                content: k.content,
+                source: k.source || "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+                source_url: docUrl,
+              };
+            })
           );
         }
       }
