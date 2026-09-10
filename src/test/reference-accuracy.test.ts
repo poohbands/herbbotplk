@@ -3,9 +3,11 @@ import {
   findRelevantThaiJo,
   normalizeThaiName,
   findRelevantMahidolDdi,
+  findRelevantTuDdi,
   extractQuestionEntities,
   validateAndPruneSources,
   sanitizeMahidolReferences,
+  sanitizeTuReferences,
   buildSystemPrompt,
 } from "../lib/local-chat-service";
 
@@ -454,6 +456,94 @@ drugs: warfarin
       expect(promptWithoutMahidol).toContain("ข้อห้ามเด็ดขาดเรื่อง ม.มหิดล");
       expect(promptWithoutMahidol).toContain("ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล");
       expect(promptWithoutMahidol).not.toContain("ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน");
+    });
+  });
+
+  describe("TU DDI Database matching & strict pruning (enable_tu_ddi)", () => {
+    it("findRelevantTuDdi returns interactions matching herb and drug from TU dataset", () => {
+      const matched = findRelevantTuDdi("ขมิ้นชันกินกับ warfarin ได้ไหม");
+      expect(matched.length).toBeGreaterThan(0);
+      expect(matched.some((m) => m.title.includes("ขมิ้นชัน") && m.title.includes("Warfarin"))).toBe(true);
+      expect(matched[0].source).toContain("ธรรมศาสตร์");
+    });
+
+    it("validateAndPruneSources strips TU DDI documents when enable_tu_ddi is false", () => {
+      const rawSources = {
+        internal: [],
+        pubmed: [],
+        thaijo: [],
+        knowledge: [
+          {
+            id: "tu-1",
+            title: "อันตรกิริยาระหว่าง ขมิ้นชัน กับ Warfarin (ม.ธรรมศาสตร์)",
+            category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)",
+            source: "สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์",
+            content: "ขมิ้นชันอาจเพิ่มฤทธิ์ต้านการแข็งตัวของเลือดของ Warfarin",
+          },
+          {
+            id: "k-1",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาขมิ้นชัน",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            source: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ข้อบ่งใช้: บรรเทาอาการท้องอืด ท้องเฟ้อ",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(
+        "ขมิ้นชันกินกับ warfarin ได้ไหม",
+        "ขมิ้นชันอาจเพิ่มฤทธิ์ของ warfarin",
+        rawSources,
+        {
+          enable_external_research: true,
+          enable_internal_db: true,
+          enable_mahidol_ddi: true,
+          enable_tu_ddi: false,
+        }
+      );
+
+      expect(pruned.knowledge.some((k) => k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)")).toBe(false);
+      expect(pruned.knowledge.some((k) => k.source?.includes("ธรรมศาสตร์"))).toBe(false);
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].title).toContain("ยาขมิ้นชัน");
+    });
+
+    it("sanitizeTuReferences strips lines citing Thammasat, Prof. Arunporn, and empty APA heading", () => {
+      const responseWithTu = `ขมิ้นชันอาจมีผลเสริมฤทธิ์ของยาวาร์ฟาริน
+ศ. ดร.ภญ.อรุณพร อิฐรัตน์ สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์ รายงานว่าควรระวัง
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+อิฐรัตน์, อ. (2566). *ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interaction)*. สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์.
+
+💡 ข้อแนะนำ: ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้
+[METADATA]
+category: drug_interaction
+severity: moderate
+herbs: ขมิ้นชัน
+drugs: warfarin
+[/METADATA]`;
+
+      const sanitized = sanitizeTuReferences(responseWithTu);
+
+      expect(sanitized).not.toContain("มหาวิทยาลัยธรรมศาสตร์");
+      expect(sanitized).not.toContain("อรุณพร อิฐรัตน์");
+      expect(sanitized).not.toContain("สถานการแพทย์แผนไทยประยุกต์");
+      expect(sanitized).not.toContain("📚 เอกสารอ้างอิง (APA 7th Edition)");
+      expect(sanitized).toContain("ขมิ้นชันอาจมีผลเสริมฤทธิ์ของยาวาร์ฟาริน");
+      expect(sanitized).toContain("💡 ข้อแนะนำ: ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้");
+    });
+
+    it("buildSystemPrompt excludes TU APA 7 template and adds strict prohibition when enable_tu_ddi is false", () => {
+      const promptWithoutTu = buildSystemPrompt({
+        enable_external_research: true,
+        enable_internal_db: true,
+        enable_mahidol_ddi: true,
+        enable_tu_ddi: false,
+      });
+
+      expect(promptWithoutTu).toContain("ข้อห้ามเด็ดขาดเรื่อง ม.ธรรมศาสตร์");
+      expect(promptWithoutTu).toContain("ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์");
+      expect(promptWithoutTu).not.toContain("อิฐรัตน์, อ. (2566). *ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน");
     });
   });
 });

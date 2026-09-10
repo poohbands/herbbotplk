@@ -415,7 +415,7 @@ async function findRelevantHerbs(supabase: any, question: string, intent?: Quest
 
 
 /** ค้นหาเอกสารความรู้จากตาราง knowledge_documents ด้วย full-text search */
-async function findRelevantKnowledge(supabase: any, question: string, enableMahidol = true): Promise<KnowledgeDoc[]> {
+async function findRelevantKnowledge(supabase: any, question: string, enableMahidol = true, enableTu = true): Promise<KnowledgeDoc[]> {
   const q = question.trim();
   if (!q) return [];
 
@@ -437,6 +437,9 @@ async function findRelevantKnowledge(supabase: any, question: string, enableMahi
   if (!enableMahidol) {
     queryBuilder = queryBuilder.neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)");
   }
+  if (!enableTu) {
+    queryBuilder = queryBuilder.neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)");
+  }
 
   const { data, error } = await queryBuilder
     .textSearch("search_vector", tsQuery, { config: "simple" })
@@ -453,6 +456,9 @@ async function findRelevantKnowledge(supabase: any, question: string, enableMahi
     if (!enableMahidol) {
       fallbackBuilder = fallbackBuilder.neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)");
     }
+    if (!enableTu) {
+      fallbackBuilder = fallbackBuilder.neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)");
+    }
 
     const { data: fallback } = await fallbackBuilder
       .or(tokens.slice(0, 3).map((t) => `title.ilike.%${t}%,content.ilike.%${t}%`).join(","))
@@ -462,7 +468,7 @@ async function findRelevantKnowledge(supabase: any, question: string, enableMahi
   return (data || []) as KnowledgeDoc[];
 }
 
-/** กรองเอกสาร DDI ของ ม.มหิดล ให้ตรงกับสมุนไพรและยาที่ผู้ใช้ถามจริง ห้ามปนสมุนไพรอื่น */
+/** กรองเอกสาร DDI ของ ม.มหิดล และ ม.ธรรมศาสตร์ ให้ตรงกับสมุนไพรและยาที่ผู้ใช้ถามจริง ห้ามปนสมุนไพรอื่น */
 function filterStrictDdiKnowledge(
   question: string,
   docs: KnowledgeDoc[],
@@ -474,9 +480,11 @@ function filterStrictDdiKnowledge(
   const askedDrugs = intentDrugs.map((d) => d.toLowerCase()).filter(Boolean);
 
   return docs.filter((k) => {
-    if (k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)") return true;
+    const isMahidolDdi = k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)";
+    const isTuDdi = k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)";
+    if (!isMahidolDdi && !isTuDdi) return true;
 
-    const m = (k.title || "").match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\(ม\.มหิดล\))?$/);
+    const m = (k.title || "").match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\((?:ม\.มหิดล|ม\.ธรรมศาสตร์)\))?$/);
     const docHerb = (m ? m[1].trim() : "").toLowerCase();
     const docDrug = (m ? m[2].trim() : "").toLowerCase();
 
@@ -1196,16 +1204,48 @@ function sanitizeMahidolReferences(content: string): string {
   return cleaned;
 }
 
-function buildSystemPrompt(enableMahidol = true): string {
-  const scopeVerification = enableMahidol
-    ? "ม.มหิดล, บัญชียาหลักฯ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, ทีมเภสัชกร สสจ.พิษณุโลก"
-    : "บัญชียาหลักฯ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, ทีมเภสัชกร สสจ.พิษณุโลก";
+function sanitizeTuReferences(content: string): string {
+  if (!content) return content;
+  const lines = content.split("\n");
+  const filteredLines = lines.filter((line) => {
+    if (
+      /มหาวิทยาลัยธรรมศาสตร์|ม\.ธรรมศาสตร์|อรุณพร\s*อิฐรัตน์|สถานการแพทย์แผนไทยประยุกต์/i.test(
+        line
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+  let cleaned = filteredLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  cleaned = cleaned.replace(
+    /###\s*📚\s*เอกสารอ้างอิง\s*\(APA\s*7th\s*Edition\)\s*(?=\n\s*(?:###|##|---|💡|🚨|\[METADATA\]|\[SOURCES\]|$))/g,
+    ""
+  ).trim();
+  return cleaned;
+}
+
+function buildSystemPrompt(enableMahidol = true, enableTu = true): string {
+  const verifyItems = [
+    enableMahidol ? "ม.มหิดล" : "",
+    enableTu ? "ม.ธรรมศาสตร์" : "",
+    "บัญชียาหลักฯ",
+    "10 กลุ่มอาการ สธ.",
+    "PubMed",
+    "ThaiJO",
+    "ทีมเภสัชกร สสจ.พิษณุโลก",
+  ].filter(Boolean);
+  const scopeVerification = verifyItems.join(", ");
 
   const mahidolApaRule = enableMahidol
     ? `  - ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น ห้ามนำสมุนไพรอื่นที่ผู้ใช้ไม่ได้ถามมาอ้างอิงเด็ดขาด): ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL`
     : `  - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.มหิดล:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยมหิดล", "ม.มหิดล", "ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล" หรือ "medplant.mahidol.ac.th" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
 
-  return `คุณคือผู้เชี่ยวชาญด้านยาสมุนไพรไทยและ Drug-Herb Interaction ของ "กลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก"
+  const tuApaRule = enableTu
+    ? `  - ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.ธรรมศาสตร์: อิฐรัตน์, อ. (2566). *ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interaction)*. สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์.`
+    : `  - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.ธรรมศาสตร์:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยธรรมศาสตร์", "ม.ธรรมศาสตร์", "ศ. ดร.ภญ.อรุณพร อิฐรัตน์", "อรุณพร อิฐรัตน์" หรือ "สถานการแพทย์แผนไทยประยุกต์" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
+
+  return `คุณคือผู้เชี่ยวชาญด้านยาสมุนไพรไทยและ Drug-Herb Interaction ของ "กลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก"`
 
 ## ขอบเขตการตอบ (สำคัญที่สุด — อ่านให้เข้าใจก่อนปฏิเสธ)
 
@@ -1285,6 +1325,7 @@ ${OUT_OF_SCOPE_REFUSAL_MESSAGE}
   ก่อนส่วนคำเตือน ให้แสดงหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบ APA 7:
   - ข้อกำหนดเรื่องฐานข้อมูลภายใน: ให้ยังคงใช้ข้อมูลสรรพคุณ ขนาด วิธีใช้ และข้อควรระวังจากฐานข้อมูลยาภายในตามปกติ แต่ **ไม่ต้องแสดงรายการอ้างอิง "สำนักงานสาธารณสุขจังหวัดพิษณุโลก" ในหัวข้อเอกสารอ้างอิง** (ให้ซ่อนรายการอ้างอิงของ สสจ.พิษณุโลก ไว้)
 ${mahidolApaRule}
+${tuApaRule}
   - บัญชียาหลักแห่งชาติด้านสมุนไพร (ให้อ้างอิงปี พ.ศ. ตามฉบับของรายการยานั้น):
     - **ข้อกำหนดเรื่องการอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร (สำคัญมาก):** ห้ามใส่ลิงก์หรือ URL ไปยัง https://ratchakitcha.soc.go.th/ โดยเด็ดขาด หากจะระบุลิงก์หรือเมื่อผู้ใช้เปิดดูข้อมูลยา ให้ชี้ไปที่ข้อมูลตัวยาภายในระบบ (/herbs?name=ชื่อยา) หรืออ้างอิงเฉพาะชื่อประกาศและปี พ.ศ. เท่านั้น
     - รายการยาฉบับปรับปรุงใหม่ พ.ศ. 2568: คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
@@ -1323,6 +1364,7 @@ serve(async (req) => {
     const enableExternal = settings?.enable_external_research !== false;
     const enableInternal = settings?.enable_internal_db !== false;
     const enableMahidol = settings?.enable_mahidol_ddi !== false;
+    const enableTu = settings?.enable_tu_ddi !== false;
 
     const lastUserMsg = [...messages].reverse().find((m: any) => m.role === "user");
     const question: string = lastUserMsg?.content || "";
@@ -1370,31 +1412,45 @@ serve(async (req) => {
       });
     }
 
-    // รันการค้นหาแบบขนาน (DB + knowledge) เฉพาะเมื่อเปิดใช้งานฐานข้อมูลภายในหรือฐานข้อมูลมหิดล
+    // รันการค้นหาแบบขนาน (DB + knowledge) เฉพาะเมื่อเปิดใช้งานฐานข้อมูลภายในหรือฐานข้อมูลมหิดลหรือธรรมศาสตร์
     const knowledgeQuery = [question, ...intent.symptoms, ...intent.herbs, ...intent.drugs].join(" ");
-    const [{ herbs, formulas, nameMatchedHerbNames, nameMatchedFormulaNames, listMode }, rawKnowledge] = (enableInternal || enableMahidol)
+    const [{ herbs, formulas, nameMatchedHerbNames, nameMatchedFormulaNames, listMode }, rawKnowledge] = (enableInternal || enableMahidol || enableTu)
       ? await Promise.all([
           enableInternal
             ? findRelevantHerbs(supabase, question, intent)
             : Promise.resolve({ herbs: [], formulas: [], nameMatchedHerbNames: [], nameMatchedFormulaNames: [], listMode: false }),
-          findRelevantKnowledge(supabase, knowledgeQuery, enableMahidol),
+          findRelevantKnowledge(supabase, knowledgeQuery, enableMahidol, enableTu),
         ])
       : [
           { herbs: [], formulas: [], nameMatchedHerbNames: [], nameMatchedFormulaNames: [], listMode: false },
           [],
         ];
 
-    // กรองเอกสาร DDI ของ ม.มหิดล ให้ตรงกับสมุนไพรและยาที่ผู้ใช้ถามจริง ห้ามปนสมุนไพรอื่น
-    const knowledge = enableMahidol
-      ? filterStrictDdiKnowledge(question, rawKnowledge, intent.herbs, intent.drugs)
-      : rawKnowledge.filter(
-          (k) =>
-            k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" &&
-            !k.source?.includes("มหิดล") &&
-            !k.source?.includes("ศูนย์ข้อมูลสมุนไพร") &&
-            !k.title?.includes("มหิดล") &&
-            !k.source_url?.includes("mahidol")
-        );
+    // กรองเอกสาร DDI ให้ตรงกับสมุนไพรและยาที่ผู้ใช้ถามจริง ห้ามปนสมุนไพรอื่น
+    let filteredKnowledge = rawKnowledge;
+    if (!enableMahidol) {
+      filteredKnowledge = filteredKnowledge.filter(
+        (k) =>
+          k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" &&
+          !k.source?.includes("มหิดล") &&
+          !k.source?.includes("ศูนย์ข้อมูลสมุนไพร") &&
+          !k.title?.includes("มหิดล") &&
+          !k.source_url?.includes("mahidol")
+      );
+    }
+    if (!enableTu) {
+      filteredKnowledge = filteredKnowledge.filter(
+        (k) =>
+          k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" &&
+          !k.source?.includes("ธรรมศาสตร์") &&
+          !k.source?.includes("อรุณพร") &&
+          !k.title?.includes("ธรรมศาสตร์") &&
+          !k.title?.includes("อรุณพร")
+      );
+    }
+    const knowledge = (enableMahidol || enableTu)
+      ? filterStrictDdiKnowledge(question, filteredKnowledge, intent.herbs, intent.drugs)
+      : filteredKnowledge;
 
     // รันการค้นหา PubMed และ ThaiJO เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก
     const { query: pubmedQuery, extraHerbNames, drugTerms } = enableExternal
@@ -1462,17 +1518,25 @@ serve(async (req) => {
         return true;
       });
     }
-    const knowledgeSources: KnowledgeSource[] = (enableInternal || enableMahidol)
+    const knowledgeSources: KnowledgeSource[] = (enableInternal || enableMahidol || enableTu)
       ? knowledge
-          .filter(
-            (k) =>
-              enableMahidol ||
-              (k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" &&
-                !k.source?.includes("มหิดล") &&
-                !k.source?.includes("ศูนย์ข้อมูลสมุนไพร") &&
-                !k.title?.includes("มหิดล") &&
-                !k.source_url?.includes("mahidol"))
-          )
+          .filter((k) => {
+            if (!enableMahidol && (
+              k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" ||
+              k.source?.includes("มหิดล") ||
+              k.source?.includes("ศูนย์ข้อมูลสมุนไพร") ||
+              k.title?.includes("มหิดล") ||
+              k.source_url?.includes("mahidol")
+            )) return false;
+            if (!enableTu && (
+              k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" ||
+              k.source?.includes("ธรรมศาสตร์") ||
+              k.source?.includes("อรุณพร") ||
+              k.title?.includes("ธรรมศาสตร์") ||
+              k.title?.includes("อรุณพร")
+            )) return false;
+            return true;
+          })
           .map((k) => ({
             id: k.id, title: k.title, category: k.category, content: k.content, source: k.source, source_url: k.source_url,
           }))
@@ -1485,7 +1549,7 @@ serve(async (req) => {
       enableInternal ? formulas : [],
       enableExternal ? pubmed : [],
       enableExternal ? extraHerbNames : [],
-      (enableInternal || enableMahidol) ? knowledge : [],
+      (enableInternal || enableMahidol || enableTu) ? knowledge : [],
       includeCommonDisease,
       aiFallback,
       enableExternal ? thaijo : []
@@ -1494,7 +1558,7 @@ serve(async (req) => {
       pubmed: enableExternal ? pubmed : [],
       thaijo: enableExternal ? thaijo : [],
       internal: enableInternal ? internalSources : [],
-      knowledge: (enableInternal || enableMahidol) ? knowledgeSources : [],
+      knowledge: (enableInternal || enableMahidol || enableTu) ? knowledgeSources : [],
       ...(includeCommonDisease ? { policy: ["กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข", "บัญชียาหลักแห่งชาติด้านสมุนไพร"] } : {}),
       ...(aiFallback.used ? { ai_fallback: ["ความรู้ทั่วไปของ AI (Gemini) — ยังไม่ยืนยันจากฐานข้อมูลภายใน"] } : {}),
     });
@@ -1513,6 +1577,9 @@ serve(async (req) => {
     }
     if (!enableMahidol) {
       settingsInstruction += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล (Herb-Drug Interaction) ห้ามนำข้อมูล DDI มหิดลมาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยมหิดล', 'ม.มหิดล', 'ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล' หรือเว็บไซต์ 'medplant.mahidol.ac.th' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
+    }
+    if (!enableTu) {
+      settingsInstruction += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ (Herb-Drug Interaction) ห้ามนำข้อมูล DDI ธรรมศาสตร์มาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยธรรมศาสตร์', 'ม.ธรรมศาสตร์', 'ศ. ดร.ภญ.อรุณพร อิฐรัตน์', 'อรุณพร อิฐรัตน์' หรือ 'สถานการแพทย์แผนไทยประยุกต์' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
     }
 
     // ผลการจำแนกเจตนาเป็นตัวตัดสินว่าจะปฏิเสธหรือไม่ (โมเดลหลักไม่ต้องตัดสินเอง)
@@ -1539,7 +1606,7 @@ ${sourcesJson}
     try {
       const draftResult = await aiComplete(providers, {
         messages: [
-          { role: 'system', content: buildSystemPrompt(enableMahidol) },
+          { role: 'system', content: buildSystemPrompt(enableMahidol, enableTu) },
           contextMessage,
           ...(Array.isArray(messages) ? messages.slice(-10) : messages),
         ],
@@ -1562,7 +1629,7 @@ ${sourcesJson}
       try {
         const retryResult = await aiComplete(providers, {
           messages: [
-            { role: 'system', content: buildSystemPrompt(enableMahidol) },
+            { role: 'system', content: buildSystemPrompt(enableMahidol, enableTu) },
             contextMessage,
             ...(Array.isArray(messages) ? messages.slice(-10) : messages),
             {
@@ -1596,7 +1663,7 @@ ${sourcesJson}
 4. PMID/ลิงก์/แหล่งอ้างอิง ต้องมาจาก CONTEXT เท่านั้น
 5. แหล่งอ้างอิงและงานวิจัยที่ระบุในคำตอบต้องตรงกับเรื่องที่ผู้ใช้ถามโดยตรงเท่านั้น ห้ามอ้างอิงสมุนไพรเดี่ยวหรือบทความวิจัยที่ไม่เกี่ยวข้องกับคำถาม (เช่น ถามตำรับยาจันทน์ลีลา ห้ามอ้างอิงฟ้าทะลายโจร หรือตะไคร้)
 6. ต้องคงรูปแบบเดิมไว้ทั้งหมด รวมถึงบล็อก [METADATA] และ [SOURCES] ห้ามแก้ไขเนื้อหาในบล็อกเหล่านั้น
-7. ${!enableMahidol ? "ห้ามมีชื่อ ม.มหิดล หรือศูนย์ข้อมูลสมุนไพรในคำตอบหรือในหัวข้อเอกสารอ้างอิงเด็ดขาดเนื่องจากระบบปิดใช้งานอยู่" : "ห้ามใส่แหล่งอ้างอิงที่ไม่มีใน CONTEXT"}
+7. ${!enableMahidol ? "ห้ามมีชื่อ ม.มหิดล หรือศูนย์ข้อมูลสมุนไพรในคำตอบหรือในหัวข้อเอกสารอ้างอิงเด็ดขาดเนื่องจากระบบปิดใช้งานอยู่" : "ห้ามใส่แหล่งอ้างอิงที่ไม่มีใน CONTEXT"}${!enableTu ? " และห้ามมีชื่อ ม.ธรรมศาสตร์ หรือ อ.อรุณพร ในคำตอบหรือในหัวข้อเอกสารอ้างอิงเด็ดขาดเนื่องจากระบบปิดใช้งานอยู่" : ""}
 
 ผลลัพธ์:
 - ถ้าถูกต้องครบถ้วน ตอบกลับคำเดียวว่า: PASS
@@ -1635,6 +1702,10 @@ ${sourcesJson}
     // กรองการอ้างอิง ม.มหิดล หากปิดการใช้งาน
     if (!enableMahidol) {
       finalAnswer = sanitizeMahidolReferences(finalAnswer);
+    }
+    // กรองการอ้างอิง ม.ธรรมศาสตร์ หากปิดการใช้งาน
+    if (!enableTu) {
+      finalAnswer = sanitizeTuReferences(finalAnswer);
     }
 
     // ---- ส่งคำตอบกลับเป็น SSE (รูปแบบเดิมที่หน้าเว็บรองรับ) ----

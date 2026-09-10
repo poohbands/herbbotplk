@@ -3,6 +3,7 @@ import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, DEFAULT_KNOWLEDGE_SETTINGS, type KnowledgeSettings } from "./knowledge-settings";
 import { searchHerbs97ByName, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
+import tuDdiDataset from "@/data/tu-ddi-dataset.json";
 
 // พจนานุกรมอาการภาษาไทยเพื่อจับคู่สมุนไพร
 const SYMPTOM_MAP = [
@@ -350,6 +351,112 @@ export function sanitizeMahidolReferences(content: string): string {
   return cleaned;
 }
 
+/** ค้นหาข้อมูลอันตรกิริยา ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์) ที่ตรงกับคำถาม */
+export function findRelevantTuDdi(
+  question: string,
+  allTuDocs: any[] = tuDdiDataset as any[],
+  matchedHerbs: any[] = []
+): any[] {
+  if (!allTuDocs || allTuDocs.length === 0) return [];
+
+  const { herbs, drugs, isGeneralHerbsQuestion, isGeneralDrugsQuestion, isDdiIntent } =
+    extractQuestionEntities(question, matchedHerbs);
+
+  if (!isDdiIntent && herbs.length === 0 && drugs.length === 0) {
+    return [];
+  }
+
+  const matched: any[] = [];
+  const seenIds = new Set<string>();
+
+  for (const doc of allTuDocs) {
+    const docId = doc.id || doc.title;
+    if (seenIds.has(docId)) continue;
+
+    const docHerb = (doc.herb_name || "").toLowerCase();
+    const docDrug = (doc.drug_name || "").toLowerCase();
+    const aliases: string[] = (doc.herb_aliases || []).map((a: string) => a.toLowerCase());
+    const allDocHerbs = [docHerb, ...aliases];
+
+    const herbMatches =
+      herbs.length > 0 &&
+      herbs.some((h) => {
+        const hLower = h.toLowerCase();
+        return allDocHerbs.some(
+          (dh) => dh === hLower || dh.includes(hLower) || hLower.includes(dh)
+        );
+      });
+
+    const drugMatches =
+      drugs.length > 0 &&
+      drugs.some((d) => {
+        const dLower = d.toLowerCase();
+        return (
+          docDrug === dLower ||
+          docDrug.includes(dLower) ||
+          dLower.includes(docDrug)
+        );
+      });
+
+    if (herbs.length > 0 && drugs.length > 0) {
+      if (herbMatches && drugMatches) {
+        seenIds.add(docId);
+        matched.push(doc);
+      }
+    } else if (herbs.length > 0 && (drugs.length === 0 || isGeneralDrugsQuestion)) {
+      if (herbMatches && (isGeneralDrugsQuestion || isDdiIntent)) {
+        seenIds.add(docId);
+        matched.push(doc);
+      }
+    } else if (drugs.length > 0 && (herbs.length === 0 || isGeneralHerbsQuestion)) {
+      if (drugMatches && (isGeneralHerbsQuestion || isDdiIntent)) {
+        seenIds.add(docId);
+        matched.push(doc);
+      }
+    }
+  }
+
+  const severityScore = (s: string) => {
+    if (s?.includes("มาก")) return 3;
+    if (s?.includes("ปานกลาง")) return 2;
+    if (s?.includes("น้อย")) return 1;
+    return 0;
+  };
+
+  matched.sort((a, b) => severityScore(b.severity || "") - severityScore(a.severity || ""));
+  return herbs.length > 0 && drugs.length > 0 ? matched.slice(0, 5) : matched.slice(0, 8);
+}
+
+/** ลบการอ้างอิงถึง ม.ธรรมศาสตร์ / ศ. ดร.ภญ.อรุณพร อิฐรัตน์ ออกจากคำตอบเมื่อปิดการใช้งานฐานข้อมูล DDI ธรรมศาสตร์ */
+export function sanitizeTuReferences(content: string): string {
+  if (!content) return content;
+
+  // 1. กรองบรรทัดที่เอ่ยถึง มหาวิทยาลัยธรรมศาสตร์ หรือ ศ. ดร.ภญ.อรุณพร อิฐรัตน์
+  const lines = content.split("\n");
+  const filteredLines = lines.filter((line) => {
+    if (
+      /มหาวิทยาลัยธรรมศาสตร์|ม\.ธรรมศาสตร์|อรุณพร\s*อิฐรัตน์|สถานการแพทย์แผนไทยประยุกต์/i.test(
+        line
+      )
+    ) {
+      return false;
+    }
+    return true;
+  });
+
+  let cleaned = filteredLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  // 2. ถ้าหัวข้อเอกสารอ้างอิง APA 7th Edition ว่างเปล่า ให้ตัดหัวข้อออก
+  cleaned = cleaned
+    .replace(
+      /###\s*📚\s*เอกสารอ้างอิง\s*\(APA\s*7th\s*Edition\)\s*(?=\n\s*(?:###|##|---|💡|🚨|\[METADATA\]|\[SOURCES\]|$))/g,
+      ""
+    )
+    .trim();
+
+  return cleaned;
+}
+
 /** ตรวจสอบและคัดกรองอ้างอิงอย่างเข้มงวดก่อนแสดงผล (Strict Pre-Response Reference Validation) */
 export function validateAndPruneSources(
   question: string,
@@ -369,6 +476,7 @@ export function validateAndPruneSources(
 } {
   const currentSettings = settings || getKnowledgeSettings();
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
+  const enableTu = currentSettings.enable_tu_ddi !== false;
   const enableInternal = currentSettings.enable_internal_db !== false;
   const enableExternal = currentSettings.enable_external_research !== false;
 
@@ -377,7 +485,7 @@ export function validateAndPruneSources(
   const qLower = (question || "").toLowerCase();
   const aLower = (answer || "").toLowerCase();
 
-  // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล)
+  // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล และ ม.ธรรมศาสตร์)
   const rawKnowledge = sources.knowledge || [];
   const validKnowledge: any[] = [];
   const seenKnowledgeTitles = new Set<string>();
@@ -393,6 +501,17 @@ export function validateAndPruneSources(
         title.includes("มหิดล") ||
         (k.source && (k.source.includes("มหิดล") || k.source.includes("ศูนย์ข้อมูลสมุนไพร"))) ||
         (k.source_url && k.source_url.includes("mahidol"))
+      ) {
+        continue;
+      }
+    }
+
+    // ถ้าปิดการใช้งานฐานข้อมูล DDI ม.ธรรมศาสตร์ ให้ตัดเอกสาร DDI หรือเอกสารที่มาจาก ม.ธรรมศาสตร์ ทิ้งทั้งหมด 100%
+    if (!enableTu) {
+      if (
+        k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" ||
+        title.includes("ม.ธรรมศาสตร์") ||
+        (k.source && (k.source.includes("ธรรมศาสตร์") || k.source.includes("อรุณพร")))
       ) {
         continue;
       }
@@ -430,6 +549,48 @@ export function validateAndPruneSources(
       }
 
       // สมุนไพรหรือยาในเอกสารนี้ ต้องปรากฏในคำถาม หรือคำตอบของ AI
+      const herbInText =
+        qLower.includes(docHerb.toLowerCase()) ||
+        aLower.includes(docHerb.toLowerCase());
+      const drugInText =
+        qLower.includes(docDrug.toLowerCase()) ||
+        aLower.includes(docDrug.toLowerCase());
+
+      const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
+
+      if (!herbInText && !drugInText && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
+        continue;
+      }
+    } else if (
+      k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" ||
+      title.includes("ม.ธรรมศาสตร์")
+    ) {
+      const m = title.match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\(ม\.ธรรมศาสตร์\))?$/);
+      const docHerb = m ? m[1].trim() : (k.herb_name || "");
+      const docDrug = m ? m[2].trim() : (k.drug_name || "");
+
+      // ถ้าผู้ใช้ระบุสมุนไพรเฉพาะเจาะจง
+      if (herbs.length > 0) {
+        const herbMatch = herbs.some(
+          (h) =>
+            docHerb.toLowerCase() === h.toLowerCase() ||
+            docHerb.toLowerCase().includes(h.toLowerCase()) ||
+            h.toLowerCase().includes(docHerb.toLowerCase())
+        );
+        if (!herbMatch) continue;
+      }
+
+      // ถ้าผู้ใช้ระบุยาเฉพาะเจาะจง
+      if (drugs.length > 0) {
+        const drugMatch = drugs.some(
+          (d) =>
+            docDrug.toLowerCase() === d.toLowerCase() ||
+            docDrug.toLowerCase().includes(d.toLowerCase()) ||
+            d.toLowerCase().includes(docDrug.toLowerCase())
+        );
+        if (!drugMatch) continue;
+      }
+
       const herbInText =
         qLower.includes(docHerb.toLowerCase()) ||
         aLower.includes(docHerb.toLowerCase());
@@ -793,15 +954,21 @@ export function isBlatantlyOutOfScope(
 export function buildSystemPrompt(settings?: KnowledgeSettings): string {
   const currentSettings = settings || getKnowledgeSettings();
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
+  const enableTu = currentSettings.enable_tu_ddi !== false;
 
-  const scopeSourcesText = enableMahidol
-    ? "เช่น ข้อมูล DDI มาจาก ม.มหิดล, บัญชียาหลักแห่งชาติ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, ทีมเภสัชกร สสจ.พิษณุโลก"
-    : "เช่น ข้อมูลยาและอันตรกิริยาจากบัญชียาหลักแห่งชาติ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก";
+  const mahidolSourceText = enableMahidol ? ", ม.มหิดล" : "";
+  const tuSourceText = enableTu ? ", ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์)" : "";
+  const scopeSourcesText = `เช่น ข้อมูล DDI มาจาก บัญชียาหลักแห่งชาติ${mahidolSourceText}${tuSourceText}, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก`;
 
   const mahidolApaRule = enableMahidol
     ? `    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น):
       ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL`
     : `    - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.มหิดล:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยมหิดล", "ม.มหิดล", "ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล" หรือ "medplant.mahidol.ac.th" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
+
+  const tuApaRule = enableTu
+    ? `    - กรณีอ้างอิงฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์):
+      อิฐรัตน์, อ. (2566). *ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interaction)*. สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์.`
+    : `    - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.ธรรมศาสตร์:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยธรรมศาสตร์", "ม.ธรรมศาสตร์", "อรุณพร อิฐรัตน์" หรือ "สถานการแพทย์แผนไทยประยุกต์ มหาวิทยาลัยธรรมศาสตร์" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
 
   return `คุณคือ "หมอยาพิษณุโลก" ผู้เชี่ยวชาญด้านเภสัชกรรมไทยและอันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
 
@@ -876,6 +1043,7 @@ drugs:
     - กรณีอ้างอิง 10 กลุ่มอาการ สธ.:
       กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ*. กระทรวงสาธารณสุข.
 ${mahidolApaRule}
+${tuApaRule}
     - กรณีอ้างอิงงานวิจัยสากล PubMed (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
       Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
     - กรณีอ้างอิงงานวิจัยไทย ThaiJO (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
@@ -920,6 +1088,7 @@ export async function processLocalChat(
   const enableExternal = currentSettings.enable_external_research !== false;
   const enableInternal = currentSettings.enable_internal_db !== false;
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
+  const enableTu = currentSettings.enable_tu_ddi !== false;
 
   // 0. ตรวจจับคำถามที่อยู่นอกขอบเขตชัดเจน (Fast short-circuit ตอบปฏิเสธทันที ไม่ต้องต่อ API)
   if (isBlatantlyOutOfScope(question, history)) {
@@ -957,12 +1126,13 @@ export async function processLocalChat(
     }
   }
 
-  // 1. ดึงสมุนไพร/ตำรับยาจาก Supabase (ถ้าเปิดฐานข้อมูลภายใน), ข้อมูล DDI ม.มหิดล, พร้อมกับค้น PubMed แบบขนาน
+  // 1. ดึงสมุนไพร/ตำรับยาจาก Supabase (ถ้าเปิดฐานข้อมูลภายใน), ข้อมูล DDI ม.มหิดล, DDI ม.ธรรมศาสตร์, พร้อมกับค้น PubMed แบบขนาน
   const [
     herbsRes,
     formulasRes,
     knowledgeRes,
     mahidolDdiRes,
+    tuDdiRes,
     pubmedResults,
   ] = await Promise.all([
     enableInternal
@@ -982,6 +1152,7 @@ export async function processLocalChat(
           .from("knowledge_documents")
           .select("id, title, category, content, source, source_url")
           .neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")
+          .neq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)")
           .limit(200)
       : Promise.resolve({ data: [] }),
     enableMahidol
@@ -991,6 +1162,13 @@ export async function processLocalChat(
           .eq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")
           .limit(1000)
       : Promise.resolve({ data: [] }),
+    enableTu
+      ? supabase
+          .from("knowledge_documents")
+          .select("id, title, category, content, source, source_url")
+          .eq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)")
+          .limit(200)
+      : Promise.resolve({ data: [] }),
     enableExternal && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
   ]);
 
@@ -998,6 +1176,9 @@ export async function processLocalChat(
   const allFormulas = (formulasRes.data || []) as any[];
   const allKnowledge = (knowledgeRes.data || []) as any[];
   const allMahidolDdi = (mahidolDdiRes.data || []) as any[];
+  const allTuDdi = enableTu
+    ? ((tuDdiRes?.data && tuDdiRes.data.length > 0) ? tuDdiRes.data : (tuDdiDataset as any[]))
+    : [];
 
   // 2. ค้นหาสมุนไพรและตำรับที่เกี่ยวข้องกับคำถาม
   const nq = normalizeThaiName(question);
@@ -1143,6 +1324,23 @@ export async function processLocalChat(
     }
   }
 
+  // 3.4 แทรกข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ม.ธรรมศาสตร์ ศ. ดร.ภญ.อรุณพร อิฐรัตน์)
+  let matchedTu: any[] = [];
+  if (enableTu && allTuDdi.length > 0) {
+    matchedTu = findRelevantTuDdi(
+      question,
+      allTuDdi,
+      [...exactMatchedHerbs, ...matchedHerbs]
+    );
+
+    if (matchedTu.length > 0) {
+      contextText += "\n[ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน — ศ. ดร.ภญ.อรุณพร อิฐรัตน์ สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์]\n";
+      matchedTu.forEach((t) => {
+        contextText += `หัวข้อ: ${t.title}\n${t.content}\n\n`;
+      });
+    }
+  }
+
   if (enableExternal) {
     // ใส่งานวิจัยสากลจาก PubMed เข้า Context
     if (pubmedResults.length > 0) {
@@ -1188,6 +1386,15 @@ export async function processLocalChat(
       );
     }
 
+    if (enableTu) {
+      sourcesList.push(
+        `${idx++}. ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.ธรรมศาสตร์:\n` +
+        `   - หน่วยงาน: ศ. ดร.ภญ.อรุณพร อิฐรัตน์ สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์\n` +
+        `   - ข้อมูล: ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรเดี่ยวและตำรับยาแผนไทยในบัญชียาหลักแห่งชาติกับยาแผนปัจจุบัน (เช่น กลไก CYP450, P-glycoprotein, Coumarin กับ Warfarin) ระดับความรุนแรง และคำแนะนำทางคลินิก\n` +
+        `   - การตรวจสอบ: ตรวจสอบได้จากรายการอ้างอิงของระบบ หรือดูในปุ่ม "แหล่งอ้างอิง"`
+      );
+    }
+
     sourcesList.push(
       `${idx++}. ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร:\n` +
       `   - หน่วยงาน: คณะกรรมการพัฒนาระบบยาแห่งชาติ กระทรวงสาธารณสุข (ฉบับ พ.ศ. 2566 และฉบับที่ 2 พ.ศ. 2568)\n` +
@@ -1221,6 +1428,7 @@ export async function processLocalChat(
       'ปุ่มแหล่งอ้างอิง',
       enableExternal ? 'รหัส PMID' : '',
       enableMahidol ? 'ลิงก์มหิดล' : '',
+      enableTu ? 'เอกสารวิชาการ ม.ธรรมศาสตร์' : '',
       'หน้ารายละเอียดสมุนไพรในระบบ (/herbs)',
     ].filter(Boolean).join(', ');
 
@@ -1228,7 +1436,7 @@ export async function processLocalChat(
       `\n[โครงสร้างแหล่งข้อมูลและเอกสารอ้างอิงที่ระบบ "หมอยาพิษณุโลก" ใช้ตอบ (System Reference & Evidence Architecture)]:\n` +
       `ระบบ "หมอยาพิษณุโลก" ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก ใช้ข้อมูลจากแหล่งอ้างอิงมาตรฐานที่น่าเชื่อถือทางวิชาการและการแพทย์ ${sourcesList.length} แหล่งหลัก ดังนี้:\n` +
       sourcesList.join('\n') +
-      `\n* คำสั่งพิเศษ: คำถามนี้ถามถึงแหล่งข้อมูลของระบบ ให้ตอบอย่างภาคภูมิใจ ละเอียด ครบถ้วน โปร่งใส และจัดรูปแบบให้อ่านง่าย โดยแจกแจงแหล่งข้อมูลทั้ง ${sourcesList.length} แหล่งข้างต้น พร้อมระบุวิธีที่ผู้ใช้สามารถตรวจสอบย้อนกลับได้ (เช่น ${verifyCheckItems}) ห้ามตอบปฏิเสธเด็ดขาด${!enableMahidol ? " และห้ามระบุถึง มหาวิทยาลัยมหิดล หรือศูนย์ข้อมูลสมุนไพร ม.มหิดล โดยเด็ดขาดเนื่องจากปัจจุบันระบบปิดการใช้งาน" : ""}*\n\n` +
+      `\n* คำสั่งพิเศษ: คำถามนี้ถามถึงแหล่งข้อมูลของระบบ ให้ตอบอย่างภาคภูมิใจ ละเอียด ครบถ้วน โปร่งใส และจัดรูปแบบให้อ่านง่าย โดยแจกแจงแหล่งข้อมูลทั้ง ${sourcesList.length} แหล่งข้างต้น พร้อมระบุวิธีที่ผู้ใช้สามารถตรวจสอบย้อนกลับได้ (เช่น ${verifyCheckItems}) ห้ามตอบปฏิเสธเด็ดขาด${!enableMahidol ? " และห้ามระบุถึง มหาวิทยาลัยมหิดล หรือศูนย์ข้อมูลสมุนไพร ม.มหิดล โดยเด็ดขาดเนื่องจากปัจจุบันระบบปิดการใช้งาน" : ""}${!enableTu ? " และห้ามระบุถึง มหาวิทยาลัยธรรมศาสตร์ หรือ ศ. ดร.ภญ.อรุณพร อิฐรัตน์ โดยเด็ดขาดเนื่องจากปัจจุบันระบบปิดการใช้งาน" : ""}*\n\n` +
       contextText;
   }
 
@@ -1246,6 +1454,12 @@ export async function processLocalChat(
   }
   if (!enableMahidol) {
     dynamicInstructions += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล (Herb-Drug Interaction) ห้ามนำข้อมูล DDI มหิดลมาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยมหิดล', 'ม.มหิดล', 'ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล' หรือเว็บไซต์ 'medplant.mahidol.ac.th' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
+  }
+  if (!enableTu) {
+    dynamicInstructions += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์) ห้ามนำข้อมูล DDI ม.ธรรมศาสตร์มาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยธรรมศาสตร์', 'ม.ธรรมศาสตร์', 'อรุณพร อิฐรัตน์' หรือ 'สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
+  }
+  if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
+    dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
   }
   if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
     dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
@@ -1443,6 +1657,18 @@ export async function processLocalChat(
         }))
       );
     }
+    if (enableTu && matchedTu.length > 0) {
+      knowledgeItems.push(
+        ...matchedTu.map((t: any) => ({
+          id: t.id,
+          title: t.title,
+          category: t.category,
+          content: t.content,
+          source: t.source || "สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์",
+          source_url: t.source_url || undefined,
+        }))
+      );
+    }
     if (enableInternal && allKnowledge.length > 0) {
       if (matchedHerbs.length === 0 && matchedFormulas.length === 0) {
         knowledgeItems.push(
@@ -1512,6 +1738,9 @@ export async function processLocalChat(
   let cleanAnswer = answer;
   if (!enableMahidol) {
     cleanAnswer = sanitizeMahidolReferences(cleanAnswer);
+  }
+  if (!enableTu) {
+    cleanAnswer = sanitizeTuReferences(cleanAnswer);
   }
 
   const finalResponse = `${cleanAnswer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;

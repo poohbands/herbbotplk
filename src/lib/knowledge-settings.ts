@@ -19,12 +19,18 @@ export type KnowledgeSettings = {
    * เปิด-ปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
    */
   enable_mahidol_ddi: boolean;
+
+  /**
+   * เปิด-ปิดการใช้ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศ. ดร.ภญ.อรุณพร อิฐรัตน์ ม.ธรรมศาสตร์)
+   */
+  enable_tu_ddi: boolean;
 };
 
 export const DEFAULT_KNOWLEDGE_SETTINGS: KnowledgeSettings = {
   enable_external_research: true,
   enable_internal_db: true,
   enable_mahidol_ddi: true,
+  enable_tu_ddi: true,
 };
 
 const STORAGE_KEY = "plk_knowledge_source_settings";
@@ -53,6 +59,10 @@ export function getKnowledgeSettings(): KnowledgeSettings {
         typeof parsed.enable_mahidol_ddi === "boolean"
           ? parsed.enable_mahidol_ddi
           : DEFAULT_KNOWLEDGE_SETTINGS.enable_mahidol_ddi,
+      enable_tu_ddi:
+        typeof parsed.enable_tu_ddi === "boolean"
+          ? parsed.enable_tu_ddi
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_tu_ddi,
     };
   } catch (e) {
     console.warn("Failed to read knowledge settings from localStorage:", e);

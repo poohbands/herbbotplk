@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, BookOpen, Search, ExternalLink, Globe, Database, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen, Search, ExternalLink, Globe, Database, Sparkles, ChevronDown, ChevronUp, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,6 +97,19 @@ const KnowledgeManager = () => {
       description: checked
         ? "AI จะใช้ข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน จากคณะเภสัชศาสตร์ ม.มหิดล พร้อมอ้างอิงลิงก์ตรง"
         : "AI จะไม่ดึงข้อมูลอันตรกิริยายาจาก ม.มหิดล มาประกอบคำตอบ",
+    });
+  };
+
+  const handleToggleTu = (checked: boolean) => {
+    const updated = saveKnowledgeSettings({ enable_tu_ddi: checked });
+    setKnowledgeSettings(updated);
+    toast({
+      title: checked
+        ? "เปิดการใช้ฐานข้อมูลอันตรกิริยา ม.ธรรมศาสตร์ แล้ว"
+        : "ปิดการใช้ฐานข้อมูลอันตรกิริยา ม.ธรรมศาสตร์ แล้ว",
+      description: checked
+        ? "AI จะใช้ข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพร/ตำรับยาไทยกับยาแผนปัจจุบัน จาก ศ. ดร.ภญ.อรุณพร อิฐรัตน์ ม.ธรรมศาสตร์ พร้อมอ้างอิง APA 7th Edition"
+        : "AI จะไม่ดึงข้อมูลอันตรกิริยายาจาก ม.ธรรมศาสตร์ มาประกอบคำตอบ",
     });
   };
 
@@ -428,11 +441,69 @@ const KnowledgeManager = () => {
               />
             </div>
           </div>
+
+          {/* เมนูที่ 4: ฐานข้อมูลอันตรกิริยายา ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์) */}
+          <div
+            className={`p-3.5 rounded-lg border transition-all ${
+              knowledgeSettings.enable_tu_ddi
+                ? "bg-card border-primary/30 shadow-xs"
+                : "bg-card/50 border-border opacity-70"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex items-center gap-2">
+                  <GraduationCap
+                    className={`w-4 h-4 ${
+                      knowledgeSettings.enable_tu_ddi
+                        ? "text-primary"
+                        : "text-muted-foreground"
+                    }`}
+                  />
+                  <span className="text-sm font-medium text-foreground font-thai">
+                    4. อันตรกิริยาระหว่างยา ม.ธรรมศาสตร์ (Herb-Drug Interaction)
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพร/ตำรับยาไทยกับยาแผนปัจจุบัน ผลงานวิชาการของ ศ. ดร.ภญ.อรุณพร อิฐรัตน์ สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ ม.ธรรมศาสตร์ พร้อมอ้างอิง APA 7th Edition
+                </p>
+                <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                  <Badge
+                    variant={
+                      knowledgeSettings.enable_tu_ddi
+                        ? "default"
+                        : "secondary"
+                    }
+                    className="text-[10px] px-1.5 py-0"
+                  >
+                    {knowledgeSettings.enable_tu_ddi
+                      ? "เปิดใช้งาน"
+                      : "ปิดใช้งาน"}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    ม.ธรรมศาสตร์
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    DDI Database
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    ศ. ดร.ภญ.อรุณพร อิฐรัตน์
+                  </Badge>
+                </div>
+              </div>
+              <Switch
+                checked={knowledgeSettings.enable_tu_ddi}
+                onCheckedChange={handleToggleTu}
+                aria-label="เปิด-ปิดฐานข้อมูลอันตรกิริยายา ม.ธรรมศาสตร์"
+              />
+            </div>
+          </div>
         </div>
 
         {!knowledgeSettings.enable_external_research &&
           !knowledgeSettings.enable_internal_db &&
-          !knowledgeSettings.enable_mahidol_ddi && (
+          !knowledgeSettings.enable_mahidol_ddi &&
+          !knowledgeSettings.enable_tu_ddi && (
             <div className="text-xs text-destructive bg-destructive/10 p-2.5 rounded-md flex items-center gap-1.5">
               ⚠️ คุณกำลังปิดทุกแหล่งข้อมูล AI จะตอบด้วยความรู้ทั่วไปและแนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุขเท่านั้น
             </div>
