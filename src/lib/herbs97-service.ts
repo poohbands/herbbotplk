@@ -295,16 +295,7 @@ export function searchHerbs97ByName(query: string, maxResults = 6): Herb97Item[]
       }
     }
 
-    // 6. ซ้อนทับด้วย Prefix / Stem
-    if (baseName.length >= 4) {
-      const prefix = baseName.slice(0, Math.min(baseName.length, 5));
-      if (prefix.length >= 4 && (cleanQ.includes(prefix) || normalizedQ.includes(prefix))) {
-        closeMatches.push(item);
-        continue;
-      }
-    }
-
-    // 7. กรณีถามกัญชาทั่วไป ให้เก็บเป็น Fallback เพื่อนำเสนอข้อมูลครบทุกตำรับ
+    // 6. กรณีถามกัญชาทั่วไป ให้เก็บเป็น Fallback เพื่อนำเสนอข้อมูลครบทุกตำรับ
     if (isCannabisQuery && item.has_cannabis) {
       cannabisFallback.push(item);
     }
@@ -330,6 +321,116 @@ export function searchHerbs97ByName(query: string, maxResults = 6): Herb97Item[]
   }
 
   return result;
+}
+
+/**
+ * ค้นหาข้อมูลยาจากไฟล์ 97 herb.xlsx ตามกลุ่มอาการและข้อบ่งใช้ (Indication/Symptoms)
+ * พร้อมระบบคัดกรองความสอดคล้องทางคลินิก (Clinical Alignment) เพื่อป้องกันการดึงยาที่ไม่เกี่ยวข้อง
+ */
+export function searchHerbs97BySymptom(query: string, maxResults = 6): Herb97Item[] {
+  if (!query || typeof query !== "string") return [];
+  const q = query.toLowerCase();
+
+  const SYMPTOM_GROUPS: {
+    pattern: RegExp;
+    keywords: string[];
+    primaryKeywords?: string[];
+  }[] = [
+    {
+      pattern: /น้ำเหลืองเสีย|น้ำเหลือง|แผลเรื้อรัง/,
+      keywords: ["น้ำเหลืองเสีย", "น้ำเหลือง", "แผลเรื้อรัง"],
+      primaryKeywords: ["น้ำเหลืองเสีย", "น้ำเหลือง"],
+    },
+    {
+      pattern: /ผื่น|คัน|ลมพิษ|ตุ่มคัน|ผิวหนัง|กลาก|เกลื้อน|เริม|งูสวัด|น้ำกัดเท้า/,
+      keywords: ["ผื่น", "คัน", "ลมพิษ", "ตุ่มคัน", "ผิวหนัง", "กลาก", "เกลื้อน", "เริม", "งูสวัด", "น้ำกัดเท้า"],
+    },
+    {
+      pattern: /ไอ|เสมหะ|ระคายคอ|เจ็บคอ|คอแห้ง/,
+      keywords: ["ไอ", "เสมหะ", "ขับเสมหะ", "ละลายเสมหะ", "เจ็บคอ", "ระคายคอ"],
+    },
+    {
+      pattern: /ท้องอืด|ท้องเฟ้อ|จุกเสียด|แน่นท้อง|ขับลม|แก๊สในกระเพาะ/,
+      keywords: ["ท้องอืด", "ท้องเฟ้อ", "จุกเสียด", "แน่น", "ขับลม"],
+    },
+    {
+      pattern: /ท้องเสีย|ถ่ายเหลว|ลงท้อง|อุจจาระร่วง|บิด/,
+      keywords: ["ท้องเสีย", "ถ่ายเหลว", "อุจจาระร่วง", "บิด"],
+    },
+    {
+      pattern: /ท้องผูก|ถ่ายยาก|ระบาย|อุจจาระแข็ง/,
+      keywords: ["ท้องผูก", "ระบาย", "ยาระบาย", "ขับถ่าย"],
+    },
+    {
+      pattern: /ไข้|ตัวร้อน|ครั่นเนื้อครั่นตัว|ลดไข้|แก้ไข้/,
+      keywords: ["ไข้", "ตัวร้อน", "แก้ไข้", "ลดไข้"],
+    },
+    {
+      pattern: /นอนไม่หลับ|หลับยาก|เครียด|วิตกกังวล/,
+      keywords: ["นอนไม่หลับ", "ช่วยให้นอนหลับ", "คลายเครียด", "สงบประสาท"],
+    },
+    {
+      pattern: /ปวดเมื่อย|กล้ามเนื้อ|เคล็ด|ขัดยอก|ข้อเข่า|ปวดข้อ|ข้ออักเสบ/,
+      keywords: ["ปวดเมื่อย", "กล้ามเนื้อ", "เคล็ด", "ขัดยอก", "ปวดข้อ", "ข้อเข่า"],
+    },
+  ];
+
+  const matchedTargetKeywords: string[] = [];
+  const primaryTargets: string[] = [];
+
+  for (const group of SYMPTOM_GROUPS) {
+    if (group.pattern.test(q)) {
+      matchedTargetKeywords.push(...group.keywords);
+      if (group.primaryKeywords) {
+        primaryTargets.push(...group.primaryKeywords);
+      }
+    }
+  }
+
+  if (matchedTargetKeywords.length === 0) {
+    const rawTokens = q.split(/[\s,()/:.]+/).filter((t) => t.length >= 3);
+    matchedTargetKeywords.push(...rawTokens);
+  }
+
+  const scoredItems: { item: Herb97Item; score: number }[] = [];
+
+  for (const item of HERBS_97_DATA) {
+    const ind = (item.indication || "").toLowerCase();
+    if (!ind) continue;
+
+    let score = 0;
+
+    // คำหลักสำคัญยิ่งยวด (Primary Targets) เช่น น้ำเหลืองเสีย
+    for (const pk of primaryTargets) {
+      if (ind.includes(pk)) {
+        score += 50;
+      }
+    }
+
+    // คำหลักกลุ่มอาการ
+    for (const kw of matchedTargetKeywords) {
+      if (ind.includes(kw.toLowerCase())) {
+        score += 10;
+      }
+    }
+
+    // ระบบป้องกันความไม่สอดคล้องทางคลินิก (Clinical Mismatch Guard):
+    // ตัวอย่าง: ถ้าผู้ใช้ถามเรื่องผิวหนัง/น้ำเหลืองเสีย แต่ยานั้นมีข้อบ่งใช้เฉพาะทางเดินอาหาร/ท้องเสีย หรือแก้ไข้/หัดเท่านั้น
+    const isSkinOrLymphQuery = /น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(q);
+    const isDigestiveOnly = /ท้องเสีย|อุจจาระ|บิด|ท้องร่วง/i.test(ind) && !/น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(ind);
+    const isFeverOrMeaslesOnly = /ไข้|ตัวร้อน|พิษหัด/i.test(ind) && !/น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(ind);
+
+    if (isSkinOrLymphQuery && (isDigestiveOnly || isFeverOrMeaslesOnly)) {
+      score = 0;
+    }
+
+    if (score > 0) {
+      scoredItems.push({ item, score });
+    }
+  }
+
+  scoredItems.sort((a, b) => b.score - a.score);
+  return scoredItems.slice(0, maxResults).map((s) => s.item);
 }
 
 /**

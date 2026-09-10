@@ -366,11 +366,18 @@ async function findRelevantHerbs(supabase: any, question: string, intent?: Quest
 
   if (symptomTerms.length > 0 && (!hasSpecificTarget || listMode || intent?.type === "symptom")) {
     const limit = listMode ? MAX_LIST_RESULTS : 6;
+    const isSkinOrLymphQuery = /น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(question);
     if (nameMatchedHerbNames.length === 0) {
       let count = 0;
       for (const f of (allFormulas || []) as FormulaRow[]) {
         if (count >= limit) break;
-        const text = `${f.indication || ""} ${f.name_thai}`.toLowerCase();
+        const ind = (f.indication || "").toLowerCase();
+        if (isSkinOrLymphQuery) {
+          const isFeverOrMeaslesOnly = /ไข้|ตัวร้อน|พิษหัด/i.test(ind) && !/น้ำเหลือง|ผื่นคันตามผิวหนัง|โรคผิวหนัง/i.test(ind);
+          const isDigestiveOnly = /ท้องเสีย|อุจจาระ|บิด|ท้องร่วง/i.test(ind);
+          if (isFeverOrMeaslesOnly || isDigestiveOnly) continue;
+        }
+        const text = `${ind} ${f.name_thai}`.toLowerCase();
         if (symptomTerms.some((t) => text.includes(t.toLowerCase()))) { addFormula(f); count++; }
       }
     }

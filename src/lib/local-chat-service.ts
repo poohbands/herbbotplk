@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, DEFAULT_KNOWLEDGE_SETTINGS, type KnowledgeSettings } from "./knowledge-settings";
-import { searchHerbs97ByName, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
+import { searchHerbs97ByName, searchHerbs97BySymptom, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
 import tuDdiDataset from "@/data/tu-ddi-dataset.json";
 
@@ -1273,8 +1273,14 @@ drugs:
      ข) **ข้อมูลที่สังเคราะห์จากหลายแหล่ง (Synthesized Information):** ข้อมูลที่มีการประมวล เปรียบเทียบ หรือสรุปรวมจากแหล่งข้อมูลหลายแห่งเข้าด้วยกัน ให้ระบุชัดเจนว่าเป็นการประมวล/สังเคราะห์จากหลายแหล่ง
      ค) **ข้อมูลที่เป็นเพียงกลไกหรือข้อสันนิษฐานทางทฤษฎี (Theoretical / Mechanistic Data):** ข้อมูลที่เป็นเพียงกลไกทางเภสัชวิทยาในระดับเซลล์/หลอดทดลอง (เช่น ฤทธิ์ยับยั้งเอนไซม์ CYP450) หรือการศึกษาในสัตว์ทดลอง ที่ยังไม่มีรายงานยืนยันผลทางคลินิกในมนุษย์ **ต้องระบุให้ชัดเจนเสมอว่าเป็น "กลไกหรือข้อสันนิษฐานทางทฤษฎี" หรือ "ข้อมูลจากการศึกษาในระดับหลอดทดลอง/สัตว์ทดลอง ซึ่งยังไม่มีรายงานยืนยันในมนุษย์"** เพื่อไม่ให้ผู้ใช้เข้าใจผิด
 
-2. **ตอบตรงประเด็นและกระชับเป็นอันดับแรก (Concise & Directly Answering):**
-   - วิเคราะห์เจตนาของคำถาม และตอบประเด็นที่ถามเป็นหลักอย่างชัดเจน รวดเร็ว ไม่เกริ่นนำยืดยาว และไม่พูดซ้ำซ้อน
+2. **ตอบตรงประเด็นและมีความสอดคล้องทางคลินิก (Concise, Directly Answering & Clinical Alignment — สำคัญมาก):**
+   - วิเคราะห์เจตนาและกลุ่มอาการของคำถาม และตอบตัวยาที่มีสรรพคุณและข้อบ่งใช้ตรงกับอาการจริงทางเภสัชกรรมเป็นหลัก
+   - **กฎเหล็กเด็ดขาดเรื่องความสอดคล้องของข้อบ่งใช้กับอาการ (Clinical Indication Alignment):**
+     - ตรวจสอบว่าสรรพคุณ/ข้อบ่งใช้ของยาแต่ละตัวตรงกับอาการที่ผู้ใช้ถามจริงหรือไม่
+     - **ห้าม** แนะนำยาที่มีข้อบ่งใช้ไม่ตรงกับอาการที่ผู้ใช้ถาม แม้ว่ายานั้นจะปรากฏอยู่ใน <CONTEXT> ก็ตาม!
+     - **ตัวอย่างเช่น:** หากผู้ใช้ถามเรื่อง *"คนไข้มีอาการน้ำเหลืองเสีย ผื่นคัน ตามผิวหนัง เรามียาอะไรบ้าง"*
+       -> ต้องเลือกแนะนำเฉพาะยาที่มีสรรพคุณแก้น้ำเหลืองเสีย หรือรักษาผื่นคันโรคผิวหนัง เช่น **ยาหญ้าปักกิ่ง** (แก้น้ำเหลืองเสีย), **ยาพญายอ / ยาทิงเจอร์ทองพันชั่ง / ยาทิงเจอร์พลู** (รักษาผื่นคัน โรคผิวหนัง)
+       -> **ห้าม** นำยาแก้ท้องเสีย (เช่น ยาเหลืองปิดสมุทร) หรือยาแก้ไข้/หัด (เช่น ยาเขียวหอม) มาแนะนำสำหรับอาการน้ำเหลืองเสียหรือผื่นคันตามผิวหนังโดยเด็ดขาด! ข้อมูลยาใดใน <CONTEXT> ที่มีข้อบ่งใช้สำหรับอาการอื่นที่ไม่เกี่ยวข้อง ให้ตัดทิ้ง ไม่ต้องนำมาตอบ
    - **กรณีผู้ใช้ถามเจาะจงเฉพาะเรื่องใดเรื่องหนึ่ง** (เช่น ถามเฉพาะ "ข้อบ่งใช้อะไรบ้าง", หรือ "กินขนาดเท่าไร", หรือ "คนท้องกินได้ไหม", หรือ "มีผลข้างเคียงอะไร"):
      -> ให้ตอบคำตอบของประเด็นนั้นให้ตรงเป้าหมายทันที
      -> **ห้าม** ยกเทมเพลตข้อมูลอื่นที่ไม่เกี่ยวข้องมาตอบทั้งหมด (เช่น ถ้าถามแค่ข้อบ่งใช้ ไม่ต้องแถมขนาดยาเต็มสูตร หรือตารางอันตรกิริยายาวๆ เข้ามา เว้นแต่มีข้อควรระวังสำคัญต่อชีวิตที่ต้องเตือนสั้นๆ 1-2 บรรทัด)
@@ -1452,8 +1458,8 @@ export async function processLocalChat(
   // 2. ค้นหาสมุนไพรและตำรับที่เกี่ยวข้องกับคำถาม
   const nq = normalizeThaiName(question);
 
-  // 2.0 ค้นหาจากฐานข้อมูล 97 รายการ (ไฟล์ 97 herb.xlsx) โดยเน้นชื่อยาใน Column A ทั้งตรงและใกล้เคียง
-  const matched97Herbs = searchHerbs97ByName(question);
+  // 2.0 ค้นหาจากฐานข้อมูล 97 รายการ (ไฟล์ 97 herb.xlsx)
+  let matched97Herbs = searchHerbs97ByName(question);
 
   // 2.1 ตรวจหาชื่อตำรับยาที่ผู้ใช้เอ่ยถึงโดยตรงในคำถาม
   const exactMatchedFormulas = allFormulas.filter((f) => {
@@ -1501,8 +1507,14 @@ export async function processLocalChat(
       });
     }).slice(0, 3);
   }
-  // ค) ถ้าผู้ใช้ไม่ได้เอ่ยชื่อสมุนไพรหรือตำรับเลย (ถามตามอาการ เช่น "นอนไม่หลับ", "ท้องอืด จุกเสียด")
+  // ค) ถ้าผู้ใช้ไม่ได้เอ่ยชื่อสมุนไพรหรือตำรับเลย (ถามตามอาการ เช่น "นอนไม่หลับ", "ท้องอืด จุกเสียด", "น้ำเหลืองเสีย ผื่นคัน")
   else {
+    // 1. ค้นหาจากฐานข้อมูล 97 รายการตามกลุ่มอาการและข้อบ่งใช้จริง
+    const symptom97 = searchHerbs97BySymptom(question, 4);
+    matched97Herbs = symptom97;
+
+    const isSkinOrLymphQuery = /น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(q);
+
     const matchedSymptoms: string[] = [];
     for (const s of SYMPTOM_MAP) {
       if (s.match.test(q)) {
@@ -1511,7 +1523,14 @@ export async function processLocalChat(
     }
 
     matchedFormulas = allFormulas.filter((f) => {
-      const text = `${f.indication || ""} ${f.name_thai || ""}`.toLowerCase();
+      const ind = (f.indication || "").toLowerCase();
+      if (isSkinOrLymphQuery) {
+        // กรองตำรับยาแก้ท้องเสีย หรือยาแก้ไข้/หัด ออกหากผู้ใช้ถามเรื่องผิวหนัง/น้ำเหลืองเสีย
+        const isFeverOrMeaslesOnly = /ไข้|ตัวร้อน|พิษหัด/i.test(ind) && !/น้ำเหลือง|ผื่นคันตามผิวหนัง|โรคผิวหนัง/i.test(ind);
+        const isDigestiveOnly = /ท้องเสีย|อุจจาระ|บิด|ท้องร่วง/i.test(ind);
+        if (isFeverOrMeaslesOnly || isDigestiveOnly) return false;
+      }
+      const text = `${ind} ${f.name_thai || ""}`.toLowerCase();
       return (
         (f.indication && q.includes(f.indication.toLowerCase())) ||
         matchedSymptoms.some((s) => text.includes(s.toLowerCase()))
