@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   recordUserFeedback,
   getFeedbackForMessage,
@@ -87,5 +87,16 @@ describe("AI Learning & Knowledge Verification Service", () => {
     const target = queue.find((q) => q.id === item.id);
     expect(target?.status).toBe("rejected");
     expect(target?.feedbackComment).toBe("ข้อมูลไม่ถูกต้องตามหลักวิชาการ");
+  });
+
+  it("returns builtin verified cough remedies answer without hallucination or 'ตามคำแนะนำ'", () => {
+    const match = findVerifiedAnswer("ถ้าผู้ป่วยมีอาการไอ มีสมุนไพรหรือตำรับยาอะไรบ้างที่สามารถใช้ได้ และแต่ละรายการใช้อย่างไร?");
+    expect(match.found).toBe(true);
+    expect(match.verifiedAnswer).toContain("ยาแก้ไอผสมมะขามป้อม");
+    expect(match.verifiedAnswer).toContain("ยาประสะมะแว้ง");
+    expect(match.verifiedAnswer).toContain("ยาอำมฤควาที");
+    expect(match.verifiedAnswer).toContain("ยาตรีผลา");
+    expect(match.verifiedAnswer).not.toContain("ตามคำแนะนำ");
+    expect(match.verifiedAnswer).toContain("ไม่พบข้อมูลขนาดและวิธีใช้ที่ชัดเจนในฐานความรู้ที่ใช้อ้างอิง");
   });
 });
