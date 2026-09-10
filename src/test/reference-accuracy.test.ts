@@ -627,6 +627,74 @@ drugs:
       expect(prompt).toContain("จะต้องระบุเฉพาะเอกสารอ้างอิงของตัวยาที่ท่านแนะนำจริงเท่านั้น (เช่น ยาหญ้าปักกิ่ง)");
       expect(prompt).toContain("ห้ามใส่บัวบก, กล้วย, ว่านหางจระเข้, ทองพันชั่ง");
     });
+
+    it("extractQuestionEntities correctly recognizes 'เรามียาอะไรบ้าง' as symptom query, NOT DDI query", () => {
+      const q = "ถ้าคนไข้มีอาการน้ำเหลืองเสีย ผื่นคันตามผิวหนัง เรามียาอะไรบ้าง";
+      const entities = extractQuestionEntities(q);
+      expect(entities.isGeneralDrugsQuestion).toBe(false);
+      expect(entities.isDdiIntent).toBe(false);
+      expect(entities.drugs).toHaveLength(0);
+    });
+
+    it("validateAndPruneSources strictly excludes unrelated DDI docs for symptom question 'เรามียาอะไรบ้าง' and retains recommended NLEM doc", () => {
+      const q = "ถ้าคนไข้มีอาการน้ำเหลืองเสีย ผื่นคันตามผิวหนัง เรามียาอะไรบ้าง";
+      const answer = `ยาสมุนไพรที่ใช้สำหรับอาการน้ำเหลืองเสีย ผื่นคันตามผิวหนัง แนะนำ **ยาหญ้าปักกิ่ง**
+- สรรพคุณ: แก้น้ำเหลืองเสีย บรรเทาอาการผื่นคัน
+- ส่วนประกอบ: หญ้าปักกิ่ง, ขมิ้นชัน`;
+
+      const rawSources = {
+        internal: [
+          { type: "formula", id: "f1", name: "ยาหญ้าปักกิ่ง" },
+        ],
+        pubmed: [],
+        thaijo: [],
+        knowledge: [
+          {
+            id: "ddi-1",
+            title: "อันตรกิริยาระหว่าง ขมิ้น กับ Warfarin (ม.มหิดล)",
+            category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+            content: "ขมิ้นชันอาจเพิ่มฤทธิ์ต้านการแข็งตัวของเลือด",
+          },
+          {
+            id: "ddi-2",
+            title: "อันตรกิริยาระหว่าง ขิง กับ Anticoagulants (ม.ธรรมศาสตร์)",
+            category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)",
+            content: "ขิงอาจเพิ่มความเสี่ยงเลือดออก",
+          },
+          {
+            id: "ddi-3",
+            title: "อันตรกิริยาระหว่าง พริกไทย กับ Theophylline (ม.มหิดล)",
+            category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+            content: "พริกไทยอาจเพิ่มระดับ theophylline",
+          },
+          {
+            id: "nlem-1",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาหญ้าปักกิ่ง (พ.ศ. 2566)",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ยาหญ้าปักกิ่ง แก้น้ำเหลืองเสีย",
+          },
+          {
+            id: "nlem-2",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาขมิ้นชัน (พ.ศ. 2568)",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ยาขมิ้นชัน บรรเทาอาการท้องอืด จุกเสียด",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(q, answer, rawSources);
+
+      // DDI documents must ALL be pruned
+      expect(pruned.knowledge.some((k) => k.title.includes("Warfarin"))).toBe(false);
+      expect(pruned.knowledge.some((k) => k.title.includes("Anticoagulants"))).toBe(false);
+      expect(pruned.knowledge.some((k) => k.title.includes("Theophylline"))).toBe(false);
+
+      // NLEM for the recommended drug (ยาหญ้าปักกิ่ง) must be retained
+      expect(pruned.knowledge.some((k) => k.title.includes("ยาหญ้าปักกิ่ง"))).toBe(true);
+
+      // NLEM for unrecommended drug (ยาขมิ้นชัน) must be pruned
+      expect(pruned.knowledge.some((k) => k.title.includes("ยาขมิ้นชัน"))).toBe(false);
+    });
   });
 });
 

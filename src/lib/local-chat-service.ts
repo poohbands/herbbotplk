@@ -64,6 +64,14 @@ const HERB_THAI_TO_SCI: Record<string, string> = {
   "หญ้าปักกิ่ง": "Murdannia loriformis",
   "ทองพันชั่ง": "Rhinacanthus nasutus",
   "กล้วย": "Musa paradisiaca",
+  "ไพล": "Zingiber montanum",
+  "พญายอ": "Clinacanthus nutans",
+  "เพชรสังฆาต": "Cissus quadrangularis",
+  "บอระเพ็ด": "Tinospora crispa",
+  "ชุมเห็ดเทศ": "Senna alata",
+  "มะขามแขก": "Senna alexandrina",
+  "กานพลู": "Syzygium aromaticum",
+  "ดีบัว": "Nelumbo nucifera",
 };
 
 // ยาแผนปัจจุบัน: คำภาษาไทย → term ภาษาอังกฤษสำหรับ PubMed
@@ -222,10 +230,12 @@ export function extractQuestionEntities(
   }
 
   const isGeneralHerbsQuestion =
-    /(?:ห้ามกินสมุนไพรอะไร|สมุนไพรอะไรบ้าง|สมุนไพรตัวไหน|มียาสมุนไพรตัวไหน|สมุนไพรใดบ้าง|สมุนไพรที่มีผล|สมุนไพรที่ตีกับ)/.test(qLower);
+    /(?:ห้ามกิน(?:กับ)?สมุนไพรอะไร|สมุนไพรที่(?:มีผล|ตี)กับ|สมุนไพรที่ห้ามกิน)/.test(qLower) ||
+    (detectedDrugs.size > 0 && /(?:สมุนไพรอะไร|สมุนไพรตัวไหน|สมุนไพรใด)/.test(qLower));
 
   const isGeneralDrugsQuestion =
-    /(?:ห้ามกินกับยาอะไร|ยาอะไรบ้าง|ยาตัวไหน|มียาใดบ้าง|ยาแผนปัจจุบันอะไร|อันตรกิริยากับยา|ตีกับยาอะไร|มีผลกับยาอะไร)/.test(qLower);
+    /(?:ห้ามกินกับยา(?:แผนปัจจุบัน|อะไร|ตัวไหน|ใด)|ยาแผนปัจจุบันอะไร|ตีกับยา(?:อะไร|ตัวไหน)|มีผลกับยา(?:อะไร|ตัวไหน)|อันตรกิริยากับยา)/.test(qLower) ||
+    (detectedHerbs.size > 0 && /(?:ห้ามกินกับยา|ตีกับยา|อันตรกิริยากับยา|มีผลกับยา)/.test(qLower));
 
   const isDdiIntent =
     detectedDrugs.size > 0 ||
@@ -892,7 +902,16 @@ export function validateAndPruneSources(
       const docDrugName = mDrug ? mDrug[1].trim() : "";
       const docDrugClean = docDrugName.replace(/^ยา/, "").trim();
 
+      const inInternalSources = (sources.internal || []).some((s: any) => {
+        const sName = (s.name || "").trim().toLowerCase();
+        return (
+          (docDrugName && (sName.includes(docDrugName.toLowerCase()) || docDrugName.toLowerCase().includes(sName))) ||
+          (docDrugClean.length >= 2 && (sName.includes(docDrugClean.toLowerCase()) || docDrugClean.toLowerCase().includes(sName)))
+        );
+      });
+
       const drugMentioned =
+        inInternalSources ||
         (docDrugName && qLower.includes(docDrugName.toLowerCase())) ||
         (docDrugClean.length >= 2 && qLower.includes(docDrugClean.toLowerCase()));
 
@@ -1397,7 +1416,8 @@ export async function processLocalChat(
       }
     }
     for (const [thai, en] of Object.entries(DRUG_THAI_TO_EN)) {
-      if (q.includes(thai.toLowerCase())) {
+      const primaryEn = en.split(/\s+OR\s+/i)[0].replace(/[()]/g, "").trim().toLowerCase();
+      if (q.includes(thai.toLowerCase()) || (primaryEn.length >= 3 && q.includes(primaryEn))) {
         pubmedQuery = pubmedQuery ? `(${pubmedQuery}) AND (${en})` : `(${en})`;
         break;
       }
@@ -1512,9 +1532,11 @@ export async function processLocalChat(
   }
   // ค) ถ้าผู้ใช้ไม่ได้เอ่ยชื่อสมุนไพรหรือตำรับเลย (ถามตามอาการ เช่น "นอนไม่หลับ", "ท้องอืด จุกเสียด", "น้ำเหลืองเสีย ผื่นคัน")
   else {
-    // 1. ค้นหาจากฐานข้อมูล 97 รายการตามกลุ่มอาการและข้อบ่งใช้จริง
-    const symptom97 = searchHerbs97BySymptom(question, 4);
-    matched97Herbs = symptom97;
+    // 1. ค้นหาจากฐานข้อมูล 97 รายการตามกลุ่มอาการและข้อบ่งใช้จริง (ถ้ายังไม่พบจากชื่อตรง)
+    if (matched97Herbs.length === 0) {
+      const symptom97 = searchHerbs97BySymptom(question, 4);
+      matched97Herbs = symptom97;
+    }
 
     const isSkinOrLymphQuery = /น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(q);
 
@@ -1535,7 +1557,7 @@ export async function processLocalChat(
       }
       const text = `${ind} ${f.name_thai || ""}`.toLowerCase();
       return (
-        (f.indication && q.includes(f.indication.toLowerCase())) ||
+        (f.indication && (f.indication.toLowerCase().includes(q) || text.includes(q))) ||
         matchedSymptoms.some((s) => text.includes(s.toLowerCase()))
       );
     }).slice(0, 4);
@@ -1599,12 +1621,16 @@ export async function processLocalChat(
   }
 
   // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
+  // ดึง DDI เฉพาะเมื่อผู้ใช้ระบุสมุนไพรชัดเจนในคำถาม หรือมีเจตนาถามเรื่อง DDI/ยาตีกันโดยตรง
+  const { isDdiIntent: qDdiIntent } = extractQuestionEntities(question);
+  const herbsForDdi = exactMatchedHerbs.length > 0 ? exactMatchedHerbs : (qDdiIntent ? matchedHerbs : []);
+
   let matchedMahidol: any[] = [];
   if (enableMahidol && allMahidolDdi.length > 0) {
     matchedMahidol = findRelevantMahidolDdi(
       question,
       allMahidolDdi,
-      [...exactMatchedHerbs, ...matchedHerbs]
+      herbsForDdi
     );
 
     if (matchedMahidol.length > 0) {
@@ -1621,7 +1647,7 @@ export async function processLocalChat(
     matchedTu = findRelevantTuDdi(
       question,
       allTuDdi,
-      [...exactMatchedHerbs, ...matchedHerbs]
+      herbsForDdi
     );
 
     if (matchedTu.length > 0) {
@@ -1748,9 +1774,6 @@ export async function processLocalChat(
   }
   if (!enableTu) {
     dynamicInstructions += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์) ห้ามนำข้อมูล DDI ม.ธรรมศาสตร์มาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยธรรมศาสตร์', 'ม.ธรรมศาสตร์', 'อรุณพร อิฐรัตน์' หรือ 'สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
-  }
-  if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
-    dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
   }
   if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
     dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
