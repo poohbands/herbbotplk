@@ -29,6 +29,7 @@ import { useMaintenanceMode } from "@/lib/maintenance-service";
 import MaintenanceOverlay from "@/components/MaintenanceOverlay";
 import AdminMaintenanceBanner from "@/components/AdminMaintenanceBanner";
 import { recordUserFeedback, getFeedbackForMessage, type FeedbackType } from "@/lib/learning-verification-service";
+import { APP_VERSION } from "@/lib/version";
 
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; year?: string; journal: string; url: string };
@@ -1410,18 +1411,6 @@ const ChatPage = () => {
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur-sm sticky bottom-0">
         <div className="container max-w-4xl mx-auto px-4 py-3">
-          {(!knowledgeSettings.enable_internal_db || !knowledgeSettings.enable_external_research || !knowledgeSettings.enable_mahidol_ddi || !knowledgeSettings.enable_tu_ddi) && (
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5 flex-wrap justify-center">
-                <span>⚙️ สถานะแหล่งข้อมูล:</span>
-                {!knowledgeSettings.enable_internal_db && <span className="line-through text-muted-foreground">ฐานข้อมูลในเว็บ</span>}
-                {!knowledgeSettings.enable_mahidol_ddi && <><span className="text-muted-foreground/50">•</span><span className="line-through text-muted-foreground">DDI ม.มหิดล</span></>}
-                {!knowledgeSettings.enable_tu_ddi && <><span className="text-muted-foreground/50">•</span><span className="line-through text-muted-foreground">DDI ม.ธรรมศาสตร์</span></>}
-                {!knowledgeSettings.enable_external_research && <><span className="text-muted-foreground/50">•</span><span className="line-through text-muted-foreground">งานวิจัยภายนอก/APA 7</span></>}
-                <a href="/admin" className="underline font-medium hover:text-foreground ml-1">ตั้งค่าในคลังความรู้</a>
-              </span>
-            </div>
-          )}
           <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex items-center gap-2">
             <div className="flex-1 relative">
               <input
@@ -1446,7 +1435,7 @@ const ChatPage = () => {
               ⚕️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
             </span>
             <span className="font-mono text-[10px] bg-muted/60 px-2 py-0.5 rounded border border-border/50 text-muted-foreground shrink-0 select-none">
-              V1.2 10092026
+              {APP_VERSION}
             </span>
           </div>
         </div>
