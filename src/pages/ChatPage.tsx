@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Check, Cpu, ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Check, Cpu, ThumbsUp, ThumbsDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -832,10 +832,6 @@ const ChatPage = () => {
           <div className="space-y-4">
             <AnimatePresence>
               {messages.map((msg, idx) => {
-                const isVerifiedResponse =
-                  msg.role === "assistant" &&
-                  (msg.content.includes("ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว") ||
-                    msg.content.includes("Verified Clinical Knowledge"));
                 const prevMsg = idx > 0 ? messages[idx - 1] : undefined;
                 const questionText = prevMsg?.role === "user" ? prevMsg.content : "";
                 const currentFeedback =
@@ -857,12 +853,6 @@ const ChatPage = () => {
                     >
                       {msg.role === "assistant" ? (
                       <div className="prose prose-sm max-w-none text-foreground">
-                        {isVerifiedResponse && (
-                          <div className="flex items-center gap-1.5 mb-2.5 pb-2 border-b border-emerald-500/25 text-emerald-800 dark:text-emerald-300 text-xs font-medium not-prose">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                            <span>คำตอบนี้ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว</span>
-                          </div>
-                        )}
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
                           components={{

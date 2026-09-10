@@ -98,5 +98,10 @@ describe("AI Learning & Knowledge Verification Service", () => {
     expect(match.verifiedAnswer).toContain("ยาตรีผลา");
     expect(match.verifiedAnswer).not.toContain("ตามคำแนะนำ");
     expect(match.verifiedAnswer).toContain("ไม่พบข้อมูลขนาดและวิธีใช้ที่ชัดเจนในฐานความรู้ที่ใช้อ้างอิง");
+    expect(match.verifiedAnswer).not.toContain("Clopidogrel");
+    expect(match.verifiedAnswer).not.toContain("clopidogrel");
+    expect(match.verifiedAnswer).not.toContain("โรคหัวใจหรือไต");
+    expect(match.verifiedAnswer).not.toContain("ยาทิพโอสถ");
+    expect(match.verifiedAnswer).not.toContain("ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว");
   });
 });
