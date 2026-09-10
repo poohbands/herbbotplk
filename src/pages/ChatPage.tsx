@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Cpu, ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
+import { Send, Leaf, AlertTriangle, Phone, ShieldAlert, Home, ExternalLink, BookOpen, FlaskConical, Copy, Check, Cpu, ThumbsUp, ThumbsDown, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -221,7 +221,37 @@ const ChatPage = () => {
   const [feedbackStates, setFeedbackStates] = useState<Record<string, FeedbackType>>({});
   const [feedbackModalMsg, setFeedbackModalMsg] = useState<{ id: string; question: string; answer: string } | null>(null);
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleCopyMessage = async (text: string, msgId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedMessageId(msgId);
+      toast.success("คัดลอกข้อความแล้ว");
+      setTimeout(() => {
+        setCopiedMessageId((prev) => (prev === msgId ? null : prev));
+      }, 2000);
+    } catch {
+      try {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        setCopiedMessageId(msgId);
+        toast.success("คัดลอกข้อความแล้ว");
+        setTimeout(() => {
+          setCopiedMessageId((prev) => (prev === msgId ? null : prev));
+        }, 2000);
+      } catch {
+        toast.error("คัดลอกข้อความไม่สำเร็จ");
+      }
+    }
+  };
 
   const handleThumbsUp = (msgId: string, question: string, answer: string) => {
     recordUserFeedback(msgId, question, answer, "helpful");
@@ -1192,13 +1222,13 @@ const ChatPage = () => {
                       )
                     )}
 
-                    {/* User Feedback Action Bar */}
+                    {/* User Feedback Action Bar & Copy Button */}
                     {msg.role === "assistant" && (
-                      <div className="flex items-center justify-between gap-2 pt-2 mt-3 border-t border-border/40 text-[11px] text-muted-foreground select-none">
-                        <span className="text-[10px] text-muted-foreground/80">
-                          คำตอบนี้มีประโยชน์หรือไม่?
-                        </span>
-                        <div className="flex items-center gap-1">
+                      <div className="flex items-center justify-between gap-2 pt-2 mt-3 border-t border-border/40 text-[11px] text-muted-foreground select-none flex-wrap">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-[10px] text-muted-foreground/80 hidden sm:inline">
+                            คำตอบนี้มีประโยชน์หรือไม่?
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleThumbsUp(msg.id, questionText, msg.content)}
@@ -1224,6 +1254,30 @@ const ChatPage = () => {
                           >
                             <ThumbsDown className="w-3 h-3" />
                             <span>ขอตรวจสอบ</span>
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0 ml-auto">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(msg.content, msg.id)}
+                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-colors cursor-pointer text-[10px] border border-border/50 ${
+                              copiedMessageId === msg.id
+                                ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-medium"
+                                : "hover:bg-muted text-muted-foreground hover:text-foreground bg-background/50"
+                            }`}
+                            title="คัดลอกข้อความคำตอบ"
+                          >
+                            {copiedMessageId === msg.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+                                <span>คัดลอกแล้ว</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>คัดลอก</span>
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
