@@ -61,6 +61,9 @@ const HERB_THAI_TO_SCI: Record<string, string> = {
   "ดอกคำฝอย": "Carthamus tinctorius",
   "เก๋ากี้": "Lycium barbarum",
   "เห็ดหลินจือ": "Ganoderma lucidum",
+  "หญ้าปักกิ่ง": "Murdannia loriformis",
+  "ทองพันชั่ง": "Rhinacanthus nasutus",
+  "กล้วย": "Musa paradisiaca",
 };
 
 // ยาแผนปัจจุบัน: คำภาษาไทย → term ภาษาอังกฤษสำหรับ PubMed
@@ -457,6 +460,279 @@ export function sanitizeTuReferences(content: string): string {
   return cleaned;
 }
 
+/** normalize ชื่อยาไทยเพื่อเทียบแบบยืดหยุ่น (ตัดคำนำหน้า/เว้นวรรค/ไม้ทัณฑฆาต/ศ-ษ→ส) */
+export function normalizeThaiName(s: string): string {
+  return (s || "")
+    .toLowerCase()
+    .replace(/[\s\u0E4C().,\-–—/]/g, "")
+    .replace(/^(ยาตำรับ|ตำรับยา|ตำรับ|ยา)/, "")
+    .replace(/[ศษ]/g, "ส")
+    .replace(/ณ/g, "น");
+}
+
+export type ThaiJoCatalogEntry = {
+  subjects: string[];   // ชื่อสมุนไพร หรือ ตำรับยาเฉพาะที่งานวิจัยนี้กล่าวถึง
+  symptoms?: string[];  // อาการที่เกี่ยวข้อง (ใช้เฉพาะเมื่อผู้ใช้ถามตามอาการโดยไม่ระบุชื่อสมุนไพร/ตำรับ)
+  data: ThaiJoItem;
+};
+
+// คลังงานวิจัยไทย (ThaiJO) ที่คัดสรรสำหรับสมุนไพรและตำรับยาไทยยอดนิยม (ตรวจสอบชื่อเรื่อง ผู้นิพนธ์ ปีพิมพ์ และ URL ตรงกับระบบ ThaiJO 100%)
+export const THAIJO_CATALOG: ThaiJoCatalogEntry[] = [
+  {
+    subjects: ["ฟ้าทะลายโจร", "andrographis"],
+    symptoms: ["หวัด", "เจ็บคอ", "ไอ", "โควิด", "covid"],
+    data: {
+      title: "งานวิจัยแบบสุ่มและมีกลุ่มเปรียบเทียบผลของฟ้าทะลายโจร กับฟาวิพิราเวียร์ ในการรักษาโควิด-19 ที่มีอาการน้อยหรือไม่มีอาการ",
+      authors: "ภูริวัฒนพงศ์ ศ., ชัยยอดศิลป์ ส., บุญสูง ธ., และคณะ",
+      year: "2023",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/257226",
+    },
+  },
+  {
+    subjects: ["แอนโดรกราโฟไลด์", "andrographolide", "วิเคราะห์ฟ้าทะลายโจร"],
+    data: {
+      title: "การพัฒนาและตรวจสอบความถูกต้องของวิธีวิเคราะห์ปริมาณ แอนโดรกราโฟไลด์ในผลิตภัณฑ์ฟ้าทะลายโจรโดยเทคนิคโครมาโทกราฟี ชนิดของเหลวประสิทธิภาพสูง",
+      authors: "สุขพันธ์ ป.",
+      year: "2024",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/267030",
+    },
+  },
+  {
+    subjects: ["ขมิ้นชัน", "curcuma"],
+    symptoms: ["แผลในกระเพาะ", "กรดไหลย้อน", "ท้องอืด", "จุกเสียด"],
+    data: {
+      title: "รายงานความปลอดภัยของการใช้ยาสมุนไพรขมิ้นชันในฐานข้อมูล รายงานเหตุการณ์ไม่พึงประสงค์ของประเทศไทย (Thai Vigibase)",
+      authors: "พามนตรี พ., สุวรรณเกษาวงษ์ ว., โภคะกุล พ., และคณะ",
+      year: "2023",
+      journal: "วารสารเภสัชกรรมไทย",
+      url: "https://he01.tci-thaijo.org/index.php/TJPP/article/view/256870",
+    },
+  },
+  {
+    // บัวบก: เฉพาะเมื่อมีการถามหรือตอบเกี่ยวกับบัวบกโดยตรง (ไม่ใส่ symptoms แผล เพื่อป้องกันการดึงงานวิจัยเคมีวิเคราะห์แล็บมาปนกับคำถามรักษาแผลทั่วไป)
+    subjects: ["บัวบก", "ใบบัวบก", "centella"],
+    data: {
+      title: "การพัฒนาวิธีวิเคราะห์สารกลุ่มไทรเทอร์พีนส์ในบัวบกด้วยวิธี UPLC",
+      authors: "มิ่งเมือง จ., ชื่นนางชี ว., ศักดิ์เพชร อ., และคณะ",
+      year: "2020",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/240988",
+    },
+  },
+  // กระชายขาว: ยังไม่พบ URL บทความจริงที่ยืนยันได้ใน ThaiJO — ไม่ใส่ fake URL เพื่อป้องกัน citation ผิด
+  {
+    subjects: ["ขิง", "zingiber"],
+    symptoms: ["คลื่นไส้", "อาเจียน", "เมารถ", "ขับลม", "แน่นท้อง"],
+    data: {
+      title: "Monograph of Selected Thai Material Medica: KHING (ข้อมูลวิชาการสมุนไพร: ขิง)",
+      authors: "คณะอนุกรรมการจัดทำข้อมูลทางวิชาการของสมุนไพร กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      year: "2014",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/120228",
+    },
+  },
+  // จันทน์ลีลา: ยังไม่พบ URL บทความจริงที่ยืนยันได้ใน ThaiJO — ไม่ใส่ fake Search URL เพื่อป้องกัน citation ผิด
+  {
+    subjects: ["ยาหอมนวโกฐ", "หอมนวโกฐ"],
+    symptoms: ["วิงเวียน", "หน้ามืด", "เป็นลม", "ลม"],
+    data: {
+      title: "ฤทธิ์ต้านอนุมูลอิสระและปริมาณฟีนอลิกรวมของตำรับยาแผนไทยบางตำรับ (Antioxidant Activity and Total Phenolic Contents of Some Thai Traditional Formulation)",
+      authors: "มหาดเล็ก จ., ตันตรวงศ์ษา ศ., เภชะมัด ธ.",
+      year: "2017",
+      journal: "วารสารเภสัชศาสตร์อีสาน",
+      url: "https://he01.tci-thaijo.org/index.php/IJPS/article/view/88553",
+    },
+  },
+  {
+    subjects: ["เบญจกูล", "ยาเบญจกูล"],
+    symptoms: ["ปรับธาตุ", "ธาตุพิการ", "บำรุงธาตุ", "ข้อเข่าเสื่อม"],
+    data: {
+      title: "บทบาทของตำรับยาเบญจกูลในการรักษาโรคข้อเข่าเสื่อม: มุมมองผ่านอิทธิพลของธาตุกำเนิด (The Role of Benjakul in Knee Osteoarthritis Treatment: A Perspective Through the Influence of Body Innate Elements)",
+      authors: "ก้องกุม ช., ปิ่นศรศักดิ์ ป., กนกกังสดาล ภ., และคณะ",
+      year: "2025",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/277757",
+    },
+  },
+  {
+    subjects: ["ประสะไพล", "ยาประสะไพล"],
+    symptoms: ["ปวดประจำเดือน", "ประจำเดือนมาผิดปกติ", "ประจำเดือน", "ระดู", "ปวดท้องประจำเดือน", "ขับน้ำคาวปลา"],
+    data: {
+      title: "ผลเบื้องต้นของยาแคปซูลประสะไพลเพื่อรักษาอาการประจำเดือนมาผิดปกติ (Preliminary Effects of Prasaplai Capsule for Menstruation Disorder Treatment)",
+      authors: "สว่างจิตร ร., และคณะ",
+      year: "2019",
+      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
+      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/186302",
+    },
+  },
+];
+
+/** ตรวจสอบว่าชื่อสมุนไพรหรือตำรับยา ปรากฏหรือเกี่ยวข้องกับเนื้อหาคำถามหรือคำตอบหรือไม่ */
+export function isEntityRelevantToText(
+  name: string,
+  qLower: string,
+  aLower: string,
+  nq: string,
+  na: string
+): boolean {
+  if (!name) return false;
+  const raw = name.toLowerCase();
+
+  // ตัดส่วนขยาย เช่น (ไม่น้อยกว่าร้อยละ 87% w/w), (สูตรตำรับที่ 1), (รพ.)
+  const clean = name
+    .replace(/\s*\(.*?\)/g, "")
+    .replace(/^(ยาผง\s*\(รพ\.\)|ทิงเจอร์\s*\(รพ\.\)|ยาน้ำ\s*\(รพ\.\)|ยาลูกกลอน\s*\(รพ\.\)|ยาชง\s*\(รพ\.\)|ยาผง|ทิงเจอร์|ยาน้ำ|ยาเม็ด|ยาแคปซูล|ยาลูกกลอน|ยาชง|ยา)\s*/, "")
+    .trim();
+  const cleanLower = clean.toLowerCase();
+
+  // ตัดคำนำหน้า เช่น "ใบ", "ต้น", "เหง้า", "เนื้อผล"
+  const baseName = clean.replace(/^(ใบ|ต้น|เหง้า|เนื้อผล|ลูก|ราก|ดอก|เปลือก)\s*/, "").trim();
+  const baseLower = baseName.toLowerCase();
+
+  const norm = normalizeThaiName(name);
+  const normClean = normalizeThaiName(clean);
+  const normBase = normalizeThaiName(baseName);
+
+  const check = (text: string, nText: string) => {
+    if (text.includes(raw)) return true;
+    if (cleanLower.length >= 2 && text.includes(cleanLower)) return true;
+    if (baseLower.length >= 2 && text.includes(baseLower)) return true;
+    if (norm.length >= 2 && nText.includes(norm)) return true;
+    if (normClean.length >= 2 && nText.includes(normClean)) return true;
+    if (normBase.length >= 2 && nText.includes(normBase)) return true;
+    return false;
+  };
+
+  return check(qLower, nq) || check(aLower, na);
+}
+
+/** สกัด Allowed Entities จาก sources payload ที่ผ่านการ prune แล้ว */
+export function extractAllowedEntitiesFromSources(sources: {
+  internal?: any[];
+  pubmed?: any[];
+  thaijo?: any[];
+  knowledge?: any[];
+}): string[] {
+  const allowed = new Set<string>();
+  for (const s of sources.internal || []) {
+    if (s.name) {
+      allowed.add(s.name);
+      const clean = s.name
+        .replace(/\s*\(.*?\)/g, "")
+        .replace(/^(ยาผง\s*\(รพ\.\)|ทิงเจอร์\s*\(รพ\.\)|ยาน้ำ\s*\(รพ\.\)|ยาลูกกลอน\s*\(รพ\.\)|ยาชง\s*\(รพ\.\)|ยาผง|ทิงเจอร์|ยาน้ำ|ยาเม็ด|ยาแคปซูล|ยาลูกกลอน|ยาชง|ยา)\s*/, "")
+        .trim();
+      if (clean && clean.length >= 2) allowed.add(clean);
+      const base = clean.replace(/^(ใบ|ต้น|เหง้า|เนื้อผล|ลูก|ราก|ดอก|เปลือก)\s*/, "").trim();
+      if (base && base.length >= 2) allowed.add(base);
+    }
+  }
+  for (const k of sources.knowledge || []) {
+    if (k.title) allowed.add(k.title);
+    if (k.herb_name) allowed.add(k.herb_name);
+    if (k.drug_name) allowed.add(k.drug_name);
+  }
+  for (const t of sources.thaijo || []) {
+    if (t.title) allowed.add(t.title);
+  }
+  for (const p of sources.pubmed || []) {
+    if (p.title) allowed.add(p.title);
+    if (p.pmid) allowed.add(p.pmid);
+  }
+  return Array.from(allowed);
+}
+
+/** คัดกรองรายการอ้างอิง APA 7th Edition ในเนื้อหาคำตอบ เพื่อให้แน่ใจว่าไม่มีการอ้างอิงสมุนไพรที่ไม่เกี่ยวข้อง */
+export function sanitizeUnrelatedApaReferences(
+  content: string,
+  allowedEntities: string[]
+): string {
+  if (!content) return content;
+  if (!allowedEntities || allowedEntities.length === 0) return content;
+
+  const apaMatch = content.match(/(?:###\s*)?📚\s*เอกสารอ้างอิง\s*\(APA\s*7th\s*Edition\)/i);
+  if (!apaMatch || apaMatch.index === undefined) return content;
+
+  const headerIdx = apaMatch.index;
+  const beforeApa = content.slice(0, headerIdx);
+  const apaSection = content.slice(headerIdx);
+
+  const lines = apaSection.split("\n");
+  const filteredLines: string[] = [];
+
+  const lowerAllowed = allowedEntities.map((e) => e.toLowerCase().trim()).filter((e) => e.length >= 2);
+  const normAllowed = allowedEntities.map((e) => normalizeThaiName(e)).filter((e) => e.length >= 2);
+
+  const checkAgainstKnown = [
+    "บัวบก", "ใบบัวบก", "centella", "ว่านหางจระเข้", "aloe", "กล้วย", "ทองพันชั่ง",
+    "ขมิ้นชัน", "ขมิ้น", "curcuma", "ฟ้าทะลายโจร", "andrographis", "กระชายดำ",
+    "กระชาย", "กระชายขาว", "ชาเขียว", "ตังกุย", "เซนต์จอห์นเวิร์ต", "มะรุม",
+    "รางจืด", "มะขามป้อม", "กะเพรา", "โหระพา", "ตะไคร้", "พริกไทย", "อบเชย",
+    "ชะพลู", "มะระขี้นก", "หญ้าหวาน", "ดอกคำฝอย", "เก๋ากี้", "เห็ดหลินจือ",
+    "หญ้าปักกิ่ง", "murdannia", "จันทน์ลีลา", "ประสะไพล", "ตรีผลา", "ปราบชมพูทวีป",
+    "หอมเทพจิตร", "ธาตุบรรจบ", "วิสัมพยาใหญ่", "เบญจกูล"
+  ];
+
+  let inCitationBlock = false;
+  for (const line of lines) {
+    if (/(?:###\s*)?📚\s*เอกสารอ้างอิง\s*\(APA\s*7th\s*Edition\)/i.test(line)) {
+      filteredLines.push(line);
+      inCitationBlock = true;
+      continue;
+    }
+
+    if (inCitationBlock && /^(?:###|##|---|💡|🚨|\[METADATA\]|\[SOURCES\])/.test(line.trim())) {
+      inCitationBlock = false;
+      filteredLines.push(line);
+      continue;
+    }
+
+    if (inCitationBlock && line.trim().length > 0) {
+      const lineLower = line.toLowerCase();
+      const lineNorm = normalizeThaiName(line);
+
+      const isAllowed = lowerAllowed.some((ent) => lineLower.includes(ent)) ||
+                        normAllowed.some((ent) => lineNorm.includes(ent));
+
+      const mentionsUnallowedKnown = checkAgainstKnown.some((k) => {
+        const kLower = k.toLowerCase();
+        if (lineLower.includes(kLower)) {
+          const isThisAllowed = lowerAllowed.some((ent) => ent.includes(kLower) || kLower.includes(ent));
+          return !isThisAllowed;
+        }
+        return false;
+      });
+
+      if (mentionsUnallowedKnown) {
+        continue;
+      }
+
+      const isGeneralOfficialDoc =
+        /(?:คณะกรรมการพัฒนาระบบยาแห่งชาติ|กรมการแพทย์แผนไทยและการแพทย์ทางเลือก|กระทรวงสาธารณสุข|บัญชียาหลักแห่งชาติ)/i.test(line) ||
+        /คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น\s*10\s*กลุ่มอาการ/i.test(line);
+
+      if (isAllowed || isGeneralOfficialDoc) {
+        filteredLines.push(line);
+      } else {
+        continue;
+      }
+    } else {
+      filteredLines.push(line);
+    }
+  }
+
+  let cleaned = beforeApa + filteredLines.join("\n");
+  cleaned = cleaned
+    .replace(
+      /(?:###\s*)?📚\s*เอกสารอ้างอิง\s*\(APA\s*7th\s*Edition\)\s*(?=\n\s*(?:###|##|---|💡|🚨|\[METADATA\]|\[SOURCES\]|$))/g,
+      ""
+    )
+    .trim();
+
+  return cleaned;
+}
+
 /** ตรวจสอบและคัดกรองอ้างอิงอย่างเข้มงวดก่อนแสดงผล (Strict Pre-Response Reference Validation) */
 export function validateAndPruneSources(
   question: string,
@@ -484,6 +760,8 @@ export function validateAndPruneSources(
     extractQuestionEntities(question);
   const qLower = (question || "").toLowerCase();
   const aLower = (answer || "").toLowerCase();
+  const nq = normalizeThaiName(question);
+  const na = normalizeThaiName(answer);
 
   // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล และ ม.ธรรมศาสตร์)
   const rawKnowledge = sources.knowledge || [];
@@ -643,123 +921,113 @@ export function validateAndPruneSources(
     });
   }
 
+  // 2. ตรวจสอบและกรอง Internal Sources (สมุนไพรเดี่ยว และ ตำรับยาแผนไทย)
+  const rawInternal = sources.internal || [];
+  const validInternal: any[] = [];
+  const seenInternalNames = new Set<string>();
+
+  if (enableInternal && rawInternal.length > 0) {
+    const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
+
+    for (const s of rawInternal) {
+      const name = (s.name || "").trim();
+      if (!name) continue;
+
+      if (isGeneralHerbsQuestion || isSourceInquiry) {
+        if (!seenInternalNames.has(name)) {
+          seenInternalNames.add(name);
+          validInternal.push(s);
+        }
+        continue;
+      }
+
+      if (isEntityRelevantToText(name, qLower, aLower, nq, na)) {
+        if (!seenInternalNames.has(name)) {
+          seenInternalNames.add(name);
+          validInternal.push(s);
+        }
+      }
+    }
+  }
+
+  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย)
+  const rawThaiJo = sources.thaijo || [];
+  const validThaiJo: any[] = [];
+  const seenThaiJoUrls = new Set<string>();
+
+  if (enableExternal && rawThaiJo.length > 0) {
+    for (const t of rawThaiJo) {
+      const url = t.url || "";
+      if (seenThaiJoUrls.has(url)) continue;
+
+      const catEntry = THAIJO_CATALOG.find((c) => c.data.url === url || c.data.title === t.title);
+      let isRelevant = false;
+
+      if (catEntry && catEntry.subjects && catEntry.subjects.length > 0) {
+        isRelevant = catEntry.subjects.some((subj) => {
+          const sLow = subj.toLowerCase();
+          const sNorm = normalizeThaiName(subj);
+          return (
+            qLower.includes(sLow) ||
+            aLower.includes(sLow) ||
+            (sNorm.length >= 2 && (nq.includes(sNorm) || na.includes(sNorm)))
+          );
+        });
+      } else {
+        const words = (t.title || "").split(/\s+/).filter((w: string) => w.length >= 4);
+        isRelevant = words.some((w: string) => qLower.includes(w.toLowerCase()) || aLower.includes(w.toLowerCase()));
+      }
+
+      if (isRelevant || isGeneralHerbsQuestion) {
+        seenThaiJoUrls.add(url);
+        validThaiJo.push(t);
+      }
+    }
+  }
+
+  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล)
+  const rawPubMed = sources.pubmed || [];
+  const validPubMed: any[] = [];
+  const seenPmids = new Set<string>();
+
+  if (enableExternal && rawPubMed.length > 0) {
+    for (const p of rawPubMed) {
+      if (seenPmids.has(p.pmid)) continue;
+      const titleLower = (p.title || "").toLowerCase();
+      let isRelevant = false;
+
+      for (const [thaiName, sciName] of Object.entries(HERB_THAI_TO_SCI)) {
+        if (qLower.includes(thaiName.toLowerCase()) || aLower.includes(thaiName.toLowerCase())) {
+          if (titleLower.includes(sciName.toLowerCase())) {
+            isRelevant = true;
+            break;
+          }
+        }
+      }
+
+      if (!isRelevant && drugs.length > 0) {
+        for (const d of drugs) {
+          if ((qLower.includes(d.toLowerCase()) || aLower.includes(d.toLowerCase())) && titleLower.includes(d.toLowerCase())) {
+            isRelevant = true;
+            break;
+          }
+        }
+      }
+
+      if (isRelevant || isGeneralHerbsQuestion) {
+        seenPmids.add(p.pmid);
+        validPubMed.push(p);
+      }
+    }
+  }
+
   return {
-    internal: enableInternal ? (sources.internal || []) : [],
-    pubmed: enableExternal ? (sources.pubmed || []) : [],
-    thaijo: enableExternal ? (sources.thaijo || []) : [],
+    internal: validInternal,
+    pubmed: validPubMed,
+    thaijo: validThaiJo,
     knowledge: validKnowledge,
   };
 }
-
-/** normalize ชื่อยาไทยเพื่อเทียบแบบยืดหยุ่น (ตัดคำนำหน้า/เว้นวรรค/ไม้ทัณฑฆาต/ศ-ษ→ส) */
-export function normalizeThaiName(s: string): string {
-  return (s || "")
-    .toLowerCase()
-    .replace(/[\s\u0E4C().,\-–—/]/g, "")
-    .replace(/^(ยาตำรับ|ตำรับยา|ตำรับ|ยา)/, "")
-    .replace(/[ศษ]/g, "ส")
-    .replace(/ณ/g, "น");
-}
-
-type ThaiJoCatalogEntry = {
-  subjects: string[];   // ชื่อสมุนไพร หรือ ตำรับยาเฉพาะที่งานวิจัยนี้กล่าวถึง
-  symptoms?: string[];  // อาการที่เกี่ยวข้อง (ใช้เฉพาะเมื่อผู้ใช้ถามตามอาการโดยไม่ระบุชื่อสมุนไพร/ตำรับ)
-  data: ThaiJoItem;
-};
-
-// คลังงานวิจัยไทย (ThaiJO) ที่คัดสรรสำหรับสมุนไพรและตำรับยาไทยยอดนิยม (ตรวจสอบชื่อเรื่อง ผู้นิพนธ์ ปีพิมพ์ และ URL ตรงกับระบบ ThaiJO 100%)
-const THAIJO_CATALOG: ThaiJoCatalogEntry[] = [
-  {
-    subjects: ["ฟ้าทะลายโจร", "andrographis"],
-    symptoms: ["หวัด", "เจ็บคอ", "ไอ", "โควิด", "covid"],
-    data: {
-      title: "งานวิจัยแบบสุ่มและมีกลุ่มเปรียบเทียบผลของฟ้าทะลายโจร กับฟาวิพิราเวียร์ ในการรักษาโควิด-19 ที่มีอาการน้อยหรือไม่มีอาการ",
-      authors: "ภูริวัฒนพงศ์ ศ., ชัยยอดศิลป์ ส., บุญสูง ธ., และคณะ",
-      year: "2023",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/257226",
-    },
-  },
-  {
-    subjects: ["แอนโดรกราโฟไลด์", "andrographolide", "วิเคราะห์ฟ้าทะลายโจร"],
-    data: {
-      title: "การพัฒนาและตรวจสอบความถูกต้องของวิธีวิเคราะห์ปริมาณ แอนโดรกราโฟไลด์ในผลิตภัณฑ์ฟ้าทะลายโจรโดยเทคนิคโครมาโทกราฟี ชนิดของเหลวประสิทธิภาพสูง",
-      authors: "สุขพันธ์ ป.",
-      year: "2024",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/267030",
-    },
-  },
-  {
-    subjects: ["ขมิ้นชัน", "curcuma"],
-    symptoms: ["แผลในกระเพาะ", "กรดไหลย้อน", "ท้องอืด", "จุกเสียด"],
-    data: {
-      title: "รายงานความปลอดภัยของการใช้ยาสมุนไพรขมิ้นชันในฐานข้อมูล รายงานเหตุการณ์ไม่พึงประสงค์ของประเทศไทย (Thai Vigibase)",
-      authors: "พามนตรี พ., สุวรรณเกษาวงษ์ ว., โภคะกุล พ., และคณะ",
-      year: "2023",
-      journal: "วารสารเภสัชกรรมไทย",
-      url: "https://he01.tci-thaijo.org/index.php/TJPP/article/view/256870",
-    },
-  },
-  {
-    subjects: ["บัวบก", "ใบบัวบก", "centella"],
-    symptoms: ["แผล", "ความจำ", "บำรุงสมอง", "ฟกช้ำ"],
-    data: {
-      title: "การพัฒนาวิธีวิเคราะห์สารกลุ่มไทรเทอร์พีนส์ในบัวบกด้วยวิธี UPLC",
-      authors: "มิ่งเมือง จ., ชื่นนางชี ว., ศักดิ์เพชร อ., และคณะ",
-      year: "2020",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/240988",
-    },
-  },
-  // กระชายขาว: ยังไม่พบ URL บทความจริงที่ยืนยันได้ใน ThaiJO — ไม่ใส่ fake URL เพื่อป้องกัน citation ผิด
-  {
-    subjects: ["ขิง", "zingiber"],
-    symptoms: ["คลื่นไส้", "อาเจียน", "เมารถ", "ขับลม", "แน่นท้อง"],
-    data: {
-      title: "Monograph of Selected Thai Material Medica: KHING (ข้อมูลวิชาการสมุนไพร: ขิง)",
-      authors: "คณะอนุกรรมการจัดทำข้อมูลทางวิชาการของสมุนไพร กรมการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      year: "2014",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/120228",
-    },
-  },
-  // จันทน์ลีลา: ยังไม่พบ URL บทความจริงที่ยืนยันได้ใน ThaiJO — ไม่ใส่ fake Search URL เพื่อป้องกัน citation ผิด
-  // (ข้อมูลสรรพคุณ ขนาดยา ข้อบ่งใช้ยังคงมาจากฐานข้อมูล thai_formulas ใน Supabase)
-  {
-    subjects: ["ยาหอมนวโกฐ", "หอมนวโกฐ"],
-    symptoms: ["วิงเวียน", "หน้ามืด", "เป็นลม", "ลม"],
-    data: {
-      title: "ฤทธิ์ต้านอนุมูลอิสระและปริมาณฟีนอลิกรวมของตำรับยาแผนไทยบางตำรับ (Antioxidant Activity and Total Phenolic Contents of Some Thai Traditional Formulation)",
-      authors: "มหาดเล็ก จ., ตันตรวงศ์ษา ศ., เภชะมัด ธ.",
-      year: "2017",
-      journal: "วารสารเภสัชศาสตร์อีสาน",
-      url: "https://he01.tci-thaijo.org/index.php/IJPS/article/view/88553",
-    },
-  },
-  {
-    subjects: ["เบญจกูล", "ยาเบญจกูล"],
-    symptoms: ["ปรับธาตุ", "ธาตุพิการ", "บำรุงธาตุ", "ข้อเข่าเสื่อม"],
-    data: {
-      title: "บทบาทของตำรับยาเบญจกูลในการรักษาโรคข้อเข่าเสื่อม: มุมมองผ่านอิทธิพลของธาตุกำเนิด (The Role of Benjakul in Knee Osteoarthritis Treatment: A Perspective Through the Influence of Body Innate Elements)",
-      authors: "ก้องกุม ช., ปิ่นศรศักดิ์ ป., กนกกังสดาล ภ., และคณะ",
-      year: "2025",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/277757",
-    },
-  },
-  {
-    subjects: ["ประสะไพล", "ยาประสะไพล"],
-    symptoms: ["ปวดประจำเดือน", "ประจำเดือนมาผิดปกติ", "ประจำเดือน", "ระดู", "ปวดท้องประจำเดือน", "ขับน้ำคาวปลา"],
-    data: {
-      title: "ผลเบื้องต้นของยาแคปซูลประสะไพลเพื่อรักษาอาการประจำเดือนมาผิดปกติ (Preliminary Effects of Prasaplai Capsule for Menstruation Disorder Treatment)",
-      authors: "สว่างจิตร ร., และคณะ",
-      year: "2019",
-      journal: "วารสารการแพทย์แผนไทยและการแพทย์ทางเลือก",
-      url: "https://he01.tci-thaijo.org/index.php/JTTAM/article/view/186302",
-    },
-  },
-];
 
 // In-Memory Cache สำหรับผลค้นหา PubMed
 const pubmedCache = new Map<string, { at: number; data: PubMedItem[] }>();
@@ -1055,6 +1323,7 @@ ${tuApaRule}
    - หากไม่มีแหล่งอ้างอิงงานวิจัยหรือประกาศกระทรวงใน CONTEXT ให้อ้างอิง "คู่มือการใช้ยาสมุนไพร กรมการแพทย์แผนไทยฯ" (ไม่ต้องใส่รายการอ้างอิง สสจ.พิษณุโลก)
 7. **ความถูกต้องตรงประเด็นของเอกสารอ้างอิง (Strict Relevance & No Unrelated Herbs - สำคัญมากที่สุด):**
    - **กฎเหล็กเด็ดขาด:** ห้ามนำสมุนไพรหรือยาอื่นที่ผู้ใช้ไม่ได้ถามมาเขียนลงในคำตอบหรือในรายการอ้างอิงเด็ดขาด! ตัวอย่างเช่น หากผู้ใช้ถามเรื่อง "ขมิ้นชัน กับ Warfarin" ให้ตอบและอ้างอิงเฉพาะข้อมูลของ "ขมิ้น/ขมิ้นชัน กับ Warfarin" เท่านั้น ห้ามนำสมุนไพรอื่น (เช่น กระชายดำ กระเทียม กล้วย โกจิเบอร์รี ขิง มะม่วง ฯลฯ) มากล่าวถึงหรือใส่ในรายการอ้างอิงเป็นอันขาด
+   - **กรณีถามตามกลุ่มอาการ (Symptom-based Question):** เช่น น้ำเหลืองเสีย, แผลตามผิวหนัง, ผื่นคัน, ไอ, ท้องอืด ฯลฯ หากใน <CONTEXT> มีข้อมูลตัวยาหลายรายการ แต่ในคำตอบท่านเลือกแนะนำเฉพาะตัวยาใด (เช่น แนะนำเฉพาะ "ยาหญ้าปักกิ่ง") ในหัวข้อ "📚 เอกสารอ้างอิง (APA 7th Edition)" **จะต้องระบุเฉพาะเอกสารอ้างอิงของตัวยาที่ท่านแนะนำจริงเท่านั้น (เช่น ยาหญ้าปักกิ่ง)** ห้ามใส่เอกสารอ้างอิง งานวิจัย หรือชื่อสมุนไพรอื่นที่ไม่ถูกเลือกนำมาแนะนำ (เช่น ห้ามใส่บัวบก, กล้วย, ว่านหางจระเข้, ทองพันชั่ง ฯลฯ หากไม่ได้ถูกกล่าวถึงและแนะนำในคำตอบ) โดยเด็ดขาด
    - ให้อ้างอิงเฉพาะข้อมูลที่ตรงกับสิ่งที่ถามและใช้ตอบจริงเท่านั้น ข้อมูลใดใน CONTEXT ที่ไม่ตรงกับสิ่งที่ผู้ใช้ระบุในคำถาม ห้ามนำมาเขียนในคำตอบหรือหัวข้อเอกสารอ้างอิงเด็ดขาด
 8. ท้ายคำตอบ ต้องลงท้ายด้วยแท็กโครงสร้างข้อมูล:
 [METADATA]
@@ -1742,6 +2011,9 @@ export async function processLocalChat(
   if (!enableTu) {
     cleanAnswer = sanitizeTuReferences(cleanAnswer);
   }
+
+  const allowedEntities = extractAllowedEntitiesFromSources(sourcesPayload);
+  cleanAnswer = sanitizeUnrelatedApaReferences(cleanAnswer, allowedEntities);
 
   const finalResponse = `${cleanAnswer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
 

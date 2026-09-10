@@ -8,6 +8,8 @@ import {
   validateAndPruneSources,
   sanitizeMahidolReferences,
   sanitizeTuReferences,
+  sanitizeUnrelatedApaReferences,
+  extractAllowedEntitiesFromSources,
   buildSystemPrompt,
 } from "../lib/local-chat-service";
 
@@ -544,6 +546,86 @@ drugs: warfarin
       expect(promptWithoutTu).toContain("ข้อห้ามเด็ดขาดเรื่อง ม.ธรรมศาสตร์");
       expect(promptWithoutTu).toContain("ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์");
       expect(promptWithoutTu).not.toContain("อิฐรัตน์, อ. (2566). *ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน");
+    });
+
+    it("validateAndPruneSources strictly strips unchosen candidate herbs and unrelated ThaiJO research papers in symptom queries", () => {
+      const question = "ถ้ามีอาการน้ำเหลืองเสีย มีแผลตามผิวหนัง คัน ควรใช้ยาตัวใด";
+      const answer = `สำหรับอาการน้ำเหลืองเสีย มีแผลตามผิวหนัง และอาการคัน ยาสมุนไพรในบัญชียาหลักแห่งชาติที่แนะนำคือ **ยาหญ้าปักกิ่ง**
+- **สรรพคุณ:** แก้น้ำเหลืองเสีย บรรเทาอาการแผลเรื้อรัง และผื่นคันตามผิวหนัง
+- **ขนาดและวิธีใช้:** รับประทานครั้งละ 1-2 แคปซูล วันละ 3 ครั้ง ก่อนอาหาร`;
+
+      const rawSources = {
+        internal: [
+          { type: "herb", id: "h1", name: "ยาหญ้าปักกิ่ง" },
+          { type: "herb", id: "h2", name: "ยาบัวบก" },
+          { type: "herb", id: "h3", name: "ยาว่านหางจระเข้ (ไม่น้อยกว่าร้อยละ 87% w/w)" },
+          { type: "formula", id: "h4", name: "ยาผง (รพ.) กล้วย" },
+          { type: "formula", id: "h5", name: "ทิงเจอร์ (รพ.) ทองพันชั่ง" },
+        ],
+        pubmed: [],
+        thaijo: [
+          {
+            title: "การพัฒนาวิธีวิเคราะห์สารกลุ่มไทรเทอร์พีนส์ในบัวบกด้วยวิธี UPLC",
+            authors: "พรพิมล ชูแสงสุข, และคณะ",
+            year: "2018",
+            journal: "วารสารกรมวิทยาศาสตร์การแพทย์",
+            url: "https://he02.tci-thaijo.org/index.php/dmsc/article/view/241199",
+          },
+        ],
+        knowledge: [],
+      };
+
+      const pruned = validateAndPruneSources(question, answer, rawSources);
+
+      // 1. ตรวจสอบ internal sources: ต้องเหลือเฉพาะยาหญ้าปักกิ่ง
+      expect(pruned.internal.length).toBe(1);
+      expect(pruned.internal[0].name).toBe("ยาหญ้าปักกิ่ง");
+      expect(pruned.internal.some((s) => s.name.includes("บัวบก"))).toBe(false);
+      expect(pruned.internal.some((s) => s.name.includes("ว่านหางจระเข้"))).toBe(false);
+      expect(pruned.internal.some((s) => s.name.includes("กล้วย"))).toBe(false);
+      expect(pruned.internal.some((s) => s.name.includes("ทองพันชั่ง"))).toBe(false);
+
+      // 2. ตรวจสอบ thaijo: งานวิจัยแล็บวิเคราะห์เคมีในบัวบกต้องถูกตัดออก 100%
+      expect(pruned.thaijo.length).toBe(0);
+      expect(pruned.thaijo.some((t) => t.title.includes("บัวบก"))).toBe(false);
+    });
+
+    it("sanitizeUnrelatedApaReferences strips citations of unchosen herbs from APA 7th Edition block", () => {
+      const fullAnswerWithUnrelatedApa = `สำหรับอาการน้ำเหลืองเสีย มีแผลตามผิวหนัง และอาการคัน ยาสมุนไพรในบัญชียาหลักแห่งชาติที่แนะนำคือ **ยาหญ้าปักกิ่ง**
+- **สรรพคุณ:** แก้น้ำเหลืองเสีย บรรเทาอาการแผลเรื้อรัง
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+1. กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ*. กระทรวงสาธารณสุข.
+2. คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2566). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2566*. ราชกิจจานุเบกษา.
+3. พรพิมล ชูแสงสุข, และคณะ. (2561). การพัฒนาวิธีวิเคราะห์สารกลุ่มไทรเทอร์พีนส์ในบัวบกด้วยวิธี UPLC. *วารสารกรมวิทยาศาสตร์การแพทย์*, 60(3), 184–196. https://he02.tci-thaijo.org/index.php/dmsc/article/view/241199
+
+💡 ข้อแนะนำ: ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้
+[METADATA]
+category: herbal_info
+severity: none
+herbs: ยาหญ้าปักกิ่ง
+drugs:
+[/METADATA]`;
+
+      const allowedEntities = ["ยาหญ้าปักกิ่ง", "หญ้าปักกิ่ง"];
+      const cleaned = sanitizeUnrelatedApaReferences(fullAnswerWithUnrelatedApa, allowedEntities);
+
+      // งานวิจัยบัวบกต้องถูกตัดออกจาก APA
+      expect(cleaned).not.toContain("บัวบก");
+      expect(cleaned).not.toContain("ไทรเทอร์พีนส์");
+      expect(cleaned).not.toContain("UPLC");
+
+      // เอกสารทางการทั่วไปและคู่มือ 10 กลุ่มอาการยังคงอยู่
+      expect(cleaned).toContain("คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ");
+      expect(cleaned).toContain("บัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2566");
+      expect(cleaned).toContain("📚 เอกสารอ้างอิง (APA 7th Edition)");
+    });
+
+    it("buildSystemPrompt contains strict instruction for symptom-based queries under rule 7", () => {
+      const prompt = buildSystemPrompt();
+      expect(prompt).toContain("กรณีถามตามกลุ่มอาการ (Symptom-based Question):");
+      expect(prompt).toContain("จะต้องระบุเฉพาะเอกสารอ้างอิงของตัวยาที่ท่านแนะนำจริงเท่านั้น (เช่น ยาหญ้าปักกิ่ง)");
+      expect(prompt).toContain("ห้ามใส่บัวบก, กล้วย, ว่านหางจระเข้, ทองพันชั่ง");
     });
   });
 });

@@ -5,8 +5,15 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
-import { toast } from "sonner";
-import { processLocalChat, hasLocalProviderKey, validateAndPruneSources, sanitizeMahidolReferences, sanitizeTuReferences } from "@/lib/local-chat-service";
+import {
+  processLocalChat,
+  hasLocalProviderKey,
+  validateAndPruneSources,
+  sanitizeMahidolReferences,
+  sanitizeTuReferences,
+  extractAllowedEntitiesFromSources,
+  sanitizeUnrelatedApaReferences,
+} from "@/lib/local-chat-service";
 import {
   getCurrentActiveProviderStatus,
   type ActiveApiStatus,
@@ -550,6 +557,10 @@ const ChatPage = () => {
         category = parsed.category;
         severity = parsed.severity;
         sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources, currentSettings) : parsed.sources;
+        if (sources) {
+          const allowedEntities = extractAllowedEntitiesFromSources(sources);
+          cleanContent = sanitizeUnrelatedApaReferences(cleanContent, allowedEntities);
+        }
 
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -656,6 +667,10 @@ const ChatPage = () => {
             category = parsed.category;
             severity = parsed.severity;
             sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources, currentSettings) : parsed.sources;
+            if (sources) {
+              const allowedEntities = extractAllowedEntitiesFromSources(sources);
+              cleanContent = sanitizeUnrelatedApaReferences(cleanContent, allowedEntities);
+            }
 
             setMessages((prev) =>
               prev.map((m, i) =>
