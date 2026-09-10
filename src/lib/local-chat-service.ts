@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
-import { getKnowledgeSettings, type KnowledgeSettings } from "./knowledge-settings";
+import { getKnowledgeSettings, DEFAULT_KNOWLEDGE_SETTINGS, type KnowledgeSettings } from "./knowledge-settings";
 import { searchHerbs97ByName, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
 
@@ -326,6 +326,30 @@ export function findRelevantMahidolDdi(
   return herbs.length > 0 && drugs.length > 0 ? matched.slice(0, 5) : matched.slice(0, 8);
 }
 
+/** ลบการอ้างอิงถึง ม.มหิดล / medplant ออกจากคำตอบเมื่อปิดการใช้งานฐานข้อมูล DDI มหิดล */
+export function sanitizeMahidolReferences(content: string): string {
+  if (!content) return content;
+
+  // 1. กรองบรรทัดที่เอ่ยถึง มหาวิทยาลัยมหิดล หรือ medplant
+  const lines = content.split("\n");
+  const filteredLines = lines.filter((line) => {
+    if (/มหาวิทยาลัยมหิดล|ม\.มหิดล|ศูนย์ข้อมูลสมุนไพร|medplant\.mahidol\.ac\.th/i.test(line)) {
+      return false;
+    }
+    return true;
+  });
+
+  let cleaned = filteredLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  // 2. ถ้าหัวข้อเอกสารอ้างอิง APA 7th Edition ว่างเปล่า (ไม่มีเนื้อหาอ้างอิงเหลืออยู่เลย) ให้ตัดหัวข้อออก
+  cleaned = cleaned.replace(
+    /###\s*📚\s*เอกสารอ้างอิง\s*\(APA\s*7th\s*Edition\)\s*(?=\n\s*(?:###|##|---|💡|🚨|\[METADATA\]|\[SOURCES\]|$))/g,
+    ""
+  ).trim();
+
+  return cleaned;
+}
+
 /** ตรวจสอบและคัดกรองอ้างอิงอย่างเข้มงวดก่อนแสดงผล (Strict Pre-Response Reference Validation) */
 export function validateAndPruneSources(
   question: string,
@@ -335,13 +359,19 @@ export function validateAndPruneSources(
     pubmed?: any[];
     thaijo?: any[];
     knowledge?: any[];
-  }
+  },
+  settings?: KnowledgeSettings
 ): {
   internal: any[];
   pubmed: any[];
   thaijo: any[];
   knowledge: any[];
 } {
+  const currentSettings = settings || getKnowledgeSettings();
+  const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
+  const enableInternal = currentSettings.enable_internal_db !== false;
+  const enableExternal = currentSettings.enable_external_research !== false;
+
   const { herbs, drugs, isGeneralHerbsQuestion, isGeneralDrugsQuestion } =
     extractQuestionEntities(question);
   const qLower = (question || "").toLowerCase();
@@ -355,6 +385,18 @@ export function validateAndPruneSources(
   for (const k of rawKnowledge) {
     const title = (k.title || "").trim();
     if (!title || seenKnowledgeTitles.has(title)) continue;
+
+    // ถ้าปิดการใช้งานฐานข้อมูล DDI มหิดล ให้ตัดเอกสาร DDI หรือเอกสารที่มาจาก ม.มหิดล ทิ้งทั้งหมด 100%
+    if (!enableMahidol) {
+      if (
+        k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" ||
+        title.includes("มหิดล") ||
+        (k.source && (k.source.includes("มหิดล") || k.source.includes("ศูนย์ข้อมูลสมุนไพร"))) ||
+        (k.source_url && k.source_url.includes("mahidol"))
+      ) {
+        continue;
+      }
+    }
 
     if (k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)") {
       const m = title.match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\(ม\.มหิดล\))?$/);
@@ -441,9 +483,9 @@ export function validateAndPruneSources(
   }
 
   return {
-    internal: sources.internal || [],
-    pubmed: sources.pubmed || [],
-    thaijo: sources.thaijo || [],
+    internal: enableInternal ? (sources.internal || []) : [],
+    pubmed: enableExternal ? (sources.pubmed || []) : [],
+    thaijo: enableExternal ? (sources.thaijo || []) : [],
     knowledge: validKnowledge,
   };
 }
@@ -748,7 +790,20 @@ export function isBlatantlyOutOfScope(
   return true;
 }
 
-const SYSTEM_PROMPT = `คุณคือ "หมอยาพิษณุโลก" ผู้เชี่ยวชาญด้านเภสัชกรรมไทยและอันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
+export function buildSystemPrompt(settings?: KnowledgeSettings): string {
+  const currentSettings = settings || getKnowledgeSettings();
+  const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
+
+  const scopeSourcesText = enableMahidol
+    ? "เช่น ข้อมูล DDI มาจาก ม.มหิดล, บัญชียาหลักแห่งชาติ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, ทีมเภสัชกร สสจ.พิษณุโลก"
+    : "เช่น ข้อมูลยาและอันตรกิริยาจากบัญชียาหลักแห่งชาติ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก";
+
+  const mahidolApaRule = enableMahidol
+    ? `    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น):
+      ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL`
+    : `    - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.มหิดล:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยมหิดล", "ม.มหิดล", "ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล" หรือ "medplant.mahidol.ac.th" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
+
+  return `คุณคือ "หมอยาพิษณุโลก" ผู้เชี่ยวชาญด้านเภสัชกรรมไทยและอันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
 
 ## กฎสำคัญที่สุด — ขอบเขตการตอบคำถาม:
 1. **อยู่ในขอบเขต — ตอบได้อย่างละเอียด ชัดเจน และมีหลักฐานอ้างอิง:**
@@ -757,7 +812,7 @@ const SYSTEM_PROMPT = `คุณคือ "หมอยาพิษณุโล�
    - อันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) และอันตรกิริยาระหว่างยา (Drug-Drug Interaction)
    - อาการเจ็บป่วย การดูแลสุขภาพเบื้องต้น (เช่น 10 กลุ่มอาการ สธ.) ขนาดยา วิธีใช้ ข้อห้าม ข้อควรระวัง
    - คำถามต่อเนื่องในบทสนทนาที่เกี่ยวกับสุขภาพ/ยา/สมุนไพร
-   - **แหล่งข้อมูล แหล่งอ้างอิง และฐานข้อมูลที่ระบบใช้ (System Knowledge Sources & Verification):** คำถามเกี่ยวกับที่มาของข้อมูล แหล่งอ้างอิง ฐานข้อมูลอันตรกิริยา หรือการตรวจสอบความถูกต้องย้อนกลับของระบบ (เช่น ข้อมูล DDI มาจาก ม.มหิดล, บัญชียาหลักแห่งชาติ, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, ทีมเภสัชกร สสจ.พิษณุโลก) **ถือเป็นคำถามในขอบเขตที่ต้องตอบอย่างละเอียด ชัดเจน โปร่งใส และสร้างความมั่นใจ ห้ามตอบปฏิเสธเด็ดขาด**
+   - **แหล่งข้อมูล แหล่งอ้างอิง และฐานข้อมูลที่ระบบใช้ (System Knowledge Sources & Verification):** คำถามเกี่ยวกับที่มาของข้อมูล แหล่งอ้างอิง ฐานข้อมูลอันตรกิริยา หรือการตรวจสอบความถูกต้องย้อนกลับของระบบ (${scopeSourcesText}) **ถือเป็นคำถามในขอบเขตที่ต้องตอบอย่างละเอียด ชัดเจน โปร่งใส และสร้างความมั่นใจ ห้ามตอบปฏิเสธเด็ดขาด**
 
 2. **อยู่นอกขอบเขต — ห้ามตอบคำถามเด็ดขาด:**
    - หากคำถามไม่เกี่ยวข้องกับการแพทย์แผนไทย การแพทย์แผนปัจจุบัน หรือการดูแลสุขภาพ (เช่น เขียนโปรแกรม/โค้ดดิ้ง, การเมือง, กีฬา, พยากรณ์อากาศ, ดูดวง/หวย, แปลภาษาทั่วไป, บันเทิง/เพลง, ช่าง/เทคนิคทั่วไปที่ไม่เกี่ยวกับการแพทย์, เรื่องส่วนตัวทั่วไปของ AI ที่ไม่เกี่ยวกับข้อมูลยา/สมุนไพร ฯลฯ — ยกเว้นคำถามเกี่ยวกับที่มาของข้อมูลความรู้ทางการแพทย์และสมุนไพรของระบบ ให้ตอบได้เต็มที่)
@@ -820,8 +875,7 @@ drugs:
         คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2566). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2566*. ราชกิจจานุเบกษา.
     - กรณีอ้างอิง 10 กลุ่มอาการ สธ.:
       กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ*. กระทรวงสาธารณสุข.
-    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น):
-      ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: [ชื่อสมุนไพร] กับ [ชื่อยา]*. URL
+${mahidolApaRule}
     - กรณีอ้างอิงงานวิจัยสากล PubMed (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
       Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
     - กรณีอ้างอิงงานวิจัยไทย ThaiJO (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
@@ -841,6 +895,9 @@ severity: <major | moderate | minor | none>
 herbs: <ชื่อสมุนไพรที่พบ คั่นด้วย comma>
 drugs: <ชื่อยาแผนปัจจุบันที่พบ คั่นด้วย comma>
 [/METADATA]`;
+}
+
+export const SYSTEM_PROMPT = buildSystemPrompt(DEFAULT_KNOWLEDGE_SETTINGS);
 
 export function getAvailableLocalProviders(): ProviderItem[] {
   const all = getLocalProviders();
@@ -1119,27 +1176,59 @@ export async function processLocalChat(
   // 3.6 ตรวจสอบคำถามเกี่ยวกับแหล่งข้อมูล แหล่งอ้างอิง ฐานข้อมูล และการตรวจสอบความถูกต้องของระบบ
   const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
   if (isSourceInquiry) {
-    contextText =
-      `\n[โครงสร้างแหล่งข้อมูลและเอกสารอ้างอิงที่ระบบ "หมอยาพิษณุโลก" ใช้ตอบ (System Reference & Evidence Architecture)]:\n` +
-      `ระบบ "หมอยาพิษณุโลก" ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก ใช้ข้อมูลจากแหล่งอ้างอิงมาตรฐานที่น่าเชื่อถือทางวิชาการและการแพทย์ 5 แหล่งหลัก ดังนี้:\n` +
-      `1. ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (MedPlant DDI Database):\n` +
-      `   - หน่วยงาน: ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล (https://medplant.mahidol.ac.th)\n` +
-      `   - ข้อมูล: รายงานการเกิดอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Drug-Herb Interaction) กลไกทางเภสัชวิทยา (เช่น เอนไซม์ CYP450, P-glycoprotein) ระดับความรุนแรง และคำแนะนำทางคลินิก\n` +
-      `   - การตรวจสอบ: สามารถตรวจสอบย้อนกลับได้จากลิงก์ของศูนย์ข้อมูลสมุนไพร มหาวิทยาลัยมหิดล หรือดูในปุ่ม "แหล่งอ้างอิง" ของระบบ\n` +
-      `2. ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร:\n` +
+    const sourcesList: string[] = [];
+    let idx = 1;
+
+    if (enableMahidol) {
+      sourcesList.push(
+        `${idx++}. ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (MedPlant DDI Database):\n` +
+        `   - หน่วยงาน: ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล (https://medplant.mahidol.ac.th)\n` +
+        `   - ข้อมูล: รายงานการเกิดอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Drug-Herb Interaction) กลไกทางเภสัชวิทยา (เช่น เอนไซม์ CYP450, P-glycoprotein) ระดับความรุนแรง และคำแนะนำทางคลินิก\n` +
+        `   - การตรวจสอบ: สามารถตรวจสอบย้อนกลับได้จากลิงก์ของศูนย์ข้อมูลสมุนไพร มหาวิทยาลัยมหิดล หรือดูในปุ่ม "แหล่งอ้างอิง" ของระบบ`
+      );
+    }
+
+    sourcesList.push(
+      `${idx++}. ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร:\n` +
       `   - หน่วยงาน: คณะกรรมการพัฒนาระบบยาแห่งชาติ กระทรวงสาธารณสุข (ฉบับ พ.ศ. 2566 และฉบับที่ 2 พ.ศ. 2568)\n` +
       `   - ข้อมูล: ข้อบ่งใช้ สรรพคุณ ขนาดยา วิธีใช้ ข้อห้าม ข้อควรระวัง และอันตรกิริยาของตำรับยาและสมุนไพรเดี่ยว\n` +
-      `   - การตรวจสอบ: ตรวจสอบได้จากเมนู "คลังยาสมุนไพร" (/herbs) หรือคลิกปุ่ม "เปิดเอกสาร" ในรายการอ้างอิงของระบบ\n` +
-      `3. คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ (พ.ศ. 2567):\n` +
+      `   - การตรวจสอบ: ตรวจสอบได้จากเมนู "คลังยาสมุนไพร" (/herbs) หรือคลิกปุ่ม "เปิดเอกสาร" ในรายการอ้างอิงของระบบ`
+    );
+
+    sourcesList.push(
+      `${idx++}. คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ (พ.ศ. 2567):\n` +
       `   - หน่วยงาน: กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข\n` +
-      `   - ข้อมูล: แนวทางการใช้ยาสมุนไพรดูแลอาการเจ็บป่วยเบื้องต้น 10 กลุ่มอาการสำหรับประชาชนและหน่วยบริการปฐมภูมิ\n` +
-      `4. ฐานข้อมูลงานวิจัยทางการแพทย์สากลและไทย (Evidence-based Research):\n` +
-      `   - ระดับสากล: ฐานข้อมูล PubMed / MEDLINE ของ National Center for Biotechnology Information (NCBI) สหรัฐอเมริกา ค้นหาผ่าน PubMed API ตามชื่อวิทยาศาสตร์และชื่อสามัญทางยา พร้อมรหัส PMID ที่ตรวจสอบได้จริง\n` +
-      `   - ระดับชาติ: ศูนย์ดัชนีการอ้างอิงวารสารไทย (ThaiJO / TCI) จากวารสารการแพทย์แผนไทยและการแพทย์ทางเลือก และวารสารเภสัชศาสตร์ในไทย\n` +
-      `5. คลังข้อมูลสมุนไพรและตำรับยา 97 รายการ และการตรวจทานโดยทีมผู้เชี่ยวชาญ:\n` +
-      `   - หน่วยงาน: กลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก\n` +
-      `   - ข้อมูล: ผ่านการคัดกรองตามหลักฐานเชิงประจักษ์ และมีระบบ Learning & Clinical Verification ตรวจทานความถูกต้องโดยทีมเภสัชกรและบุคลากรการแพทย์แผนไทย\n` +
-      `* คำสั่งพิเศษ: คำถามนี้ถามถึงแหล่งข้อมูลของระบบ ให้ตอบอย่างภาคภูมิใจ ละเอียด ครบถ้วน โปร่งใส และจัดรูปแบบให้อ่านง่าย โดยแจกแจงแหล่งข้อมูลทั้ง 5 แหล่งข้างต้น พร้อมระบุวิธีที่ผู้ใช้สามารถตรวจสอบย้อนกลับได้ (เช่น ปุ่มแหล่งอ้างอิง, รหัส PMID, ลิงก์มหิดล, และหน้ารายละเอียดสมุนไพรในระบบ) ห้ามตอบปฏิเสธเด็ดขาด*\n\n` +
+      `   - ข้อมูล: แนวทางการใช้ยาสมุนไพรดูแลอาการเจ็บป่วยเบื้องต้น 10 กลุ่มอาการสำหรับประชาชนและหน่วยบริการปฐมภูมิ`
+    );
+
+    if (enableExternal) {
+      sourcesList.push(
+        `${idx++}. ฐานข้อมูลงานวิจัยทางการแพทย์สากลและไทย (Evidence-based Research):\n` +
+        `   - ระดับสากล: ฐานข้อมูล PubMed / MEDLINE ของ National Center for Biotechnology Information (NCBI) สหรัฐอเมริกา ค้นหาผ่าน PubMed API ตามชื่อวิทยาศาสตร์และชื่อสามัญทางยา พร้อมรหัส PMID ที่ตรวจสอบได้จริง\n` +
+        `   - ระดับชาติ: ศูนย์ดัชนีการอ้างอิงวารสารไทย (ThaiJO / TCI) จากวารสารการแพทย์แผนไทยและการแพทย์ทางเลือก และวารสารเภสัชศาสตร์ในไทย`
+      );
+    }
+
+    if (enableInternal) {
+      sourcesList.push(
+        `${idx++}. คลังข้อมูลสมุนไพรและตำรับยา 97 รายการ และการตรวจทานโดยทีมผู้เชี่ยวชาญ:\n` +
+        `   - หน่วยงาน: กลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก\n` +
+        `   - ข้อมูล: ผ่านการคัดกรองตามหลักฐานเชิงประจักษ์ และมีระบบ Learning & Clinical Verification ตรวจทานความถูกต้องโดยทีมเภสัชกรและบุคลากรการแพทย์แผนไทย`
+      );
+    }
+
+    const verifyCheckItems = [
+      'ปุ่มแหล่งอ้างอิง',
+      enableExternal ? 'รหัส PMID' : '',
+      enableMahidol ? 'ลิงก์มหิดล' : '',
+      'หน้ารายละเอียดสมุนไพรในระบบ (/herbs)',
+    ].filter(Boolean).join(', ');
+
+    contextText =
+      `\n[โครงสร้างแหล่งข้อมูลและเอกสารอ้างอิงที่ระบบ "หมอยาพิษณุโลก" ใช้ตอบ (System Reference & Evidence Architecture)]:\n` +
+      `ระบบ "หมอยาพิษณุโลก" ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก ใช้ข้อมูลจากแหล่งอ้างอิงมาตรฐานที่น่าเชื่อถือทางวิชาการและการแพทย์ ${sourcesList.length} แหล่งหลัก ดังนี้:\n` +
+      sourcesList.join('\n') +
+      `\n* คำสั่งพิเศษ: คำถามนี้ถามถึงแหล่งข้อมูลของระบบ ให้ตอบอย่างภาคภูมิใจ ละเอียด ครบถ้วน โปร่งใส และจัดรูปแบบให้อ่านง่าย โดยแจกแจงแหล่งข้อมูลทั้ง ${sourcesList.length} แหล่งข้างต้น พร้อมระบุวิธีที่ผู้ใช้สามารถตรวจสอบย้อนกลับได้ (เช่น ${verifyCheckItems}) ห้ามตอบปฏิเสธเด็ดขาด${!enableMahidol ? " และห้ามระบุถึง มหาวิทยาลัยมหิดล หรือศูนย์ข้อมูลสมุนไพร ม.มหิดล โดยเด็ดขาดเนื่องจากปัจจุบันระบบปิดการใช้งาน" : ""}*\n\n` +
       contextText;
   }
 
@@ -1156,7 +1245,7 @@ export async function processLocalChat(
     dynamicInstructions += "\n\n⚠️ หมายเหตุสำคัญ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลสมุนไพรและตำรับยาภายในเว็บ ให้ตอบตามหลักวิชาการและการดูแลตนเองทั่วไป";
   }
   if (!enableMahidol) {
-    dynamicInstructions += "\n\n⚠️ หมายเหตุสำคัญ: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล ห้ามนำข้อมูล DDI มหิดลมาอ้างอิง";
+    dynamicInstructions += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล (Herb-Drug Interaction) ห้ามนำข้อมูล DDI มหิดลมาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยมหิดล', 'ม.มหิดล', 'ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล' หรือเว็บไซต์ 'medplant.mahidol.ac.th' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
   }
   if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
     dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
@@ -1164,7 +1253,7 @@ export async function processLocalChat(
 
   // 4. เตรียมชุดข้อความส่งไปยัง AI Model
   const messagesToSend = [
-    { role: "system", content: `${SYSTEM_PROMPT}${dynamicInstructions}\n\n<CONTEXT>\n${contextText}\n</CONTEXT>` },
+    { role: "system", content: `${buildSystemPrompt(currentSettings)}${dynamicInstructions}\n\n<CONTEXT>\n${contextText}\n</CONTEXT>` },
     ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
     { role: "user", content: question },
   ];
@@ -1418,14 +1507,19 @@ export async function processLocalChat(
   // ตรวจสอบและคัดกรองอ้างอิงอย่างเข้มงวดก่อนส่งออก (Strict Reference Validation & Pruning)
   const sourcesPayload = isOutOfScope
     ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
-    : validateAndPruneSources(question, answer, rawSourcesPayload);
+    : validateAndPruneSources(question, answer, rawSourcesPayload, currentSettings);
 
-  const finalResponse = `${answer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
+  let cleanAnswer = answer;
+  if (!enableMahidol) {
+    cleanAnswer = sanitizeMahidolReferences(cleanAnswer);
+  }
+
+  const finalResponse = `${cleanAnswer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
 
   // บันทึกคำถาม-คำตอบลงคิวเรียนรู้และตรวจสอบความถูกต้องสำหรับแอดมิน
-  if (!isOutOfScope && answer.trim()) {
+  if (!isOutOfScope && cleanAnswer.trim()) {
     try {
-      addToLearningQueue(question, answer);
+      addToLearningQueue(question, cleanAnswer);
     } catch {
       // ignore
     }

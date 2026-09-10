@@ -5,6 +5,8 @@ import {
   findRelevantMahidolDdi,
   extractQuestionEntities,
   validateAndPruneSources,
+  sanitizeMahidolReferences,
+  buildSystemPrompt,
 } from "../lib/local-chat-service";
 
 describe("Reference and Citation Accuracy (Strict Relevance)", () => {
@@ -373,6 +375,85 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
       expect(pruned.knowledge.length).toBe(1);
       expect(pruned.knowledge[0].source_url).not.toContain("ratchakitcha.soc.go.th");
       expect(pruned.knowledge[0].source_url).toBe(`/herbs?name=${encodeURIComponent("ยาขมิ้นชัน")}`);
+    });
+
+    it("validateAndPruneSources completely removes Mahidol DDI documents when enable_mahidol_ddi is false", () => {
+      const question = "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?";
+      const answer = "ขมิ้นชันอาจมีผลต่อยาวาร์ฟาริน";
+      const rawSources = {
+        internal: [],
+        pubmed: [],
+        thaijo: [],
+        knowledge: [
+          {
+            id: "m-1",
+            title: "อันตรกิริยาระหว่าง ขมิ้น กับ Warfarin (ม.มหิดล)",
+            category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+            content: "ขมิ้นชันกับ warfarin",
+            source: "ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
+            source_url: "https://medplant.mahidol.ac.th/ddi/1",
+          },
+          {
+            id: "nlem-1",
+            title: "บัญชียาหลักแห่งชาติด้านสมุนไพร: ยาขมิ้นชัน (พ.ศ. 2568)",
+            category: "บัญชียาหลักแห่งชาติด้านสมุนไพร",
+            content: "ยาขมิ้นชัน",
+            source: "ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(question, answer, rawSources, {
+        enable_external_research: true,
+        enable_internal_db: true,
+        enable_mahidol_ddi: false,
+      });
+
+      // ต้องไม่มีเอกสารของ ม.มหิดล หลงเหลืออยู่เลย
+      expect(pruned.knowledge.some((k) => k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)")).toBe(false);
+      expect(pruned.knowledge.some((k) => k.title.includes("มหิดล"))).toBe(false);
+      expect(pruned.knowledge.some((k) => k.source?.includes("มหิดล"))).toBe(false);
+      expect(pruned.knowledge.some((k) => k.source_url?.includes("mahidol"))).toBe(false);
+      // ต้องเหลือเฉพาะเอกสารที่ไม่ใช่ ม.มหิดล
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].title).toContain("ยาขมิ้นชัน");
+    });
+
+    it("sanitizeMahidolReferences strips lines citing Mahidol or medplant and empty APA heading", () => {
+      const responseWithMahidol = `ขมิ้นชันอาจมีผลเพิ่มฤทธิ์ของยาวาร์ฟาริน
+ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล รายงานว่าควรหลีกเลี่ยง
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน: ขมิ้นชัน กับ Warfarin*. https://medplant.mahidol.ac.th/
+
+💡 ข้อแนะนำ: ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้
+[METADATA]
+category: drug_interaction
+severity: moderate
+herbs: ขมิ้นชัน
+drugs: warfarin
+[/METADATA]`;
+
+      const sanitized = sanitizeMahidolReferences(responseWithMahidol);
+
+      expect(sanitized).not.toContain("มหาวิทยาลัยมหิดล");
+      expect(sanitized).not.toContain("medplant.mahidol.ac.th");
+      expect(sanitized).not.toContain("ศูนย์ข้อมูลสมุนไพร");
+      expect(sanitized).not.toContain("📚 เอกสารอ้างอิง (APA 7th Edition)");
+      expect(sanitized).toContain("ขมิ้นชันอาจมีผลเพิ่มฤทธิ์ของยาวาร์ฟาริน");
+      expect(sanitized).toContain("💡 ข้อแนะนำ: ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้");
+    });
+
+    it("buildSystemPrompt excludes Mahidol APA 7 template and adds strict prohibition when enable_mahidol_ddi is false", () => {
+      const promptWithoutMahidol = buildSystemPrompt({
+        enable_external_research: true,
+        enable_internal_db: true,
+        enable_mahidol_ddi: false,
+      });
+
+      expect(promptWithoutMahidol).toContain("ข้อห้ามเด็ดขาดเรื่อง ม.มหิดล");
+      expect(promptWithoutMahidol).toContain("ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.มหิดล");
+      expect(promptWithoutMahidol).not.toContain("ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล. (ม.ป.ป.). *ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน");
     });
   });
 });

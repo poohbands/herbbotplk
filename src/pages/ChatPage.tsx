@@ -6,7 +6,7 @@ import remarkGfm from "remark-gfm";
 import { supabase } from "@/integrations/supabase/client";
 import herbalHero from "@/assets/herbal-hero.png";
 import { toast } from "sonner";
-import { processLocalChat, hasLocalProviderKey, validateAndPruneSources } from "@/lib/local-chat-service";
+import { processLocalChat, hasLocalProviderKey, validateAndPruneSources, sanitizeMahidolReferences } from "@/lib/local-chat-service";
 import {
   getCurrentActiveProviderStatus,
   type ActiveApiStatus,
@@ -496,9 +496,12 @@ const ChatPage = () => {
 
         const parsed = parseMetadata(fullResponse);
         cleanContent = parsed.cleanContent;
+        if (currentSettings.enable_mahidol_ddi === false) {
+          cleanContent = sanitizeMahidolReferences(cleanContent);
+        }
         category = parsed.category;
         severity = parsed.severity;
-        sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources) : parsed.sources;
+        sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources, currentSettings) : parsed.sources;
 
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -596,9 +599,12 @@ const ChatPage = () => {
 
             const parsed = parseMetadata(assistantContent);
             cleanContent = parsed.cleanContent;
+            if (currentSettings.enable_mahidol_ddi === false) {
+              cleanContent = sanitizeMahidolReferences(cleanContent);
+            }
             category = parsed.category;
             severity = parsed.severity;
-            sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources) : parsed.sources;
+            sources = parsed.sources ? validateAndPruneSources(userContent, cleanContent, parsed.sources, currentSettings) : parsed.sources;
 
             setMessages((prev) =>
               prev.map((m, i) =>
@@ -1033,7 +1039,17 @@ const ChatPage = () => {
                           {/* 4. เอกสารองค์ความรู้และคู่มือกระทรวงสาธารณสุข */}
                           {msg.sources.knowledge && msg.sources.knowledge.length > 0 && (
                             <div className="space-y-1.5">
-                              {msg.sources.knowledge.map((k) => (
+                              {msg.sources.knowledge
+                                .filter(
+                                  (k) =>
+                                    knowledgeSettings.enable_mahidol_ddi !== false ||
+                                    (k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" &&
+                                      !k.source?.includes("มหิดล") &&
+                                      !k.source?.includes("ศูนย์ข้อมูลสมุนไพร") &&
+                                      !k.title?.includes("มหิดล") &&
+                                      !k.source_url?.includes("mahidol"))
+                                )
+                                .map((k) => (
                                 <div
                                   key={k.id}
                                   className="flex items-center justify-between gap-2 text-xs p-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/15 border border-emerald-500/20 transition-all"
@@ -1094,10 +1110,20 @@ const ChatPage = () => {
                                       ...(msg.sources?.thaijo || []).map(
                                         (t) => `${t.authors ? `${t.authors}. ` : ""}(${t.year || "ม.ป.ป."}). ${t.title}. ${t.journal}. ${t.url}`
                                       ),
-                                      ...(msg.sources?.knowledge || []).map((k) => {
-                                        const docUrl = getKnowledgeLink(k);
-                                        return `${k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). ${k.title}. กระทรวงสาธารณสุข.${docUrl ? ` ${docUrl}` : ""}`;
-                                      }),
+                                      ...(msg.sources?.knowledge || [])
+                                        .filter(
+                                          (k) =>
+                                            knowledgeSettings.enable_mahidol_ddi !== false ||
+                                            (k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" &&
+                                              !k.source?.includes("มหิดล") &&
+                                              !k.source?.includes("ศูนย์ข้อมูลสมุนไพร") &&
+                                              !k.title?.includes("มหิดล") &&
+                                              !k.source_url?.includes("mahidol"))
+                                        )
+                                        .map((k) => {
+                                          const docUrl = getKnowledgeLink(k);
+                                          return `${k.source || "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก"}. (2567). ${k.title}. กระทรวงสาธารณสุข.${docUrl ? ` ${docUrl}` : ""}`;
+                                        }),
                                     ].join("\n\n");
                                     copyLink(allApa);
                                     toast.success("คัดลอกรายการอ้างอิง APA 7 ทั้งหมดแล้ว");
@@ -1174,7 +1200,17 @@ const ChatPage = () => {
                                   </button>
                                 </div>
                               ))}
-                              {(msg.sources?.knowledge || []).map((k) => {
+                              {(msg.sources?.knowledge || [])
+                                .filter(
+                                  (k) =>
+                                    knowledgeSettings.enable_mahidol_ddi !== false ||
+                                    (k.category !== "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" &&
+                                      !k.source?.includes("มหิดล") &&
+                                      !k.source?.includes("ศูนย์ข้อมูลสมุนไพร") &&
+                                      !k.title?.includes("มหิดล") &&
+                                      !k.source_url?.includes("mahidol"))
+                                )
+                                .map((k) => {
                                 const docUrl = getKnowledgeLink(k);
                                 const isNlem = isNlemKnowledge(k);
                                 return (
@@ -1342,12 +1378,14 @@ const ChatPage = () => {
       {/* Input */}
       <div className="border-t border-border bg-card/80 backdrop-blur-sm sticky bottom-0">
         <div className="container max-w-4xl mx-auto px-4 py-3">
-          {(!knowledgeSettings.enable_internal_db || !knowledgeSettings.enable_external_research) && (
+          {(!knowledgeSettings.enable_internal_db || !knowledgeSettings.enable_external_research || !knowledgeSettings.enable_mahidol_ddi) && (
             <div className="flex items-center justify-center gap-2 mb-2">
               <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
                 <span>⚙️ สถานะแหล่งข้อมูล:</span>
                 {!knowledgeSettings.enable_internal_db && <span className="line-through text-muted-foreground">ฐานข้อมูลในเว็บ</span>}
-                {!knowledgeSettings.enable_internal_db && !knowledgeSettings.enable_external_research && <span>•</span>}
+                {!knowledgeSettings.enable_internal_db && (!knowledgeSettings.enable_external_research || !knowledgeSettings.enable_mahidol_ddi) && <span>•</span>}
+                {!knowledgeSettings.enable_mahidol_ddi && <span className="line-through text-muted-foreground">DDI ม.มหิดล</span>}
+                {!knowledgeSettings.enable_mahidol_ddi && !knowledgeSettings.enable_external_research && <span>•</span>}
                 {!knowledgeSettings.enable_external_research && <span className="line-through text-muted-foreground">งานวิจัยภายนอก/APA 7</span>}
                 <a href="/admin" className="underline font-medium hover:text-foreground ml-1">ตั้งค่าในคลังความรู้</a>
               </span>
