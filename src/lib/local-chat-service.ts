@@ -800,7 +800,14 @@ export function validateAndPruneSources(
       const docHerb = m ? m[1].trim() : "";
       const docDrug = m ? m[2].trim() : "";
 
-      // ถ้าผู้ใช้ระบุสมุนไพรเฉพาะเจาะจง สมุนไพรในเอกสารต้องตรงกับที่ถาม
+      const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
+
+      // ถ้าเป็นคำถามอาการ (ไม่ได้ระบุสมุนไพร/ยาเฉพาะ) → ตัด DDI ทิ้งทั้งหมด เพราะไม่ได้ถามเรื่อง DDI
+      if (herbs.length === 0 && drugs.length === 0 && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
+        continue;
+      }
+
+      // ถ้าผู้ใช้ระบุสมุนไพรเฉพาะเจาะจง สมุนไพรในเอกสารต้องตรงกับที่ถามใน **คำถาม** เท่านั้น
       if (herbs.length > 0) {
         const herbMatch = herbs.some(
           (h) =>
@@ -809,7 +816,7 @@ export function validateAndPruneSources(
             h.toLowerCase().includes(docHerb.toLowerCase())
         );
         if (!herbMatch) {
-          continue; // ตัดสมุนไพรที่ไม่เกี่ยวข้องทิ้งทันที
+          continue;
         }
       }
 
@@ -822,21 +829,15 @@ export function validateAndPruneSources(
             d.toLowerCase().includes(docDrug.toLowerCase())
         );
         if (!drugMatch) {
-          continue; // ตัดยาที่ไม่เกี่ยวข้องทิ้งทันที
+          continue;
         }
       }
 
-      // สมุนไพรหรือยาในเอกสารนี้ ต้องปรากฏในคำถาม หรือคำตอบของ AI
-      const herbInText =
-        qLower.includes(docHerb.toLowerCase()) ||
-        aLower.includes(docHerb.toLowerCase());
-      const drugInText =
-        qLower.includes(docDrug.toLowerCase()) ||
-        aLower.includes(docDrug.toLowerCase());
+      // สมุนไพรหรือยาในเอกสารนี้ ต้องปรากฏใน **คำถาม** เท่านั้น (ไม่ใช้คำตอบ เพราะชื่อสมุนไพรที่เป็นส่วนประกอบของตำรับจะถูกรวมเข้ามาโดยไม่เกี่ยวข้อง)
+      const herbInQuestion = qLower.includes(docHerb.toLowerCase());
+      const drugInQuestion = qLower.includes(docDrug.toLowerCase());
 
-      const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
-
-      if (!herbInText && !drugInText && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
+      if (!herbInQuestion && !drugInQuestion && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
         continue;
       }
     } else if (
@@ -846,6 +847,13 @@ export function validateAndPruneSources(
       const m = title.match(/อันตรกิริยาระหว่าง\s+(.+?)\s+กับ\s+(.+?)(?:\s+\(ม\.ธรรมศาสตร์\))?$/);
       const docHerb = m ? m[1].trim() : (k.herb_name || "");
       const docDrug = m ? m[2].trim() : (k.drug_name || "");
+
+      const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
+
+      // ถ้าเป็นคำถามอาการ (ไม่ได้ระบุสมุนไพร/ยาเฉพาะ) → ตัด DDI ทิ้งทั้งหมด เพราะไม่ได้ถามเรื่อง DDI
+      if (herbs.length === 0 && drugs.length === 0 && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
+        continue;
+      }
 
       // ถ้าผู้ใช้ระบุสมุนไพรเฉพาะเจาะจง
       if (herbs.length > 0) {
@@ -869,16 +877,11 @@ export function validateAndPruneSources(
         if (!drugMatch) continue;
       }
 
-      const herbInText =
-        qLower.includes(docHerb.toLowerCase()) ||
-        aLower.includes(docHerb.toLowerCase());
-      const drugInText =
-        qLower.includes(docDrug.toLowerCase()) ||
-        aLower.includes(docDrug.toLowerCase());
+      // สมุนไพรหรือยาในเอกสารนี้ ต้องปรากฏใน **คำถาม** เท่านั้น (ไม่ใช้คำตอบ)
+      const herbInQuestion = qLower.includes(docHerb.toLowerCase());
+      const drugInQuestion = qLower.includes(docDrug.toLowerCase());
 
-      const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
-
-      if (!herbInText && !drugInText && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
+      if (!herbInQuestion && !drugInQuestion && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion && !isSourceInquiry) {
         continue;
       }
     } else if (k.category === "บัญชียาหลักแห่งชาติด้านสมุนไพร") {
@@ -890,8 +893,8 @@ export function validateAndPruneSources(
       const docDrugClean = docDrugName.replace(/^ยา/, "").trim();
 
       const drugMentioned =
-        (docDrugName && (qLower.includes(docDrugName.toLowerCase()) || aLower.includes(docDrugName.toLowerCase()))) ||
-        (docDrugClean.length >= 2 && (qLower.includes(docDrugClean.toLowerCase()) || aLower.includes(docDrugClean.toLowerCase())));
+        (docDrugName && qLower.includes(docDrugName.toLowerCase())) ||
+        (docDrugClean.length >= 2 && qLower.includes(docDrugClean.toLowerCase()));
 
       if (!drugMentioned && !isSourceInquiry) {
         continue; // ตัดเอกสารบัญชียาหลักที่ไม่เกี่ยวข้องทิ้ง
