@@ -1821,6 +1821,7 @@ export async function processLocalChat(
             temperature: 0.2,
             stream: true,
           }),
+          signal: AbortSignal.timeout(35000),
         });
 
         if (resp.status === 404 || resp.status === 503 || resp.status === 429) {

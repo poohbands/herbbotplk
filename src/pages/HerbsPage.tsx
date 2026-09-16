@@ -59,7 +59,9 @@ const safeDecode = (val: string | null | undefined): string => {
     if (decoded.includes("%")) {
       try {
         decoded = decodeURIComponent(decoded);
-      } catch {}
+      } catch {
+        // Ignore secondary decode error
+      }
     }
     return decoded.trim();
   } catch {
@@ -72,7 +74,7 @@ const cleanThai = (s: string): string =>
   s
     .toLowerCase()
     .replace(/^(ยา)?(น้ำมัน|สเปรย์|ทา|ขี้ผึ้ง)?(สารสกัด(จาก)?)?/, "")
-    .replace(/[\s\-_,()\/\\:.\[\]]+/g, "")
+    .replace(/[\s\-_,()/\\:.[\]]+/g, "")
     .trim();
 
 /** ฟังก์ชันสกัดคีย์เวิร์ดสำคัญ (เช่น อัตราส่วน 1:1, 20:1 และคำสำคัญ) */
@@ -85,7 +87,7 @@ const extractTokens = (s: string): string[] => {
 
   const words = lower
     .replace(/\d+:\d+/g, " ")
-    .split(/[\s\-_,()\/\\:.\[\]]+/)
+    .split(/[\s\-_,()/\\:.[\]]+/)
     .map((w) => cleanThai(w) || w)
     .filter((w) => w.length >= 2);
 

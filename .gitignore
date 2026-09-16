@@ -27,3 +27,6 @@ supabase/.temp/
 *.tmp
 *.pdf
 *.docx
+*.xlsx
+import_payload.json
+parsed_herb_drug.json

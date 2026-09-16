@@ -31,7 +31,7 @@ export interface AnalyticsSummary {
   browserBreakdown: { name: string; value: number }[];
   osBreakdown: { name: string; value: number }[];
   topPages: { path: string; title: string; count: number }[];
-  dailyVisitors: { date: string; visitors: number; pageviews: number }[];
+  dailyVisitors: { date: string; fullDate?: string; visitors: number; pageviews: number }[];
   hourlyActivity: { hour: string; count: number }[];
 }
 
@@ -187,20 +187,20 @@ export function updatePageDuration(eventId: string, durationSec: number): void {
   }
 }
 
-/** คำนวณสรุปสถิติเพื่อนำไปแสดงผลบน Dashboard */
-export function computeAnalyticsSummary(): AnalyticsSummary {
+/** คำนวณสรุปสถิติเพื่อนำไปแสดงผลบน Dashboard (รองรับเลือกช่วงวัน เช่น 7, 30, 90 วัน) */
+export function computeAnalyticsSummary(days: number = 7): AnalyticsSummary {
   const events = getStoredAnalytics();
 
   if (events.length === 0) {
     // กรณีพึ่งติดตั้ง ยังไม่มีข้อมูล ให้สร้างสถิติเริ่มต้นของเซสชันปัจจุบัน
     const current = trackPageView();
-    return computeFromEvents([current]);
+    return computeFromEvents([current], days);
   }
 
-  return computeFromEvents(events);
+  return computeFromEvents(events, days);
 }
 
-function computeFromEvents(events: PageviewEvent[]): AnalyticsSummary {
+function computeFromEvents(events: PageviewEvent[], days: number = 7): AnalyticsSummary {
   const totalPageviews = events.length;
   const uniqueVisitorsSet = new Set(events.map((e) => e.visitorId));
   const uniqueSessionsSet = new Set(events.map((e) => e.sessionId));
@@ -255,18 +255,30 @@ function computeFromEvents(events: PageviewEvent[]): AnalyticsSummary {
     .map(([path, data]) => ({ path, title: data.title, count: data.count }))
     .sort((a, b) => b.count - a.count);
 
-  // Daily visitors (7 days)
+  // Daily visitors (กำหนดตามจำนวนวัน: 7, 30, 90 วัน)
   const dayNames = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
-  const dailyMap: Record<string, { visitors: Set<string>; pageviews: number; dayName: string }> = {};
+  const validDays = Math.max(1, Math.min(days, 365));
+  const dailyMap: Record<
+    string,
+    { visitors: Set<string>; pageviews: number; label: string; fullDate: string }
+  > = {};
 
-  for (let i = 6; i >= 0; i--) {
+  for (let i = validDays - 1; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateKey = d.toISOString().split("T")[0];
+    const label = validDays <= 7 ? dayNames[d.getDay()] : `${d.getDate()}/${d.getMonth() + 1}`;
+    const fullDate = d.toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "short",
+      year: "2-digit",
+    });
+
     dailyMap[dateKey] = {
       visitors: new Set<string>(),
       pageviews: 0,
-      dayName: dayNames[d.getDay()],
+      label,
+      fullDate,
     };
   }
 
@@ -278,8 +290,9 @@ function computeFromEvents(events: PageviewEvent[]): AnalyticsSummary {
     }
   });
 
-  const dailyVisitors = Object.entries(dailyMap).map(([date, data]) => ({
-    date: data.dayName,
+  const dailyVisitors = Object.entries(dailyMap).map(([_, data]) => ({
+    date: data.label,
+    fullDate: data.fullDate,
     visitors: data.visitors.size,
     pageviews: data.pageviews,
   }));

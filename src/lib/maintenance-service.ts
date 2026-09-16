@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type MaintenanceState = {
@@ -138,7 +138,9 @@ export async function fetchRemoteMaintenanceState(): Promise<MaintenanceState | 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteState));
       window.dispatchEvent(new CustomEvent(MAINTENANCE_EVENT, { detail: remoteState }));
-    } catch {}
+    } catch {
+      // Ignore localStorage write failure in restricted environments
+    }
 
     return remoteState;
   } catch {

@@ -13,6 +13,7 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronUp,
+  Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -43,20 +44,26 @@ const BROWSER_COLORS = ["#10b981", "#06b6d4", "#f97316", "#8b5cf6", "#ec4899", "
 export const VisitorAnalyticsDashboard = () => {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
+  const [selectedDays, setSelectedDays] = useState<7 | 30 | 90>(7);
 
-  const loadData = () => {
-    const data = computeAnalyticsSummary();
+  const loadData = (days: 7 | 30 | 90 = selectedDays) => {
+    const data = computeAnalyticsSummary(days);
     setSummary(data);
   };
 
+  const handleDaysChange = (days: 7 | 30 | 90) => {
+    setSelectedDays(days);
+    loadData(days);
+  };
+
   useEffect(() => {
-    loadData();
+    loadData(7);
   }, []);
 
   const handleClear = () => {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติสถิติการเข้าชมทั้งหมดบนเครื่องนี้?")) {
       clearStoredAnalytics();
-      loadData();
+      loadData(selectedDays);
       toast.success("ล้างประวัติสถิติเรียบร้อยแล้ว");
     }
   };
@@ -181,19 +188,70 @@ export const VisitorAnalyticsDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Daily Visitors Chart */}
               <div className="lg:col-span-2 bg-muted/20 rounded-xl p-4 border border-border/60">
-                <h4 className="text-sm font-semibold text-foreground mb-1 flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-emerald-600" /> สถิติผู้เข้าชมรายวัน (7 วันล่าสุด)
-                </h4>
-                <p className="text-xs text-muted-foreground mb-4">จำนวนผู้เข้าชม (Visitors) และยอดเปิดหน้า (Pageviews)</p>
+                <div className="flex items-center justify-between flex-wrap gap-2 mb-2 pb-1 border-b border-border/40">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    <TrendingUp className="w-4 h-4 text-emerald-600" /> สถิติผู้เข้าชมรายวัน ({selectedDays} วันล่าสุด)
+                  </h4>
+                  {/* Selector for 7, 30, 90 days */}
+                  <div className="flex items-center gap-1.5 bg-background p-1 rounded-lg border-2 border-emerald-500/40 shadow-xs">
+                    <span className="text-[11px] font-medium text-muted-foreground pl-1.5 pr-0.5 hidden sm:inline-flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 text-emerald-600" /> เลือก:
+                    </span>
+                    {([7, 30, 90] as const).map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => handleDaysChange(d)}
+                        className={`px-3 py-1 rounded-md transition-all font-thai font-semibold text-xs cursor-pointer ${
+                          selectedDays === d
+                            ? "bg-emerald-600 text-white shadow-xs scale-105"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
+                        }`}
+                      >
+                        {d} วัน
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4">
+                  จำนวนผู้เข้าชม (Visitors) และยอดเปิดหน้า (Pageviews) ย้อนหลัง {selectedDays} วัน
+                </p>
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={summary.dailyVisitors}>
+                    <BarChart data={summary.dailyVisitors} barGap={selectedDays > 7 ? 1 : 4}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                      <XAxis dataKey="date" style={{ fontFamily: "Sarabun", fontSize: 11 }} />
+                      <XAxis
+                        dataKey="date"
+                        minTickGap={10}
+                        style={{ fontFamily: "Sarabun", fontSize: selectedDays > 7 ? 10 : 11 }}
+                      />
                       <YAxis allowDecimals={false} style={{ fontFamily: "Sarabun", fontSize: 11 }} />
-                      <Tooltip contentStyle={{ borderRadius: "8px", border: "1px solid hsl(var(--border))", fontFamily: "Sarabun" }} />
-                      <Bar dataKey="visitors" name="ผู้เข้าชม (คน)" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="pageviews" name="ยอดเปิดหน้า (ครั้ง)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                      <Tooltip
+                        labelFormatter={(value, payload) => {
+                          const item = payload?.[0]?.payload;
+                          return item?.fullDate ? `${item.fullDate} (${item.date})` : value;
+                        }}
+                        contentStyle={{
+                          borderRadius: "8px",
+                          border: "1px solid hsl(var(--border))",
+                          fontFamily: "Sarabun",
+                          fontSize: "12px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="visitors"
+                        name="ผู้เข้าชม (คน)"
+                        fill="#10b981"
+                        radius={[3, 3, 0, 0]}
+                        maxBarSize={selectedDays > 30 ? 6 : selectedDays > 7 ? 12 : 24}
+                      />
+                      <Bar
+                        dataKey="pageviews"
+                        name="ยอดเปิดหน้า (ครั้ง)"
+                        fill="#3b82f6"
+                        radius={[3, 3, 0, 0]}
+                        maxBarSize={selectedDays > 30 ? 6 : selectedDays > 7 ? 12 : 24}
+                      />
                       <Legend wrapperStyle={{ fontFamily: "Sarabun", fontSize: "11px" }} />
                     </BarChart>
                   </ResponsiveContainer>
