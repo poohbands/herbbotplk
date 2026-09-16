@@ -41,17 +41,20 @@ import {
 const DEVICE_COLORS = ["#10b981", "#3b82f6", "#f59e0b"];
 const BROWSER_COLORS = ["#10b981", "#06b6d4", "#f97316", "#8b5cf6", "#ec4899", "#64748b"];
 
+export type DayOption = 7 | 30 | 90 | 180 | 360;
+export const DAY_OPTIONS: DayOption[] = [7, 30, 90, 180, 360];
+
 export const VisitorAnalyticsDashboard = () => {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
-  const [selectedDays, setSelectedDays] = useState<7 | 30 | 90>(7);
+  const [selectedDays, setSelectedDays] = useState<DayOption>(7);
 
-  const loadData = (days: 7 | 30 | 90 = selectedDays) => {
+  const loadData = (days: DayOption = selectedDays) => {
     const data = computeAnalyticsSummary(days);
     setSummary(data);
   };
 
-  const handleDaysChange = (days: 7 | 30 | 90) => {
+  const handleDaysChange = (days: DayOption) => {
     setSelectedDays(days);
     loadData(days);
   };
@@ -197,12 +200,12 @@ export const VisitorAnalyticsDashboard = () => {
                     <span className="text-[11px] font-medium text-muted-foreground pl-1.5 pr-0.5 hidden sm:inline-flex items-center gap-1">
                       <Calendar className="w-3.5 h-3.5 text-emerald-600" /> เลือก:
                     </span>
-                    {([7, 30, 90] as const).map((d) => (
+                    {DAY_OPTIONS.map((d) => (
                       <button
                         key={d}
                         type="button"
                         onClick={() => handleDaysChange(d)}
-                        className={`px-3 py-1 rounded-md transition-all font-thai font-semibold text-xs cursor-pointer ${
+                        className={`px-2.5 sm:px-3 py-1 rounded-md transition-all font-thai font-semibold text-xs cursor-pointer ${
                           selectedDays === d
                             ? "bg-emerald-600 text-white shadow-xs scale-105"
                             : "text-muted-foreground hover:text-foreground hover:bg-muted/80"
@@ -222,7 +225,7 @@ export const VisitorAnalyticsDashboard = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                       <XAxis
                         dataKey="date"
-                        minTickGap={10}
+                        minTickGap={selectedDays >= 180 ? 18 : 10}
                         style={{ fontFamily: "Sarabun", fontSize: selectedDays > 7 ? 10 : 11 }}
                       />
                       <YAxis allowDecimals={false} style={{ fontFamily: "Sarabun", fontSize: 11 }} />
@@ -242,15 +245,15 @@ export const VisitorAnalyticsDashboard = () => {
                         dataKey="visitors"
                         name="ผู้เข้าชม (คน)"
                         fill="#10b981"
-                        radius={[3, 3, 0, 0]}
-                        maxBarSize={selectedDays > 30 ? 6 : selectedDays > 7 ? 12 : 24}
+                        radius={[2, 2, 0, 0]}
+                        maxBarSize={selectedDays >= 180 ? 3 : selectedDays > 30 ? 6 : selectedDays > 7 ? 12 : 24}
                       />
                       <Bar
                         dataKey="pageviews"
                         name="ยอดเปิดหน้า (ครั้ง)"
                         fill="#3b82f6"
-                        radius={[3, 3, 0, 0]}
-                        maxBarSize={selectedDays > 30 ? 6 : selectedDays > 7 ? 12 : 24}
+                        radius={[2, 2, 0, 0]}
+                        maxBarSize={selectedDays >= 180 ? 3 : selectedDays > 30 ? 6 : selectedDays > 7 ? 12 : 24}
                       />
                       <Legend wrapperStyle={{ fontFamily: "Sarabun", fontSize: "11px" }} />
                     </BarChart>

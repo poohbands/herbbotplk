@@ -255,9 +255,9 @@ function computeFromEvents(events: PageviewEvent[], days: number = 7): Analytics
     .map(([path, data]) => ({ path, title: data.title, count: data.count }))
     .sort((a, b) => b.count - a.count);
 
-  // Daily visitors (กำหนดตามจำนวนวัน: 7, 30, 90 วัน)
+  // Daily visitors (กำหนดตามจำนวนวัน: 7, 30, 90, 180, 360 วัน)
   const dayNames = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
-  const validDays = Math.max(1, Math.min(days, 365));
+  const validDays = Math.max(1, Math.min(days, 730));
   const dailyMap: Record<
     string,
     { visitors: Set<string>; pageviews: number; label: string; fullDate: string }

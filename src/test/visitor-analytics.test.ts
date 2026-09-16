@@ -57,7 +57,7 @@ describe("Visitor & Technical Analytics Service (PDPA Compliant)", () => {
     expect(summary.dailyVisitors.length).toBe(7);
   });
 
-  it("supports configurable daily visitor windows (7, 30, 90 days)", () => {
+  it("supports configurable daily visitor windows (7, 30, 90, 180, 360 days)", () => {
     trackPageView("/", "หน้าแรก - หมอยาพิษณุโลก");
 
     const summary7 = computeAnalyticsSummary(7);
@@ -68,6 +68,12 @@ describe("Visitor & Technical Analytics Service (PDPA Compliant)", () => {
 
     const summary90 = computeAnalyticsSummary(90);
     expect(summary90.dailyVisitors.length).toBe(90);
+
+    const summary180 = computeAnalyticsSummary(180);
+    expect(summary180.dailyVisitors.length).toBe(180);
+
+    const summary360 = computeAnalyticsSummary(360);
+    expect(summary360.dailyVisitors.length).toBe(360);
 
     expect(summary30.dailyVisitors[0].date).toBeDefined();
     expect(summary30.dailyVisitors[0].fullDate).toBeDefined();
