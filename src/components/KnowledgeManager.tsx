@@ -18,6 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   getKnowledgeSettings,
   saveKnowledgeSettings,
+  fetchRemoteKnowledgeSettings,
+  KNOWLEDGE_SETTINGS_EVENT,
   type KnowledgeSettings,
 } from "@/lib/knowledge-settings";
 import {
@@ -131,6 +133,32 @@ const KnowledgeManager = () => {
     });
   };
 
+  const handleToggleShowVerifiableSources = (checked: boolean) => {
+    const updated = saveKnowledgeSettings({ show_verifiable_sources: checked });
+    setKnowledgeSettings(updated);
+    toast({
+      title: checked
+        ? "เปิดการแสดงผลเมนูแหล่งอ้างอิงที่ตรวจสอบได้แล้ว"
+        : "ปิดการแสดงผลเมนูแหล่งอ้างอิงที่ตรวจสอบได้แล้ว",
+      description: checked
+        ? "ระบบจะแสดงกล่อง 'แหล่งอ้างอิงที่ตรวจสอบได้' ท้ายคำตอบ AI ในหน้าแชท"
+        : "ระบบจะซ่อนกล่อง 'แหล่งอ้างอิงที่ตรวจสอบได้' ท้ายคำตอบ AI ในหน้าแชท",
+    });
+  };
+
+  const handleToggleShowApaCitations = (checked: boolean) => {
+    const updated = saveKnowledgeSettings({ show_apa_citations: checked });
+    setKnowledgeSettings(updated);
+    toast({
+      title: checked
+        ? "เปิดการแสดงผลรูปแบบการอ้างอิง (APA 7th Edition) แล้ว"
+        : "ปิดการแสดงผลรูปแบบการอ้างอิง (APA 7th Edition) แล้ว",
+      description: checked
+        ? "ระบบจะแสดงบล็อก 'รูปแบบการอ้างอิง (APA 7th Edition)' ด้านล่าง และรวมหัวข้อ APA ในคำตอบ AI"
+        : "ระบบจะซ่อนบล็อก 'รูปแบบการอ้างอิง (APA 7th Edition)' ด้านล่าง และตัดหัวข้อ APA ออกจากคำตอบ AI",
+    });
+  };
+
   const [activeTab, setActiveTab] = useState<"docs" | "books">("docs");
   const [bookCategoryFilter, setBookCategoryFilter] = useState<string>("all");
   const [copiedApaId, setCopiedApaId] = useState<string | null>(null);
@@ -155,6 +183,17 @@ const KnowledgeManager = () => {
 
   useEffect(() => {
     load();
+    fetchRemoteKnowledgeSettings().then((remote) => {
+      if (remote) setKnowledgeSettings(remote);
+    }).catch(() => {});
+
+    const handleSettingsChange = () => {
+      setKnowledgeSettings(getKnowledgeSettings());
+    };
+
+    window.addEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
+    window.addEventListener("storage", handleSettingsChange);
+
     try {
       const params = new URLSearchParams(window.location.search);
       if (params.get("tab") === "books") {
@@ -170,6 +209,11 @@ const KnowledgeManager = () => {
     } catch {
       /* ignore */
     }
+
+    return () => {
+      window.removeEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
+      window.removeEventListener("storage", handleSettingsChange);
+    };
   }, []);
 
   const openNew = () => { setForm({ ...emptyForm }); setOpen(true); };
@@ -622,6 +666,129 @@ const KnowledgeManager = () => {
                 onCheckedChange={handleToggleHerbBooks}
                 aria-label="เปิด-ปิดหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* ส่วนควบคุมการแสดงผลอ้างอิงและ APA ในหน้าแชท (Chat Reference & Citation Display Settings) */}
+        <div className="pt-3 border-t border-border/70">
+          <div className="mb-3">
+            <h5 className="text-xs font-semibold font-thai text-foreground flex items-center gap-2">
+              <BookOpen className="w-3.5 h-3.5 text-primary" />
+              การควบคุมการแสดงผลอ้างอิงในหน้าแชท (Chat Reference & Citation Display Settings)
+            </h5>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              เปิด-ปิดการแสดงผลส่วนอ้างอิงสำหรับผู้ใช้ทั่วไปในหน้าแชท โดยแอดมินสามารถเปิดหรือปิดได้ทันที
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* สวิตช์ที่ 1: เมนูแหล่งอ้างอิงที่ตรวจสอบได้ */}
+            <div
+              className={`p-3.5 rounded-lg border transition-all ${
+                knowledgeSettings.show_verifiable_sources
+                  ? "bg-card border-primary/30 shadow-xs"
+                  : "bg-card/50 border-border opacity-70"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <BookOpen
+                      className={`w-4 h-4 ${
+                        knowledgeSettings.show_verifiable_sources
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                    <span className="text-sm font-medium text-foreground font-thai">
+                      เมนูแหล่งอ้างอิงที่ตรวจสอบได้
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    แสดงกล่อง "แหล่งอ้างอิงที่ตรวจสอบได้" ท้ายข้อความคำตอบของ AI ในหน้าแชท (รายการตัวยา/ตำรับในระบบ, งานวิจัย PubMed, ThaiJO และหนังสือเวชปฏิบัติ)
+                  </p>
+                  <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                    <Badge
+                      variant={
+                        knowledgeSettings.show_verifiable_sources
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {knowledgeSettings.show_verifiable_sources
+                        ? "เปิดแสดงผล"
+                        : "ซ่อนการแสดงผล"}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      แชทการ์ดอ้างอิง
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      ปุ่มเปิดเอกสาร
+                    </Badge>
+                  </div>
+                </div>
+                <Switch
+                  checked={knowledgeSettings.show_verifiable_sources}
+                  onCheckedChange={handleToggleShowVerifiableSources}
+                  aria-label="เปิด-ปิดการแสดงผลเมนูแหล่งอ้างอิงที่ตรวจสอบได้"
+                />
+              </div>
+            </div>
+
+            {/* สวิตช์ที่ 2: รูปแบบการอ้างอิง (APA 7th Edition) ด้านล่าง */}
+            <div
+              className={`p-3.5 rounded-lg border transition-all ${
+                knowledgeSettings.show_apa_citations
+                  ? "bg-card border-primary/30 shadow-xs"
+                  : "bg-card/50 border-border opacity-70"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1.5 flex-1">
+                  <div className="flex items-center gap-2">
+                    <Sparkles
+                      className={`w-4 h-4 ${
+                        knowledgeSettings.show_apa_citations
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                      }`}
+                    />
+                    <span className="text-sm font-medium text-foreground font-thai">
+                      รูปแบบการอ้างอิง (APA 7th Edition) ด้านล่าง
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    แสดงบล็อก "รูปแบบการอ้างอิง (APA 7th Edition)" ด้านล่าง และรวมหัวข้อเอกสารอ้างอิง APA 7th Edition ในเนื้อหาคำตอบของ AI
+                  </p>
+                  <div className="flex items-center gap-1.5 pt-1 flex-wrap">
+                    <Badge
+                      variant={
+                        knowledgeSettings.show_apa_citations
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {knowledgeSettings.show_apa_citations
+                        ? "เปิดแสดงผล"
+                        : "ซ่อนการแสดงผล"}
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      APA 7th Edition
+                    </Badge>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      ปุ่มคัดลอก APA
+                    </Badge>
+                  </div>
+                </div>
+                <Switch
+                  checked={knowledgeSettings.show_apa_citations}
+                  onCheckedChange={handleToggleShowApaCitations}
+                  aria-label="เปิด-ปิดการแสดงผลรูปแบบการอ้างอิง APA 7th Edition ด้านล่าง"
+                />
+              </div>
             </div>
           </div>
         </div>

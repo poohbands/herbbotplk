@@ -1,7 +1,10 @@
 /**
- * จัดการการตั้งค่าแหล่งข้อมูลสำหรับ AI (Knowledge Base & External Sources Settings)
- * ควบคุมการเปิด-ปิดการใช้ฐานข้อมูลภายในเว็บ และการดึงงานวิจัยภายนอกพร้อมระบบอ้างอิง APA 7
+ * จัดการการตั้งค่าแหล่งข้อมูลและการแสดงผลอ้างอิงสำหรับ AI (Knowledge Base & Citation Display Settings)
+ * ควบคุมการเปิด-ปิดการใช้ฐานข้อมูลภายในเว็บ งานวิจัยภายนอก หนังสือ CPG
+ * และควบคุมการเปิด-ปิดการแสดงผล "เมนูแหล่งอ้างอิงที่ตรวจสอบได้" และ "รูปแบบการอ้างอิง (APA 7th Edition) ด้านล่าง"
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 export type KnowledgeSettings = {
   /**
@@ -29,6 +32,16 @@ export type KnowledgeSettings = {
    * เปิด-ปิดการใช้หนังสือข้อมูลความรู้ด้านยาและแนวทางเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาทดแทน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, บัญชียาหลัก 2568)
    */
   enable_herb_books: boolean;
+
+  /**
+   * เปิด-ปิดการแสดงผล "เมนูแหล่งอ้างอิงที่ตรวจสอบได้" ท้ายคำตอบของ AI ในหน้าแชท
+   */
+  show_verifiable_sources: boolean;
+
+  /**
+   * เปิด-ปิดการแสดงผล "รูปแบบการอ้างอิง (APA 7th Edition)" ด้านล่าง และในเนื้อหาคำตอบของ AI
+   */
+  show_apa_citations: boolean;
 };
 
 export const DEFAULT_KNOWLEDGE_SETTINGS: KnowledgeSettings = {
@@ -37,10 +50,13 @@ export const DEFAULT_KNOWLEDGE_SETTINGS: KnowledgeSettings = {
   enable_mahidol_ddi: true,
   enable_tu_ddi: true,
   enable_herb_books: true,
+  show_verifiable_sources: true,
+  show_apa_citations: true,
 };
 
 const STORAGE_KEY = "plk_knowledge_source_settings";
 export const KNOWLEDGE_SETTINGS_EVENT = "plk_knowledge_settings_changed";
+const SUPABASE_SETTINGS_DOC_TITLE = "SYSTEM_KNOWLEDGE_SETTINGS_CONFIG";
 
 /** ดึงการตั้งค่าแหล่งข้อมูลปัจจุบัน */
 export function getKnowledgeSettings(): KnowledgeSettings {
@@ -73,6 +89,14 @@ export function getKnowledgeSettings(): KnowledgeSettings {
         typeof parsed.enable_herb_books === "boolean"
           ? parsed.enable_herb_books
           : DEFAULT_KNOWLEDGE_SETTINGS.enable_herb_books,
+      show_verifiable_sources:
+        typeof parsed.show_verifiable_sources === "boolean"
+          ? parsed.show_verifiable_sources
+          : DEFAULT_KNOWLEDGE_SETTINGS.show_verifiable_sources,
+      show_apa_citations:
+        typeof parsed.show_apa_citations === "boolean"
+          ? parsed.show_apa_citations
+          : DEFAULT_KNOWLEDGE_SETTINGS.show_apa_citations,
     };
   } catch (e) {
     console.warn("Failed to read knowledge settings from localStorage:", e);
@@ -101,5 +125,96 @@ export function saveKnowledgeSettings(
     }
   }
 
+  syncKnowledgeSettingsToSupabase(next).catch(() => {});
+
   return next;
+}
+
+/** ซิงค์ค่าการตั้งค่าไปยัง Supabase เพื่อให้อุปกรณ์และผู้ใช้ทุกคนรับทราบพร้อมกัน */
+async function syncKnowledgeSettingsToSupabase(settings: KnowledgeSettings): Promise<void> {
+  try {
+    if (!supabase) return;
+    const { data: existing } = await supabase
+      .from("knowledge_documents")
+      .select("id")
+      .eq("title", SUPABASE_SETTINGS_DOC_TITLE)
+      .maybeSingle();
+
+    const payload = {
+      title: SUPABASE_SETTINGS_DOC_TITLE,
+      category: "system_setting",
+      content: JSON.stringify(settings),
+      tags: ["system", "knowledge_settings"],
+      is_published: true,
+      source: "HerbBot System Admin",
+    };
+
+    if (existing?.id) {
+      await supabase.from("knowledge_documents").update(payload).eq("id", existing.id);
+    } else {
+      await supabase.from("knowledge_documents").insert(payload);
+    }
+  } catch (e) {
+    // ละเว้นกรณีออฟไลน์หรือไม่มีสิทธิ์เขียน
+  }
+}
+
+/** ดึงค่าการตั้งค่าจาก Supabase Cloud เพื่ออัปเดต LocalStorage */
+export async function fetchRemoteKnowledgeSettings(): Promise<KnowledgeSettings | null> {
+  try {
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from("knowledge_documents")
+      .select("content, updated_at")
+      .eq("title", SUPABASE_SETTINGS_DOC_TITLE)
+      .maybeSingle();
+
+    if (error || !data?.content) return null;
+    const parsed = JSON.parse(data.content);
+    if (!parsed || typeof parsed !== "object") return null;
+
+    const validated: KnowledgeSettings = {
+      enable_external_research:
+        typeof parsed.enable_external_research === "boolean"
+          ? parsed.enable_external_research
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_external_research,
+      enable_internal_db:
+        typeof parsed.enable_internal_db === "boolean"
+          ? parsed.enable_internal_db
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_internal_db,
+      enable_mahidol_ddi:
+        typeof parsed.enable_mahidol_ddi === "boolean"
+          ? parsed.enable_mahidol_ddi
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_mahidol_ddi,
+      enable_tu_ddi:
+        typeof parsed.enable_tu_ddi === "boolean"
+          ? parsed.enable_tu_ddi
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_tu_ddi,
+      enable_herb_books:
+        typeof parsed.enable_herb_books === "boolean"
+          ? parsed.enable_herb_books
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_herb_books,
+      show_verifiable_sources:
+        typeof parsed.show_verifiable_sources === "boolean"
+          ? parsed.show_verifiable_sources
+          : DEFAULT_KNOWLEDGE_SETTINGS.show_verifiable_sources,
+      show_apa_citations:
+        typeof parsed.show_apa_citations === "boolean"
+          ? parsed.show_apa_citations
+          : DEFAULT_KNOWLEDGE_SETTINGS.show_apa_citations,
+    };
+
+    if (typeof window !== "undefined") {
+      const current = localStorage.getItem(STORAGE_KEY);
+      if (current !== JSON.stringify(validated)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(validated));
+        window.dispatchEvent(
+          new CustomEvent(KNOWLEDGE_SETTINGS_EVENT, { detail: validated })
+        );
+      }
+    }
+    return validated;
+  } catch (e) {
+    return null;
+  }
 }

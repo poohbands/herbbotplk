@@ -13,6 +13,7 @@ import {
   sanitizeTuReferences,
   extractAllowedEntitiesFromSources,
   sanitizeUnrelatedApaReferences,
+  stripAllApaReferences,
 } from "@/lib/local-chat-service";
 import {
   getCurrentActiveProviderStatus,
@@ -20,6 +21,7 @@ import {
 } from "@/lib/ai-providers-storage";
 import {
   getKnowledgeSettings,
+  fetchRemoteKnowledgeSettings,
   KNOWLEDGE_SETTINGS_EVENT,
   type KnowledgeSettings,
 } from "@/lib/knowledge-settings";
@@ -372,6 +374,10 @@ const ChatPage = () => {
   };
 
   useEffect(() => {
+    fetchRemoteKnowledgeSettings().then((remote) => {
+      if (remote) setKnowledgeSettings(remote);
+    }).catch(() => {});
+
     const refreshApiStatus = () => {
       setActiveApiStatus(getCurrentActiveProviderStatus());
     };
@@ -603,6 +609,9 @@ const ChatPage = () => {
           const allowedEntities = extractAllowedEntitiesFromSources(sources);
           cleanContent = sanitizeUnrelatedApaReferences(cleanContent, allowedEntities);
         }
+        if (currentSettings.show_apa_citations === false) {
+          cleanContent = stripAllApaReferences(cleanContent);
+        }
 
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -713,6 +722,9 @@ const ChatPage = () => {
             if (sources) {
               const allowedEntities = extractAllowedEntitiesFromSources(sources);
               cleanContent = sanitizeUnrelatedApaReferences(cleanContent, allowedEntities);
+            }
+            if (currentSettings.show_apa_citations === false) {
+              cleanContent = stripAllApaReferences(cleanContent);
             }
 
             setMessages((prev) =>
@@ -978,7 +990,9 @@ const ChatPage = () => {
                             ),
                           }}
                         >
-                          {msg.content}
+                          {msg.role === "assistant" && knowledgeSettings.show_apa_citations === false
+                            ? stripAllApaReferences(msg.content)
+                            : msg.content}
                         </ReactMarkdown>
                       </div>
                     ) : (
@@ -992,7 +1006,7 @@ const ChatPage = () => {
                         {getSeverityBadge(msg.severity)}
                       </div>
                     )}
-                    {msg.role === "assistant" && msg.sources && (
+                    {knowledgeSettings.show_verifiable_sources !== false && msg.role === "assistant" && msg.sources && (
                       ((msg.sources.pubmed && msg.sources.pubmed.length > 0) ||
                        (msg.sources.internal && msg.sources.internal.length > 0) ||
                        (msg.sources.thaijo && msg.sources.thaijo.length > 0) ||
@@ -1182,7 +1196,8 @@ const ChatPage = () => {
                           )}
 
                           {/* บล็อกแสดงรายการอ้างอิงตามมาตรฐาน APA 7th Edition พร้อมปุ่มเปิดเอกสารท้ายแต่ละรายการ (ซ่อนอ้างอิงฐานข้อมูลภายใน) */}
-                          {((msg.sources?.pubmed && msg.sources.pubmed.length > 0) ||
+                          {knowledgeSettings.show_apa_citations !== false &&
+                            ((msg.sources?.pubmed && msg.sources.pubmed.length > 0) ||
                             (msg.sources?.thaijo && msg.sources.thaijo.length > 0) ||
                             (msg.sources?.knowledge && msg.sources.knowledge.length > 0)) && (
                             <div className="mt-2.5 pt-2.5 border-t border-border/40 bg-muted/40 p-2.5 rounded-lg space-y-2">
