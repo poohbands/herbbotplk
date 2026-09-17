@@ -1102,12 +1102,12 @@ export function validateAndPruneSources(
     }
   }
 
-  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย - ข้ามกรณีพบคำตอบจากลำดับที่ 1-7 แล้ว หรือเป็นคำถาม DDI)
+  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย - ข้ามกรณีเป็นคำถาม DDI)
   const rawThaiJo = sources.thaijo || [];
   const validThaiJo: any[] = [];
   const seenThaiJoUrls = new Set<string>();
 
-  if (enableExternal && !(enableHerbBooks && (isDdiQuery || effectiveTier !== null)) && rawThaiJo.length > 0) {
+  if (enableExternal && !(enableHerbBooks && isDdiQuery) && rawThaiJo.length > 0) {
     for (const t of rawThaiJo) {
       const url = t.url || "";
       if (seenThaiJoUrls.has(url)) continue;
@@ -1127,7 +1127,9 @@ export function validateAndPruneSources(
         });
       } else {
         const words = (t.title || "").split(/\s+/).filter((w: string) => w.length >= 4);
-        isRelevant = words.some((w: string) => qLower.includes(w.toLowerCase()) || aLower.includes(w.toLowerCase()));
+        isRelevant =
+          words.some((w: string) => qLower.includes(w.toLowerCase()) || aLower.includes(w.toLowerCase())) ||
+          herbs.some((h: string) => (t.title || "").toLowerCase().includes(h.toLowerCase()));
       }
 
       if (isRelevant || isGeneralHerbsQuestion) {
@@ -1137,12 +1139,12 @@ export function validateAndPruneSources(
     }
   }
 
-  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล - ข้ามกรณีพบคำตอบจากลำดับที่ 1-7 แล้ว หรือเป็นคำถาม DDI)
+  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล - ข้ามกรณีเป็นคำถาม DDI)
   const rawPubMed = sources.pubmed || [];
   const validPubMed: any[] = [];
   const seenPmids = new Set<string>();
 
-  if (enableExternal && !(enableHerbBooks && (isDdiQuery || effectiveTier !== null)) && rawPubMed.length > 0) {
+  if (enableExternal && !(enableHerbBooks && isDdiQuery) && rawPubMed.length > 0) {
     for (const p of rawPubMed) {
       if (seenPmids.has(p.pmid)) continue;
       const titleLower = (p.title || "").toLowerCase();
@@ -1753,8 +1755,8 @@ export async function processLocalChat(
 
   const isTierMatched = matchedTier !== null && matchedHerbBooks.length > 0;
 
-  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก, ไม่ใช่คำถาม DDI, และไม่พบใน Tier 1-7)
-  const thaijoResults = (enableExternal && !isDdi && !isTierMatched)
+  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก และไม่ใช่คำถาม DDI)
+  const thaijoResults = (enableExternal && !isDdi)
     ? findRelevantThaiJo(question, matchedHerbs, matchedFormulas)
     : [];
 
@@ -1782,21 +1784,21 @@ export async function processLocalChat(
       });
     }
 
-    // หากไม่พบข้อมูลใน 7 ลำดับหนังสือ จึงอนุญาตให้แทรกเอกสารแนวทาง 10 กลุ่มอาการหรือคลังความรู้ทั่วไป
-    if (!isTierMatched && allKnowledge.length > 0) {
-      if (matchedHerbs.length === 0 && matchedFormulas.length === 0) {
+    // แทรกเอกสารความรู้เพิ่มเติม (เช่น บัญชียาหลักแห่งชาติ หรือแนวทาง 10 กลุ่มอาการ) เพื่อเป็นข้อมูลเสริม
+    if (allKnowledge.length > 0) {
+      if (!isTierMatched && matchedHerbs.length === 0 && matchedFormulas.length === 0) {
         contextText += "\n[แนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุข]\n";
         allKnowledge.slice(0, 2).forEach((k) => {
           contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.length > 1500 ? k.content.slice(0, 1500) + "…(ตัดเนื้อหาบางส่วน)" : k.content}\n`;
         });
       } else {
-        // แสดง knowledge ที่เกี่ยวข้องด้วยแม้จะมี herb match แล้ว (เนื้อหาเพิ่มเติม)
+        // แสดง knowledge ที่เกี่ยวข้องเพื่อเป็นข้อมูลเสริม
         const relatedKnowledge = allKnowledge.filter((k) => {
           const qt = question.toLowerCase();
           return (k.title || "").toLowerCase().split(/\s+/).some((w: string) => w.length >= 3 && qt.includes(w));
         });
         if (relatedKnowledge.length > 0) {
-          contextText += "\n[เอกสารประกอบจากคลังความรู้]\n";
+          contextText += "\n[ข้อมูลเสริมจากคลังความรู้/บัญชียาหลักแห่งชาติ]\n";
           relatedKnowledge.slice(0, 2).forEach((k) => {
             contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.length > 1500 ? k.content.slice(0, 1500) + "…(ตัดเนื้อหาบางส่วน)" : k.content}\n`;
           });
@@ -1808,6 +1810,21 @@ export async function processLocalChat(
   // 3.2 แทรกข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (ลำดับที่พบ: Tier 1-7)
   if (enableHerbBooks && matchedHerbBooks.length > 0) {
     contextText += "\n" + formatHerbBooksForAiContext(matchedHerbBooks) + "\n";
+  }
+
+  // 3.2.1 แทรกงานวิจัยไทย ThaiJO และ PubMed เพื่อเป็นข้อมูลเสริม (ถ้ามีและไม่ใช่คำถาม DDI)
+  if (enableExternal && !isDdi && thaijoResults.length > 0) {
+    contextText += "\n[งานวิจัยไทยจากศูนย์ดัชนีการอ้างอิงวารสารไทย (ThaiJO) - สำหรับเป็นข้อมูลเสริม]:\n";
+    thaijoResults.forEach((t) => {
+      contextText += `ชื่อเรื่อง: ${t.title}\nผู้แต่ง: ${t.authors} (${t.year})\nวารสาร: ${t.journal}\nURL: ${t.url}\n\n`;
+    });
+  }
+
+  if (enableExternal && !isDdi && pubmedResults.length > 0) {
+    contextText += "\n[งานวิจัยสากลจากฐานข้อมูล PubMed - สำหรับเป็นข้อมูลเสริม]:\n";
+    pubmedResults.slice(0, 2).forEach((p) => {
+      contextText += `Title: ${p.title}\nAuthors: ${(p.authors || []).join(", ")} (${p.pubdate || ""})\nJournal: ${p.source}\nPMID: ${p.pmid}\n\n`;
+    });
   }
 
   // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
@@ -1845,24 +1862,6 @@ export async function processLocalChat(
       contextText += "\n[ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน — ศ. ดร.ภญ.อรุณพร อิฐรัตน์ สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์]\n";
       matchedTu.forEach((t) => {
         contextText += `หัวข้อ: ${t.title}\n${t.content}\n\n`;
-      });
-    }
-  }
-
-  if (enableExternal && !isDdi && !isTierMatched) {
-    // ใส่งานวิจัยสากลจาก PubMed เข้า Context
-    if (pubmedResults.length > 0) {
-      contextText += "\n[งานวิจัยระดับสากลจาก PubMed ที่เกี่ยวข้อง]\n";
-      pubmedResults.forEach((p) => {
-        contextText += `- PMID: ${p.pmid} | เรื่อง: ${p.title} | วารสาร: ${p.journal} (${p.year}) | ผู้แต่ง: ${p.authors}\n`;
-      });
-    }
-
-    // ใส่งานวิจัยไทยจาก ThaiJO เข้า Context
-    if (thaijoResults.length > 0) {
-      contextText += "\n[งานวิจัยไทยที่เกี่ยวข้องจาก ThaiJO]\n";
-      thaijoResults.forEach((t) => {
-        contextText += `- เรื่อง: ${t.title} | วารสาร: ${t.journal} | ผู้แต่ง: ${t.authors} | ลิงก์: ${t.url}\n`;
       });
     }
   }
@@ -1982,12 +1981,18 @@ export async function processLocalChat(
     const apaCite = activeTierMeta?.apa || matchedHerbBooks[0]?.apaCitation;
 
     contextText =
-      `\n[แหล่งข้อมูลหลักตามลำดับความสำคัญ (Tier ${matchedTier} Priority Source)]:\n` +
-      `คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลลำดับที่ ${matchedTier}: "${sourceFileName}"\n` +
-      `ตามระเบียบของระบบ เมื่อพบข้อมูลจากลำดับที่น้อยกว่าแล้ว **ต้องหยุดค้นหาและห้ามนำข้อมูลหรืออ้างอิงจากแหล่งข้อมูลลำดับที่ต่ำกว่าหรือแหล่งอื่นเด็ดขาด** ให้ตอบโดยอ้างอิงเนื้อหาจากลำดับที่ ${matchedTier} นี้เป็นหลัก และเขียนรายการอ้างอิง (APA 7th Edition) คือ "${apaCite}"\n\n` +
+      `\n[แหล่งข้อมูลหลักตามลำดับความสำคัญ (Tier ${matchedTier} Primary Authority Source)]:\n` +
+      `คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลหลักลำดับที่ ${matchedTier}: "${sourceFileName}"\n` +
+      `ตามระเบียบของระบบ ให้ใช้ข้อมูลจากลำดับที่ ${matchedTier} นี้เป็น **แกนหลักในการตอบประเด็นคำถามหลัก (Primary Core Answer)** อย่างเคร่งครัด\n` +
+      `หากมีประเด็นอื่นๆ ในคำตอบที่เสริมกับคำตอบ (เช่น ข้อมูลทางพฤกษศาสตร์, กลไกการออกฤทธิ์, ขนาดยาตามประกาศกระทรวง, คำแนะนำการดูแลสุขภาพ, หรืองานวิจัยสนับสนุน) สามารถค้นหาและดึงข้อมูลจากแหล่งอื่นในระบบมาตอบเสริมได้ **แต่คำตอบและข้อมูลเสริมต้องห้ามขัดแย้ง คัดง้าง หรือทำให้สับสนกับคำตอบที่ตอบในประเด็นคำถามหลักจาก Tier ${matchedTier} โดยเด็ดขาด**\n` +
+      `ในหัวข้อเอกสารอ้างอิง (APA 7th Edition) ให้อ้างอิงแหล่งข้อมูลหลักลำดับที่ ${matchedTier} คือ "${apaCite}" เป็นรายการแรกเสมอ และสามารถระบุเอกสารอ้างอิงเสริมที่นำมาใช้ตอบจริงต่อท้ายได้\n\n` +
       contextText;
 
-    dynamicInstructions += `\n\n⚠️ **กฎลำดับความสำคัญของแหล่งข้อมูล (Tiered Source Hierarchy):** คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลลำดับที่ ${matchedTier}: "${sourceFileName}" ตามระเบียบของระบบ เมื่อพบข้อมูลจากลำดับที่น้อยกว่าแล้ว **ให้ใช้ข้อมูลและอ้างอิงจากแหล่งนี้เป็นหลักเด็ดขาด และหยุดค้นหา/ห้ามนำแหล่งข้อมูลจากลำดับที่ต่ำกว่า หรือ Mahidol, ธรรมศาสตร์, PubMed, ThaiJO มาใช้ร่วมในคำตอบโดยเด็ดขาด** และในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ให้ระบุเฉพาะ: "${apaCite}" เท่านั้น`;
+    dynamicInstructions += `\n\n⚠️ **กฎลำดับความสำคัญของแหล่งข้อมูลและการตอบประเด็นเสริม (Tiered Authority & Supplementary Rules):**\n` +
+      `1. **ประเด็นคำถามหลัก:** คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลหลักลำดับที่ ${matchedTier}: "${sourceFileName}" ให้ใช้ข้อมูลจากแหล่งนี้เป็น **แกนหลักในการตอบประเด็นคำถามหลัก** อย่างเคร่งครัด\n` +
+      `2. **การเสริมข้อมูลจากแหล่งอื่น:** หากมีประเด็นอื่นๆ ในคำตอบที่เสริมกับคำตอบ สามารถค้นหาและดึงข้อมูลจากแหล่งอื่นในระบบ (เช่น คลังยาสมุนไพร 97 รายการ, บัญชียาหลักแห่งชาติ, หรืองานวิจัย) มาตอบเสริมเพื่อความสมบูรณ์ได้\n` +
+      `3. **กฎเหล็กเรื่องความไม่ขัดแย้ง (Strict Non-Contradiction Rule):** ข้อมูลที่นำมาตอบเสริม **ต้องไม่ขัดแย้ง คัดง้าง หรือทำให้สับสนกับคำตอบที่ตอบในประเด็นคำถามหลักจาก Tier ${matchedTier} โดยเด็ดขาด** หากพบข้อมูลเสริมที่ขัดแย้งกับ Tier ${matchedTier} ให้ยึดข้อมูลของ Tier ${matchedTier} เป็นข้อยุติเท่านั้น และห้ามนำข้อมูลที่ขัดแย้งมาตอบเด็ดขาด\n` +
+      `4. **การอ้างอิง APA 7th Edition:** ในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ให้ระบุเอกสารหลัก "${apaCite}" เป็นอันดับแรกเสมอ หากมีการนำข้อมูลเสริมจากแหล่งอื่นมาใช้ตอบจริง สามารถระบุเอกสารอ้างอิงเสริมต่อท้ายได้`;
   } else if (isDdi) {
     contextText =
       `\n[แหล่งข้อมูลเฉพาะสำหรับอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions Exclusive Source)]:\n` +
@@ -2174,8 +2179,8 @@ export async function processLocalChat(
     ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
     : {
         internal: internalSources,
-        pubmed: (enableExternal && !isTierMatched) ? pubmedResults : [],
-        thaijo: (enableExternal && !isTierMatched) ? thaijoResults : [],
+        pubmed: (enableExternal && !isDdi) ? pubmedResults : [],
+        thaijo: (enableExternal && !isDdi) ? thaijoResults : [],
       };
 
   if (!isOutOfScope) {
@@ -2204,8 +2209,8 @@ export async function processLocalChat(
         }))
       );
     }
-    if (!isTierMatched && enableInternal && allKnowledge.length > 0) {
-      if (matchedHerbs.length === 0 && matchedFormulas.length === 0) {
+    if (enableInternal && allKnowledge.length > 0) {
+      if (!isTierMatched && matchedHerbs.length === 0 && matchedFormulas.length === 0) {
         knowledgeItems.push(
           ...allKnowledge.slice(0, 2).map((k: any) => ({
             id: k.id,

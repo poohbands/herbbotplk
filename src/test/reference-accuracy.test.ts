@@ -801,6 +801,103 @@ drugs:
       expect(pruned.knowledge.some((k) => k.title.includes("ขมิ้นชัน"))).toBe(true);
       expect(pruned.knowledge.some((k) => k.title.includes("เถาวัลย์เปรียง"))).toBe(false);
     });
+
+    it("allows non-contradictory supplementary research (ThaiJO/PubMed) when tier is matched on non-DDI questions", () => {
+      const q = "ขมิ้นชันรักษาแผลในกระเพาะอาหารได้อย่างไร มีงานวิจัยอะไรบ้าง";
+      const answer = "ขมิ้นชันมีสารสำคัญเคอร์คูมิน ช่วยสมานแผลและลดการอักเสบในกระเพาะอาหาร มีงานวิจัยทางคลินิกสนับสนุน";
+      const rawSources = {
+        internal: [{ type: "herb", id: "curcuma", name: "ขมิ้นชัน" }],
+        knowledge: [
+          {
+            id: "cpg-curcuma",
+            tier: 1,
+            title: "ขมิ้นชัน (Curcuma longa)",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            bookCategory: "cpg_medical_services_2568",
+            source: "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+            herbs: ["ขมิ้นชัน"],
+          },
+        ],
+        thaijo: [
+          {
+            title: "ประสิทธิผลของขมิ้นชันในการรักษาแผลในทางเดินอาหาร",
+            authors: "สมชาย และคณะ",
+            year: "2566",
+            journal: "วารสารการแพทย์แผนไทย",
+            url: "https://thaijo.org/article/1",
+          },
+        ],
+        pubmed: [
+          {
+            pmid: "12345678",
+            title: "Curcuma longa in peptic ulcer disease: a clinical trial",
+            authors: "Smith J, et al.",
+            year: "2023",
+            journal: "Phytomedicine",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(q, answer, rawSources);
+      // Primary tier knowledge must be kept
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].id).toBe("cpg-curcuma");
+      // Supplementary ThaiJO & PubMed must be kept because they are relevant to non-DDI question
+      expect(pruned.thaijo.length).toBe(1);
+      expect(pruned.thaijo[0].title).toContain("ขมิ้นชัน");
+      expect(pruned.pubmed.length).toBe(1);
+      expect(pruned.pubmed[0].pmid).toBe("12345678");
+    });
+
+    it("strictly prunes external research and Mahidol/TU DDI when question is a DDI query, preserving only CPG 2568", () => {
+      const q = "ขมิ้นชันกินร่วมกับ warfarin มีอันตรกิริยาหรือยาตีกันไหม";
+      const answer = "ขมิ้นชันอาจเพิ่มฤทธิ์ต้านการแข็งตัวของเลือดเมื่อใช้ร่วมกับ warfarin";
+      const rawSources = {
+        internal: [{ type: "herb", id: "curcuma", name: "ขมิ้นชัน" }],
+        knowledge: [
+          {
+            id: "cpg-ddi-curcuma",
+            tier: 1,
+            title: "ขมิ้นชัน (Curcuma longa) อันตรกิริยาระหว่างยา",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            bookCategory: "cpg_medical_services_2568",
+            source: "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+            herbs: ["ขมิ้นชัน"],
+            modernDrugs: ["warfarin"],
+          },
+          {
+            id: "mahidol-ddi",
+            title: "อันตรกิริยาระหว่าง ขมิ้นชัน กับ warfarin (ม.มหิดล)",
+            category: "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)",
+            source: "ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ มหาวิทยาลัยมหิดล",
+            source_url: "https://medplant.mahidol.ac.th/ddi",
+          },
+        ],
+        thaijo: [
+          {
+            title: "รายงานอันตรกิริยาของขมิ้นชัน",
+            url: "https://thaijo.org/article/2",
+          },
+        ],
+        pubmed: [
+          {
+            pmid: "99999999",
+            title: "Curcuma longa interaction with warfarin",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(q, answer, rawSources);
+      // Only CPG 2568 should remain
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].id).toBe("cpg-ddi-curcuma");
+      // Mahidol DDI must be pruned
+      expect(pruned.knowledge.some((k) => k.id === "mahidol-ddi")).toBe(false);
+      // External research must be pruned for DDI
+      expect(pruned.thaijo.length).toBe(0);
+      expect(pruned.pubmed.length).toBe(0);
+    });
   });
 });
+
 
