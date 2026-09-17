@@ -1562,9 +1562,15 @@ export const SYSTEM_PROMPT = buildSystemPrompt(DEFAULT_KNOWLEDGE_SETTINGS);
 
 export function getAvailableLocalProviders(): ProviderItem[] {
   const all = getLocalProviders();
-  return all
-    .filter((p) => p.is_active && !!p.api_key && p.api_key.trim() !== "" && p.api_key !== "__CLEAR__")
-    .sort((a, b) => a.priority - b.priority);
+  const withKeys = all.filter(
+    (p) => !!p.api_key && p.api_key.trim() !== "" && p.api_key !== "__CLEAR__"
+  );
+  const activeWithKeys = withKeys.filter((p) => p.is_active);
+  if (activeWithKeys.length > 0) {
+    return activeWithKeys.sort((a, b) => a.priority - b.priority);
+  }
+  // ถ้ามี API Key กรอกไว้แล้ว (เช่น DeepSeek) แต่ยังไม่ได้เปิดสวิตช์ ให้เปิดใช้งานเป็นตัวเลือกอัตโนมัติ
+  return withKeys.sort((a, b) => a.priority - b.priority);
 }
 
 export function hasLocalProviderKey(): boolean {

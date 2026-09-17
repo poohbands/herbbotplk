@@ -138,6 +138,7 @@ const AiSettingsPage = () => {
               ...p,
               [field]: cleanVal,
               has_key: field === "api_key" ? Boolean(cleanVal) : p.has_key,
+              is_active: field === "api_key" && cleanVal ? true : p.is_active,
             }
           : p
       )
@@ -224,6 +225,7 @@ const AiSettingsPage = () => {
       try {
         const payload = providers.map((p) => ({
           id: p.id,
+          provider_key: p.provider_key,
           base_url: p.base_url,
           model_name: p.model_name,
           is_active: p.is_active,
