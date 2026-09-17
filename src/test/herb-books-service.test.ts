@@ -3,84 +3,134 @@ import {
   HERB_BOOKS_DATA,
   HERB_BOOK_CATEGORIES,
   searchHerbBooks,
+  searchHerbBooksTiered,
   formatHerbBooksForAiContext,
   isHerbDrugInteractionQuery,
   searchCpgHerbDrugInteractions,
 } from '../lib/herb-books-service';
 
-describe('Herb Books & CPG Guidelines Service (5th Category)', () => {
-  it('loads all 53 clinical reference items across 5 subcategories', () => {
-    expect(HERB_BOOKS_DATA.length).toBe(53);
-    expect(HERB_BOOK_CATEGORIES.length).toBe(5);
+describe('Herb Books & CPG Guidelines Service (7 Tiers Hierarchy with Short-Circuit Retrieval)', () => {
+  it('loads all 55 clinical reference items across 7 priority tiers', () => {
+    expect(HERB_BOOKS_DATA.length).toBe(55);
+    expect(HERB_BOOK_CATEGORIES.length).toBe(7);
 
     const categories = new Set(HERB_BOOKS_DATA.map((b) => b.bookCategory));
-    expect(categories.size).toBe(5);
+    expect(categories.size).toBe(7);
+
+    const tiers = new Set(HERB_BOOKS_DATA.map((b) => b.tier));
+    expect(tiers.size).toBe(7);
   });
 
-  it('contains CPG Department of Medical Services 2568 items with evidence grades and monographs', () => {
-    const cpgItems = HERB_BOOKS_DATA.filter(
-      (b) => b.bookCategory === 'cpg_medical_services_2568'
-    );
-    expect(cpgItems.length).toBe(26);
-    expect(cpgItems.some((b) => b.evidenceLevel?.includes('ก') || b.content.includes('ก1') || b.content.includes('ก2'))).toBe(true);
-    expect(cpgItems.every((b) => b.apaCitation.includes('กรมการแพทย์. (2568)'))).toBe(true);
+  it('contains Tier 1: 25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf (26 items)', () => {
+    const tier1Items = HERB_BOOKS_DATA.filter((b) => b.tier === 1);
+    expect(tier1Items.length).toBe(26);
+    expect(tier1Items.every((b) => b.sourceFile === '25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf')).toBe(true);
+    expect(tier1Items.every((b) => b.apaCitation.includes('กรมการแพทย์. (2568)'))).toBe(true);
   });
 
-  it('contains drug substitution items with modern drug equivalents', () => {
-    const subItems = HERB_BOOKS_DATA.filter(
-      (b) => b.bookCategory === 'substitution_modern_drugs_2567'
-    );
-    expect(subItems.length).toBe(13);
+  it('contains Tier 2: สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf (13 items)', () => {
+    const tier2Items = HERB_BOOKS_DATA.filter((b) => b.tier === 2);
+    expect(tier2Items.length).toBe(13);
+    expect(tier2Items.every((b) => b.sourceFile === 'สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf')).toBe(true);
 
-    const curcumaSub = subItems.find((b) => b.herbs.includes('ขมิ้นชัน'));
+    const curcumaSub = tier2Items.find((b) => b.herbs.includes('ขมิ้นชัน'));
     expect(curcumaSub).toBeDefined();
     expect(curcumaSub?.modernDrugs).toContain('Omeprazole');
-
-    const thaoWanSub = subItems.find((b) => b.herbs.includes('เถาวัลย์เปรียง'));
-    expect(thaoWanSub).toBeDefined();
-    expect(thaoWanSub?.modernDrugs).toContain('Diclofenac');
   });
 
-  it('contains primary care flowcharts with ICD-10 and ICD-10-TM codes', () => {
-    const flowItems = HERB_BOOKS_DATA.filter(
-      (b) => b.bookCategory === 'primary_care_flowchart_icd10'
-    );
-    expect(flowItems.length).toBe(3);
-    expect(flowItems.every((b) => (b.icdCodes || []).length > 0)).toBe(true);
+  it('contains Tier 3: แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf (3 items)', () => {
+    const tier3Items = HERB_BOOKS_DATA.filter((b) => b.tier === 3);
+    expect(tier3Items.length).toBe(3);
+    expect(tier3Items.every((b) => b.sourceFile === 'แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf')).toBe(true);
+    expect(tier3Items.every((b) => (b.icdCodes || []).length > 0)).toBe(true);
   });
 
-  it('contains NLEM 2566 & 2568 (No.2) items with official APA citations', () => {
-    const nlemItems = HERB_BOOKS_DATA.filter(
-      (b) => b.bookCategory === 'nlem_updates_2568'
-    );
-    expect(nlemItems.length).toBe(1);
-    expect(nlemItems.every((b) => b.apaCitation.includes('ราชกิจจานุเบกษา'))).toBe(true);
+  it('contains Tier 4: 2568_2.pdf และ 2568_2_summary.pdf (1 item)', () => {
+    const tier4Items = HERB_BOOKS_DATA.filter((b) => b.tier === 4);
+    expect(tier4Items.length).toBe(1);
+    expect(tier4Items[0].sourceFile).toBe('2568_2.pdf และ 2568_2_summary.pdf');
+    expect(tier4Items[0].apaCitation).toContain('ราชกิจจานุเบกษา');
   });
 
-  it('contains common diseases knowledge items', () => {
-    const commonItems = HERB_BOOKS_DATA.filter(
-      (b) => b.bookCategory === 'common_diseases_10'
-    );
-    expect(commonItems.length).toBe(10);
+  it('contains Tier 5: CD 10 กลุ่มโรค (10 items)', () => {
+    const tier5Items = HERB_BOOKS_DATA.filter((b) => b.tier === 5);
+    expect(tier5Items.length).toBe(10);
+    expect(tier5Items.every((b) => b.sourceFile === 'CD 10 กลุ่มโรค')).toBe(true);
   });
 
-  it('accurately searches for drug substitution queries (e.g. Omeprazole)', () => {
-    const results = searchHerbBooks('คนไข้กินยา omeprazole อยู่ อยากได้สมุนไพรทดแทน', 3);
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].herbs).toContain('ขมิ้นชัน');
-    expect(results[0].modernDrugs).toContain('Omeprazole');
+  it('contains Tier 6: CD 10 กลุ่มอาการ A5.png (1 item)', () => {
+    const tier6Items = HERB_BOOKS_DATA.filter((b) => b.tier === 6);
+    expect(tier6Items.length).toBe(1);
+    expect(tier6Items[0].sourceFile).toBe('CD 10 กลุ่มอาการ A5.png');
+    expect(tier6Items[0].apaCitation).toContain('สำนักงานสาธารณสุขจังหวัดบุรีรัมย์');
+    expect(tier6Items[0].herbs).toContain('เถาวัลย์เปรียง');
   });
 
-  it('accurately searches for CPG queries (e.g. เข่าเสื่อก ข้อเข่าเสื่อม)', () => {
-    const results = searchHerbBooks('ข้อเข่าเสื่อม กรมการแพทย์ แนะนำยาสมุนไพรอะไร', 3);
-    expect(results.length).toBeGreaterThan(0);
-    expect(results.some((r) => r.chapter.includes('ข้อเข่าเสื่อม'))).toBe(true);
+  it('contains Tier 7: ยาทดแทน 19 รายการ A5.png (1 item)', () => {
+    const tier7Items = HERB_BOOKS_DATA.filter((b) => b.tier === 7);
+    expect(tier7Items.length).toBe(1);
+    expect(tier7Items[0].sourceFile).toBe('ยาทดแทน 19 รายการ A5.png');
+    expect(tier7Items[0].apaCitation).toContain('สำนักงานสาธารณสุขจังหวัดบุรีรัมย์');
+    expect(tier7Items[0].modernDrugs).toContain('Omeprazole');
+    expect(tier7Items[0].modernDrugs).toContain('Daflon');
+  });
+
+  it('searchHerbBooksTiered: stops immediately at Tier 1 for DDI questions and does not search Tier 2-7', () => {
+    const result = searchHerbBooksTiered('ขมิ้นชันกินร่วมกับ warfarin ได้ไหม', 3);
+    expect(result.matchedTier).toBe(1);
+    expect(result.sourceFile).toBe('25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf');
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items.every((i) => i.tier === 1)).toBe(true);
+    expect(result.items[0].apaCitation).toContain('กรมการแพทย์. (2568)');
+  });
+
+  it('searchHerbBooksTiered: stops at Tier 2 for modern drug substitution questions', () => {
+    const result = searchHerbBooksTiered('สมุนไพรทดแทนยา omeprazole หรือ simvastatin', 3);
+    expect(result.matchedTier).toBe(2);
+    expect(result.sourceFile).toBe('สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf');
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items.every((i) => i.tier === 2)).toBe(true);
+  });
+
+  it('searchHerbBooksTiered: stops at Tier 3 for primary care decision flowcharts and ICD-10 questions', () => {
+    const result = searchHerbBooksTiered('แผนภูมิปฐมภูมิ รหัสโรค icd-10 และเกณฑ์ส่งต่อ', 3);
+    expect(result.matchedTier).toBe(3);
+    expect(result.sourceFile).toBe('แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf');
+    expect(result.items.every((i) => i.tier === 3)).toBe(true);
+  });
+
+  it('searchHerbBooksTiered: stops at Tier 4 for NLEM 2568 update queries', () => {
+    const result = searchHerbBooksTiered('ประกาศบัญชียาหลักแห่งชาติด้านสมุนไพร 2568 ฉบับที่ 2 มีรายการปรับปรุงใหม่อะไรบ้าง', 3);
+    expect(result.matchedTier).toBe(4);
+    expect(result.sourceFile).toBe('2568_2.pdf และ 2568_2_summary.pdf');
+    expect(result.items.every((i) => i.tier === 4)).toBe(true);
+  });
+
+  it('searchHerbBooksTiered: stops at Tier 5 for CD 10 disease cards', () => {
+    const result = searchHerbBooksTiered('ชุดความรู้ cd 10 บัตรความรู้โรคท้องผูกและริดสีดวงทวารหนัก', 3);
+    expect(result.matchedTier).toBe(5);
+    expect(result.sourceFile).toBe('CD 10 กลุ่มโรค');
+    expect(result.items.every((i) => i.tier === 5)).toBe(true);
+  });
+
+  it('searchHerbBooksTiered: stops at Tier 6 for CD 10 symptoms poster A5', () => {
+    const result = searchHerbBooksTiered('แผ่นภาพ A5 cd 10 กลุ่มอาการ บุรีรัมย์', 3);
+    expect(result.matchedTier).toBe(6);
+    expect(result.sourceFile).toBe('CD 10 กลุ่มอาการ A5.png');
+    expect(result.items.every((i) => i.tier === 6)).toBe(true);
+  });
+
+  it('searchHerbBooksTiered: stops at Tier 7 for substitution 19 remedies poster A5', () => {
+    const result = searchHerbBooksTiered('แผ่นภาพโปสเตอร์ ยาทดแทน 19 รายการ a5 บุรีรัมย์', 3);
+    expect(result.matchedTier).toBe(7);
+    expect(result.sourceFile).toBe('ยาทดแทน 19 รายการ A5.png');
+    expect(result.items.every((i) => i.tier === 7)).toBe(true);
   });
 
   it('formats herb books context clearly for AI generation', () => {
     const results = searchHerbBooks('omeprazole', 1);
     const context = formatHerbBooksForAiContext(results);
-    expect(context).toContain('[หนังสือข้อมูลความรู้ด้านยาและแนวทางเวชปฏิบัติ');
+    expect(context).toContain('[หนังสือและเอกสารข้อมูลความรู้ด้านยาและเวชปฏิบัติ');
     expect(context).toContain('ขมิ้นชัน');
     expect(context).toContain('Omeprazole');
     expect(context).toContain('เอกสารอ้างอิง (APA 7th Edition):');

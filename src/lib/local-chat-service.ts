@@ -5,9 +5,11 @@ import { searchHerbs97ByName, searchHerbs97BySymptom, formatHerb97ForAiContext, 
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
 import {
   searchHerbBooks,
+  searchHerbBooksTiered,
   formatHerbBooksForAiContext,
   isHerbDrugInteractionQuery,
   searchCpgHerbDrugInteractions,
+  HERB_BOOK_CATEGORIES,
   type HerbBookItem,
 } from "./herb-books-service";
 import tuDdiDataset from "@/data/tu-ddi-dataset.json";
@@ -790,14 +792,65 @@ export function validateAndPruneSources(
   const nq = normalizeThaiName(question);
   const na = normalizeThaiName(answer);
 
-  // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล และ ม.ธรรมศาสตร์)
+  // ตรวจสอบการจับคู่ลำดับความสำคัญ 7 ลำดับ
   const rawKnowledge = sources.knowledge || [];
+
+  function detectDocTier(k: any): number | null {
+    if (typeof k.tier === "number") return k.tier;
+    if (k.bookCategory === "cpg_medical_services_2568" || (k.source && k.source.includes("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ"))) return 1;
+    if (k.bookCategory === "substitution_modern_drugs_2567" || (k.source && k.source.includes("ทดแทนยาแผนปัจจุบัน") && !k.id?.includes("poster"))) return 2;
+    if (k.bookCategory === "primary_care_flowchart_icd10" || (k.source && k.source.includes("ปฐมภูมิ") && k.category !== "10 กลุ่มอาการ")) return 3;
+    if (k.bookCategory === "nlem_updates_2568" || k.id === "nlem-updates-2568" || (k.source && k.source.includes("2568_2"))) return 4;
+    if (k.bookCategory === "common_diseases_10" || (k.id && k.id.startsWith("cd10-") && !k.id.includes("poster"))) return 5;
+    if (k.bookCategory === "cd10_symptoms_poster" || k.id === "cd10-symptoms-poster-a5") return 6;
+    if (k.bookCategory === "substitution_19_poster" || k.id === "substitution-19-poster-a5") return 7;
+    return null;
+  }
+
+  const docTiers = rawKnowledge
+    .map((k) => detectDocTier(k))
+    .filter((t): t is number => t !== null);
+
+  let effectiveTier: number | null = null;
+  if (enableHerbBooks && isDdiQuery) {
+    effectiveTier = 1;
+  } else if (docTiers.length > 0) {
+    effectiveTier = Math.min(...docTiers);
+  }
+
+  // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล และ ม.ธรรมศาสตร์)
   const validKnowledge: any[] = [];
   const seenKnowledgeTitles = new Set<string>();
 
   for (const k of rawKnowledge) {
     const title = (k.title || "").trim();
     if (!title || seenKnowledgeTitles.has(title)) continue;
+
+    // กฎ Short-Circuit: หากพบข้อมูลในลำดับที่ effectiveTier (1-7) ให้หยุดและตัดแหล่งข้อมูลอื่นๆ ออกทั้งหมด
+    if (effectiveTier !== null) {
+      if (
+        k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" ||
+        k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" ||
+        title.includes("มหิดล") ||
+        title.includes("ม.ธรรมศาสตร์") ||
+        (k.source && (k.source.includes("มหิดล") || k.source.includes("ธรรมศาสตร์") || k.source.includes("อรุณพร"))) ||
+        (k.source_url && k.source_url.includes("mahidol"))
+      ) {
+        continue;
+      }
+
+      const itemTier = detectDocTier(k);
+
+      // ถ้าเป็นเอกสารหนังสือแต่คนละ tier กับที่พบคำตอบ ให้ตัดทิ้ง
+      if (itemTier !== null && itemTier !== effectiveTier) {
+        continue;
+      }
+
+      // ถ้าเป็นเอกสารความรู้ทั่วไปที่ไม่ใช่หนังสือใน tier ที่พบคำตอบ ให้ตัดทิ้ง
+      if (itemTier === null && (k.category === "10 กลุ่มอาการ" || k.category === "ทั่วไป")) {
+        continue;
+      }
+    }
 
     // ถ้าเป็นคำถามอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions) และเปิดใช้งานหนังสือความรู้ด้านยา
     // ใช้อ้างอิงจากคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568) เท่านั้น
@@ -1049,12 +1102,12 @@ export function validateAndPruneSources(
     }
   }
 
-  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย - ข้ามกรณีเป็นคำถาม DDI เพราะใช้ CPG กรมการแพทย์ 2568 เท่านั้น)
+  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย - ข้ามกรณีพบคำตอบจากลำดับที่ 1-7 แล้ว หรือเป็นคำถาม DDI)
   const rawThaiJo = sources.thaijo || [];
   const validThaiJo: any[] = [];
   const seenThaiJoUrls = new Set<string>();
 
-  if (enableExternal && !(enableHerbBooks && isDdiQuery) && rawThaiJo.length > 0) {
+  if (enableExternal && !(enableHerbBooks && (isDdiQuery || effectiveTier !== null)) && rawThaiJo.length > 0) {
     for (const t of rawThaiJo) {
       const url = t.url || "";
       if (seenThaiJoUrls.has(url)) continue;
@@ -1084,12 +1137,12 @@ export function validateAndPruneSources(
     }
   }
 
-  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล - ข้ามกรณีเป็นคำถาม DDI เพราะใช้ CPG กรมการแพทย์ 2568 เท่านั้น)
+  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล - ข้ามกรณีพบคำตอบจากลำดับที่ 1-7 แล้ว หรือเป็นคำถาม DDI)
   const rawPubMed = sources.pubmed || [];
   const validPubMed: any[] = [];
   const seenPmids = new Set<string>();
 
-  if (enableExternal && !(enableHerbBooks && isDdiQuery) && rawPubMed.length > 0) {
+  if (enableExternal && !(enableHerbBooks && (isDdiQuery || effectiveTier !== null)) && rawPubMed.length > 0) {
     for (const p of rawPubMed) {
       if (seenPmids.has(p.pmid)) continue;
       const titleLower = (p.title || "").toLowerCase();
@@ -1673,21 +1726,37 @@ export async function processLocalChat(
 
   const isDdi = isHerbDrugInteractionQuery(question);
 
-  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก และไม่ใช่คำถาม DDI)
-  const thaijoResults = (enableExternal && !isDdi)
-    ? findRelevantThaiJo(question, matchedHerbs, matchedFormulas)
-    : [];
+  // ค้นหาข้อมูลตามลำดับความสำคัญ 7 ลำดับ (Tiered Knowledge Hierarchy with Short-Circuit Rule)
+  // 1. 25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf (CPG 2568)
+  // 2. สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf
+  // 3. แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf
+  // 4. 2568_2.pdf และ 2568_2_summary.pdf
+  // 5. CD 10 กลุ่มโรค
+  // 6. CD 10 กลุ่มอาการ A5.png
+  // 7. ยาทดแทน 19 รายการ A5.png
+  // กฎ: ถ้าเจอข้อมูลในการตอบคำถามแล้วจากลำดับใดที่น้อยกว่า ให้หยุดค้นหาแหล่งข้อมูลจากแหล่งอื่นๆ ทันทีในประเด็นที่ถาม
+  const tieredResult = enableHerbBooks
+    ? searchHerbBooksTiered(question, 4)
+    : { items: [], matchedTier: null, sourceFile: null, apaCitation: null };
 
-  // ค้นหาข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์, ยาทดแทน 32 รายการ, แผนภูมิปฐมภูมิ, บัญชียาหลัก 2568)
-  const matchedHerbBooks = enableHerbBooks ? searchHerbBooks(question, 4) : [];
+  let matchedHerbBooks = tieredResult.items;
+  let matchedTier = tieredResult.matchedTier;
+
+  // สำหรับคำถาม DDI ถ้ายังไม่ได้จับคู่ Monograph ให้ดึงจาก CPG 2568 (Tier 1) โดยเฉพาะ
   if (enableHerbBooks && isDdi) {
     const cpgDdiMatches = searchCpgHerbDrugInteractions(question, 3);
-    for (const cpgItem of cpgDdiMatches) {
-      if (!matchedHerbBooks.some((b) => b.id === cpgItem.id)) {
-        matchedHerbBooks.unshift(cpgItem);
-      }
+    if (cpgDdiMatches.length > 0) {
+      matchedHerbBooks = cpgDdiMatches;
+      matchedTier = 1;
     }
   }
+
+  const isTierMatched = matchedTier !== null && matchedHerbBooks.length > 0;
+
+  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก, ไม่ใช่คำถาม DDI, และไม่พบใน Tier 1-7)
+  const thaijoResults = (enableExternal && !isDdi && !isTierMatched)
+    ? findRelevantThaiJo(question, matchedHerbs, matchedFormulas)
+    : [];
 
   // 3. สร้าง Context ที่รวบรวมทั้งข้อมูลภายในและงานวิจัยภายนอก (ตามการตั้งค่าเปิด-ปิด)
   let contextText = "";
@@ -1713,38 +1782,41 @@ export async function processLocalChat(
       });
     }
 
-    if (allKnowledge.length > 0 && matchedHerbs.length === 0 && matchedFormulas.length === 0) {
-      contextText += "\n[แนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุข]\n";
-      allKnowledge.slice(0, 2).forEach((k) => {
-        contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.length > 1500 ? k.content.slice(0, 1500) + "…(ตัดเนื้อหาบางส่วน)" : k.content}\n`;
-      });
-    } else if (allKnowledge.length > 0) {
-      // แสดง knowledge ที่เกี่ยวข้องด้วยแม้จะมี herb match แล้ว (เนื้อหาเพิ่มเติม)
-      const relatedKnowledge = allKnowledge.filter((k) => {
-        const qt = question.toLowerCase();
-        return (k.title || "").toLowerCase().split(/\s+/).some((w: string) => w.length >= 3 && qt.includes(w));
-      });
-      if (relatedKnowledge.length > 0) {
-        contextText += "\n[เอกสารประกอบจากคลังความรู้]\n";
-        relatedKnowledge.slice(0, 2).forEach((k) => {
+    // หากไม่พบข้อมูลใน 7 ลำดับหนังสือ จึงอนุญาตให้แทรกเอกสารแนวทาง 10 กลุ่มอาการหรือคลังความรู้ทั่วไป
+    if (!isTierMatched && allKnowledge.length > 0) {
+      if (matchedHerbs.length === 0 && matchedFormulas.length === 0) {
+        contextText += "\n[แนวทาง 10 กลุ่มอาการของกระทรวงสาธารณสุข]\n";
+        allKnowledge.slice(0, 2).forEach((k) => {
           contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.length > 1500 ? k.content.slice(0, 1500) + "…(ตัดเนื้อหาบางส่วน)" : k.content}\n`;
         });
+      } else {
+        // แสดง knowledge ที่เกี่ยวข้องด้วยแม้จะมี herb match แล้ว (เนื้อหาเพิ่มเติม)
+        const relatedKnowledge = allKnowledge.filter((k) => {
+          const qt = question.toLowerCase();
+          return (k.title || "").toLowerCase().split(/\s+/).some((w: string) => w.length >= 3 && qt.includes(w));
+        });
+        if (relatedKnowledge.length > 0) {
+          contextText += "\n[เอกสารประกอบจากคลังความรู้]\n";
+          relatedKnowledge.slice(0, 2).forEach((k) => {
+            contextText += `หัวข้อ: ${k.title}\nเนื้อหา: ${k.content.length > 1500 ? k.content.slice(0, 1500) + "…(ตัดเนื้อหาบางส่วน)" : k.content}\n`;
+          });
+        }
       }
     }
   }
 
-  // 3.2 แทรกข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์, ยาทดแทน 32 รายการ, แผนภูมิปฐมภูมิ, บัญชียาหลัก 2568)
+  // 3.2 แทรกข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (ลำดับที่พบ: Tier 1-7)
   if (enableHerbBooks && matchedHerbBooks.length > 0) {
     contextText += "\n" + formatHerbBooksForAiContext(matchedHerbBooks) + "\n";
   }
 
   // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
-  // หากเป็นคำถามเรื่องอันตรกิริยาระหว่างสมุนไพรกับยา (DDI) ระบบกำหนดให้ใช้ข้อมูลจาก CPG กรมการแพทย์ 2568 เท่านั้น
+  // หากเป็นคำถามเรื่อง DDI หรือพบข้อมูลในลำดับ Tier 1-7 แล้ว ให้ระงับ Mahidol ทันที
   const { isDdiIntent: qDdiIntent } = extractQuestionEntities(question);
   const herbsForDdi = exactMatchedHerbs.length > 0 ? exactMatchedHerbs : (qDdiIntent ? matchedHerbs : []);
 
   let matchedMahidol: any[] = [];
-  if (!isDdi && enableMahidol && allMahidolDdi.length > 0) {
+  if (!isDdi && !isTierMatched && enableMahidol && allMahidolDdi.length > 0) {
     matchedMahidol = findRelevantMahidolDdi(
       question,
       allMahidolDdi,
@@ -1760,8 +1832,9 @@ export async function processLocalChat(
   }
 
   // 3.4 แทรกข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ม.ธรรมศาสตร์ ศ. ดร.ภญ.อรุณพร อิฐรัตน์)
+  // หากเป็นคำถามเรื่อง DDI หรือพบข้อมูลในลำดับ Tier 1-7 แล้ว ให้ระงับ ม.ธรรมศาสตร์ ทันที
   let matchedTu: any[] = [];
-  if (!isDdi && enableTu && allTuDdi.length > 0) {
+  if (!isDdi && !isTierMatched && enableTu && allTuDdi.length > 0) {
     matchedTu = findRelevantTuDdi(
       question,
       allTuDdi,
@@ -1776,7 +1849,7 @@ export async function processLocalChat(
     }
   }
 
-  if (enableExternal && !isDdi) {
+  if (enableExternal && !isDdi && !isTierMatched) {
     // ใส่งานวิจัยสากลจาก PubMed เข้า Context
     if (pubmedResults.length > 0) {
       contextText += "\n[งานวิจัยระดับสากลจาก PubMed ที่เกี่ยวข้อง]\n";
@@ -1903,7 +1976,19 @@ export async function processLocalChat(
   if (!enableTu) {
     dynamicInstructions += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์) ห้ามนำข้อมูล DDI ม.ธรรมศาสตร์มาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยธรรมศาสตร์', 'ม.ธรรมศาสตร์', 'อรุณพร อิฐรัตน์' หรือ 'สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
   }
-  if (isDdi) {
+  if (isTierMatched) {
+    const activeTierMeta = HERB_BOOK_CATEGORIES.find((c) => c.tier === matchedTier);
+    const sourceFileName = activeTierMeta?.sourceFile || matchedHerbBooks[0]?.sourceFile;
+    const apaCite = activeTierMeta?.apa || matchedHerbBooks[0]?.apaCitation;
+
+    contextText =
+      `\n[แหล่งข้อมูลหลักตามลำดับความสำคัญ (Tier ${matchedTier} Priority Source)]:\n` +
+      `คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลลำดับที่ ${matchedTier}: "${sourceFileName}"\n` +
+      `ตามระเบียบของระบบ เมื่อพบข้อมูลจากลำดับที่น้อยกว่าแล้ว **ต้องหยุดค้นหาและห้ามนำข้อมูลหรืออ้างอิงจากแหล่งข้อมูลลำดับที่ต่ำกว่าหรือแหล่งอื่นเด็ดขาด** ให้ตอบโดยอ้างอิงเนื้อหาจากลำดับที่ ${matchedTier} นี้เป็นหลัก และเขียนรายการอ้างอิง (APA 7th Edition) คือ "${apaCite}"\n\n` +
+      contextText;
+
+    dynamicInstructions += `\n\n⚠️ **กฎลำดับความสำคัญของแหล่งข้อมูล (Tiered Source Hierarchy):** คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลลำดับที่ ${matchedTier}: "${sourceFileName}" ตามระเบียบของระบบ เมื่อพบข้อมูลจากลำดับที่น้อยกว่าแล้ว **ให้ใช้ข้อมูลและอ้างอิงจากแหล่งนี้เป็นหลักเด็ดขาด และหยุดค้นหา/ห้ามนำแหล่งข้อมูลจากลำดับที่ต่ำกว่า หรือ Mahidol, ธรรมศาสตร์, PubMed, ThaiJO มาใช้ร่วมในคำตอบโดยเด็ดขาด** และในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ให้ระบุเฉพาะ: "${apaCite}" เท่านั้น`;
+  } else if (isDdi) {
     contextText =
       `\n[แหล่งข้อมูลเฉพาะสำหรับอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions Exclusive Source)]:\n` +
       `ตามนโยบายมาตรฐานการรักษาด้านสมุนไพร สำหรับคำถามเกี่ยวกับอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions / ยาตีกัน / การกินร่วมกับยาแผนปัจจุบัน) **ต้องใช้แหล่งข้อมูลจาก "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568)" เป็นแหล่งข้อมูลในการตอบคำถามเท่านั้น** ห้ามใช้หรืออ้างอิงแหล่งข้อมูล DDI อื่นเด็ดขาด และเขียนรายการอ้างอิง (APA 7th Edition) คือ "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข."\n\n` +
@@ -2089,13 +2174,13 @@ export async function processLocalChat(
     ? { internal: [], pubmed: [], thaijo: [], knowledge: [] }
     : {
         internal: internalSources,
-        pubmed: enableExternal ? pubmedResults : [],
-        thaijo: enableExternal ? thaijoResults : [],
+        pubmed: (enableExternal && !isTierMatched) ? pubmedResults : [],
+        thaijo: (enableExternal && !isTierMatched) ? thaijoResults : [],
       };
 
   if (!isOutOfScope) {
     const knowledgeItems: any[] = [];
-    if (enableMahidol && matchedMahidol.length > 0) {
+    if (!isTierMatched && enableMahidol && matchedMahidol.length > 0) {
       knowledgeItems.push(
         ...matchedMahidol.map((m: any) => ({
           id: m.id,
@@ -2107,7 +2192,7 @@ export async function processLocalChat(
         }))
       );
     }
-    if (enableTu && matchedTu.length > 0) {
+    if (!isTierMatched && enableTu && matchedTu.length > 0) {
       knowledgeItems.push(
         ...matchedTu.map((t: any) => ({
           id: t.id,
@@ -2119,7 +2204,7 @@ export async function processLocalChat(
         }))
       );
     }
-    if (enableInternal && allKnowledge.length > 0) {
+    if (!isTierMatched && enableInternal && allKnowledge.length > 0) {
       if (matchedHerbs.length === 0 && matchedFormulas.length === 0) {
         knowledgeItems.push(
           ...allKnowledge.slice(0, 2).map((k: any) => ({
@@ -2179,12 +2264,14 @@ export async function processLocalChat(
       knowledgeItems.push(
         ...matchedHerbBooks.map((b) => ({
           id: b.id,
+          tier: b.tier,
+          sourceFile: b.sourceFile,
           title: b.title,
           category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
-          bookCategory: b.category,
+          bookCategory: b.bookCategory,
           chapter: b.chapter,
           content: b.content,
-          source: b.source,
+          source: b.bookTitle,
           source_url: `/knowledge?tab=books&id=${encodeURIComponent(b.id)}`,
           apaCitation: b.apaCitation,
           herbs: b.herbs,
@@ -2203,10 +2290,10 @@ export async function processLocalChat(
     : validateAndPruneSources(question, answer, rawSourcesPayload, currentSettings);
 
   let cleanAnswer = answer;
-  if (!enableMahidol || isDdi) {
+  if (!enableMahidol || isDdi || isTierMatched) {
     cleanAnswer = sanitizeMahidolReferences(cleanAnswer);
   }
-  if (!enableTu || isDdi) {
+  if (!enableTu || isDdi || isTierMatched) {
     cleanAnswer = sanitizeTuReferences(cleanAnswer);
   }
 

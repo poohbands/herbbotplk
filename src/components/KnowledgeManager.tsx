@@ -658,7 +658,7 @@ const KnowledgeManager = () => {
             className="font-thai text-xs gap-1.5 h-8"
           >
             <LibraryBig className="w-3.5 h-3.5" />
-            <span>หนังสือข้อมูลความรู้ด้านยา (5 หมวด {HERB_BOOKS_DATA.length} เรื่อง)</span>
+            <span>หนังสือข้อมูลความรู้ด้านยา (7 ลำดับ {HERB_BOOKS_DATA.length} เรื่อง)</span>
           </Button>
         </div>
 
@@ -669,7 +669,7 @@ const KnowledgeManager = () => {
           </Button>
         ) : (
           <Badge variant="outline" className="text-xs text-muted-foreground border-primary/30">
-            📚 5 หมวดย่อย: D:\code\herbbot\herbbook
+            📚 7 ลำดับความสำคัญ: D:\code\herbbot\herbbook
           </Badge>
         )}
       </div>

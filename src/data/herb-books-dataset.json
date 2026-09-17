@@ -28,7 +28,9 @@
     ],
     "evidenceLevel": "ก1 (เทียบเท่า Omeprazole สำหรับ Functional Dyspepsia)",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch02-constipation",
@@ -56,7 +58,9 @@
     ],
     "evidenceLevel": "ก2",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch03-hemorrhoid",
@@ -85,7 +89,9 @@
     ],
     "evidenceLevel": "ก1 (เทียบเท่า Daflon ในริดสีดวงระยะที่ 1-2)",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch04-cough",
@@ -116,7 +122,9 @@
     ],
     "evidenceLevel": "ก1",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch05-allergic-rhinitis",
@@ -144,7 +152,9 @@
     ],
     "evidenceLevel": "ก1",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch06-uri",
@@ -174,7 +184,9 @@
     ],
     "evidenceLevel": "ก1 (สำหรับ URI และเจ็บคอ) / ก2 (สำหรับโควิด-19)",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch07-osteoarthritis",
@@ -211,7 +223,9 @@
     ],
     "evidenceLevel": "ก1 (เถาวัลย์เปรียงเทียบเท่า Ibuprofen ในข้อเข่าเสื่อม)",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch08-radiation-dermatitis",
@@ -244,7 +258,9 @@
     ],
     "evidenceLevel": "ก2",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-ch09-cannabis-neurology",
@@ -278,7 +294,9 @@
     ],
     "evidenceLevel": "ก1 (CBD ในโรคลมชัก) / ก2 (THC:CBD 1:1 ใน MS และ Neuropathic pain)",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dms.go.th"
+    "sourceUrl": "https://www.dms.go.th",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "sub-turmeric-omeprazole",
@@ -308,7 +326,9 @@
     ],
     "evidenceLevel": "Clinical RCT Level 1 (เทียบเท่า Omeprazole)",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-derris-nsaids",
@@ -338,7 +358,9 @@
     ],
     "evidenceLevel": "Clinical RCT Level 1",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-capsicum-topical-nsaids",
@@ -370,7 +392,9 @@
     ],
     "evidenceLevel": "Clinical Evidence Level 1",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-andrographis-cold-fever",
@@ -399,7 +423,9 @@
     ],
     "evidenceLevel": "Clinical RCT Level 1",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-prabchompoo-antihistamine",
@@ -427,7 +453,9 @@
     ],
     "evidenceLevel": "Clinical Trial Level 1 (ประสิทธิภาพเทียบเท่า CPM โดยไม่ง่วงนอน)",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-cissus-daflon",
@@ -455,7 +483,9 @@
     ],
     "evidenceLevel": "Clinical RCT Level 1 (เทียบเท่า Daflon 500)",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-senna-bisacodyl",
@@ -482,7 +512,9 @@
     ],
     "evidenceLevel": "Level 1 Evidence",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-ginger-dimenhydrinate",
@@ -512,7 +544,9 @@
     ],
     "evidenceLevel": "Clinical RCT Level 1",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-skin-aloevera-phayayo",
@@ -549,7 +583,9 @@
     ],
     "evidenceLevel": "Clinical Evidence Level 1",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-diarrhea-banana-pit-samut",
@@ -579,7 +615,9 @@
     ],
     "evidenceLevel": "Level 1 Clinical Evidence",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-insomnia-suksayat-thepchit",
@@ -610,7 +648,9 @@
     ],
     "evidenceLevel": "Level 2 Evidence",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-neuro-muscle-relaxant-wind",
@@ -641,7 +681,9 @@
     ],
     "evidenceLevel": "Level 2 Clinical Evidence",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "sub-appetite-bitter-melon",
@@ -667,7 +709,9 @@
     ],
     "evidenceLevel": "Level 2 Evidence",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 2,
+    "sourceFile": "สมุนไพรในบัญชียาหลักที่ใช้ทดแทนยาแผนปัจ 11-12-67.pdf"
   },
   {
     "id": "flowchart-respiratory-icd10",
@@ -706,7 +750,9 @@
     ],
     "evidenceLevel": "Primary Care Clinical Algorithm",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 3,
+    "sourceFile": "แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf"
   },
   {
     "id": "flowchart-gastrointestinal-icd10",
@@ -745,7 +791,9 @@
     ],
     "evidenceLevel": "Primary Care Clinical Algorithm",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 3,
+    "sourceFile": "แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf"
   },
   {
     "id": "flowchart-musculoskeletal-icd10",
@@ -781,7 +829,9 @@
     ],
     "evidenceLevel": "Primary Care Clinical Algorithm",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 3,
+    "sourceFile": "แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร.pdf"
   },
   {
     "id": "nlem-2568-summary-changes",
@@ -813,7 +863,9 @@
     ],
     "evidenceLevel": "National Essential Medicines Gazette (ราชกิจจานุเบกษา)",
     "apaCitation": "คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568. ราชกิจจานุเบกษา.",
-    "sourceUrl": "https://www.ratchakitcha.soc.go.th"
+    "sourceUrl": "https://www.ratchakitcha.soc.go.th",
+    "tier": 4,
+    "sourceFile": "2568_2.pdf และ 2568_2_summary.pdf"
   },
   {
     "id": "cd10-constipation-hemorrhoid",
@@ -843,7 +895,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-dyspepsia-flatulence",
@@ -872,7 +926,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-musculoskeletal-pain",
@@ -905,7 +961,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-cold-cough-fever",
@@ -937,7 +995,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-skin-wounds",
@@ -969,7 +1029,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-insomnia-anxiety",
@@ -997,7 +1059,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-dizziness-nausea",
@@ -1026,7 +1090,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-paralysis-numbness",
@@ -1054,7 +1120,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-appetite-loss",
@@ -1079,7 +1147,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cd10-acute-diarrhea",
@@ -1108,7 +1178,9 @@
     ],
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
-    "sourceUrl": "https://www.dtam.moph.go.th"
+    "sourceUrl": "https://www.dtam.moph.go.th",
+    "tier": 5,
+    "sourceFile": "CD 10 กลุ่มโรค"
   },
   {
     "id": "cpg-2568-mono-01-curcuma",
@@ -1142,7 +1214,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-01-curcuma"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-01-curcuma",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-02-ginger",
@@ -1168,7 +1242,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-02-ginger"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-02-ginger",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-03-senna",
@@ -1196,7 +1272,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-03-senna"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-03-senna",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-04-cissus",
@@ -1220,7 +1298,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-04-cissus"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-04-cissus",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-05-emblica",
@@ -1249,7 +1329,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-05-emblica"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-05-emblica",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-06-solanum",
@@ -1270,7 +1352,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-06-solanum"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-06-solanum",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-07-prabchompoo",
@@ -1297,7 +1381,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-07-prabchompoo"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-07-prabchompoo",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-08-andrographis",
@@ -1330,7 +1416,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-08-andrographis"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-08-andrographis",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-09-derris",
@@ -1354,7 +1442,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-09-derris"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-09-derris",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-10-plai",
@@ -1375,7 +1465,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-10-plai"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-10-plai",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-11-sahasatara",
@@ -1408,7 +1500,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-11-sahasatara"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-11-sahasatara",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-12-compress",
@@ -1436,7 +1530,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-12-compress"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-12-compress",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-13-cannabis-cbd",
@@ -1469,7 +1565,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-13-cannabis-cbd"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-13-cannabis-cbd",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-14-cannabis-1-1",
@@ -1500,7 +1598,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-14-cannabis-1-1"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-14-cannabis-1-1",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-15-capsicum",
@@ -1531,7 +1631,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-15-capsicum"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-15-capsicum",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-16-aloe",
@@ -1554,7 +1656,9 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-16-aloe"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-16-aloe",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
   },
   {
     "id": "cpg-2568-mono-17-phayayor",
@@ -1578,6 +1682,134 @@
     "icdCodes": [],
     "evidenceLevel": "CPG กรมการแพทย์ 2568",
     "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
-    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-17-phayayor"
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-17-phayayor",
+    "tier": 1,
+    "sourceFile": "25680421113642AM_คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ.pdf"
+  },
+  {
+    "id": "cd10-symptoms-poster-a5",
+    "tier": 6,
+    "sourceFile": "CD 10 กลุ่มอาการ A5.png",
+    "bookCategory": "cd10_symptoms_poster",
+    "bookCategoryTitle": "6. กลุ่มอาการของโรคที่พบบ่อย (CD 10 กลุ่มอาการ A5.png)",
+    "bookTitle": "กลุ่มอาการของโรคที่พบบ่อยกับการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติ (A5)",
+    "chapter": "แผ่นภาพความรู้ 10 กลุ่มอาการของโรคที่พบบ่อย (กลุ่มงานการแพทย์แผนไทยฯ สสจ.บุรีรัมย์)",
+    "title": "แผ่นภาพสรุป 10 กลุ่มอาการของโรคที่พบบ่อยกับการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติ (CD 10 กลุ่มอาการ A5.png)",
+    "summary": "สรุปการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติใน 10 กลุ่มอาการของโรคที่พบบ่อย ได้แก่ ปวดกล้ามเนื้อและข้อ, ไข้หวัด ไอ เสมหะ โควิด-19, ท้องอืด ท้องเฟ้อ, ท้องผูก ริดสีดวงทวาร, วิงเวียน คลื่นไส้อาเจียน, ชาจากอัมพฤกษ์-อัมพาต, ผิวหนัง แผล, นอนไม่หลับ, ท้องเสีย, และเบื่ออาหาร",
+    "content": "แผ่นภาพความรู้: กลุ่มอาการของโรคที่พบบ่อยกับการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติ (สำนักงานสาธารณสุขจังหวัดบุรีรัมย์):\n1. ปวดกล้ามเนื้อและปวดข้อ: ยาเถาวัลย์เปรียง, ยาสหัสธารา, ยาประคบ, ไพลครีม, เจลพริก\n2. ไข้หวัด ไอ เสมหะ โควิด-19: ยาฟ้าทะลายโจร, ยาประสะมะแว้ง, ยาตรีผลา, ยาแก้ไอมะขามป้อม, ยาปราบชมพูทวีป\n3. ท้องอืด ท้องเฟ้อ: ยาขมิ้นชัน, ยาขิง, ยาธาตุอบเชย\n4. ท้องผูก ริดสีดวงทวาร: ยามะขามแขก, ยาเพชรสังฆาต\n5. วิงเวียน คลื่นไส้อาเจียน: ยาขิง, ยาหอมนวโกฐ, ยาหอมอินทจักร์\n6. ชาจากอัมพฤกษ์-อัมพาต: ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ\n7. อาการทางผิวหนัง แผล: เจลว่านหางจระเข้, ครีมบัวบก, กลีเซอรีนพญายอ\n8. นอนไม่หลับ: ยาศุขไสยาศน์, ยาหอมเทพจิตร, น้ำมันกัญชา THC 2.0 mg/ml\n9. ท้องเสีย: ยาฟ้าทะลายโจร, ยากล้วย, ยาเหลืองปิดสมุทร\n10. เบื่ออาหาร: ยามะระขี้นก, น้ำมันกัญชา THC 2.0 mg/ml",
+    "herbs": [
+      "เถาวัลย์เปรียง",
+      "สหัสธารา",
+      "ประคบ",
+      "ไพลครีม",
+      "เจลพริก",
+      "ฟ้าทะลายโจร",
+      "ประสะมะแว้ง",
+      "ตรีผลา",
+      "มะขามป้อม",
+      "ปราบชมพูทวีป",
+      "ขมิ้นชัน",
+      "ขิง",
+      "ธาตุอบเชย",
+      "มะขามแขก",
+      "เพชรสังฆาต",
+      "หอมนวโกฐ",
+      "หอมอินทจักร์",
+      "แก้ลมแก้เส้น",
+      "ทำลายพระสุเมรุ",
+      "ว่านหางจระเข้",
+      "บัวบก",
+      "กลีเซอรีนพญายอ",
+      "ศุขไสยาศน์",
+      "หอมเทพจิตร",
+      "น้ำมันกัญชา",
+      "กล้วย",
+      "เหลืองปิดสมุทร",
+      "มะระขี้นก"
+    ],
+    "modernDrugs": [
+      "Paracetamol",
+      "NSAIDs",
+      "Omeprazole",
+      "Antihistamine",
+      "Antacid"
+    ],
+    "icdCodes": [
+      "M79.1",
+      "J00",
+      "J06.9",
+      "K30",
+      "K59.0",
+      "R11",
+      "G81",
+      "L30.9",
+      "G47.0",
+      "A09",
+      "R63.0"
+    ],
+    "evidenceLevel": "แนวทางสรุปบัญชียาหลักแห่งชาติด้านสมุนไพร ระดับปฐมภูมิ",
+    "apaCitation": "กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก สำนักงานสาธารณสุขจังหวัดบุรีรัมย์. (2567). กลุ่มอาการของโรคที่พบบ่อยกับการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติ [แผ่นภาพความรู้ A5]. กระทรวงสาธารณสุข.",
+    "sourceUrl": "herbbook/CD 10 กลุ่มอาการ A5.png"
+  },
+  {
+    "id": "substitution-19-poster-a5",
+    "tier": 7,
+    "sourceFile": "ยาทดแทน 19 รายการ A5.png",
+    "bookCategory": "substitution_19_poster",
+    "bookCategoryTitle": "7. ยาสมุนไพรทดแทนยาแผนปัจจุบัน 19 รายการ (ยาทดแทน 19 รายการ A5.png)",
+    "bookTitle": "ยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทน 19 รายการ (A5)",
+    "chapter": "แผ่นภาพความรู้ยาสมุนไพรทดแทนยาแผนปัจจุบัน 19 รายการ (กลุ่มงานการแพทย์แผนไทยฯ สสจ.บุรีรัมย์)",
+    "title": "แผ่นภาพสรุปยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทนยาแผนปัจจุบัน 19 รายการ (ยาทดแทน 19 รายการ A5.png)",
+    "summary": "รายละเอียดวิธีใช้ ขนาดยา ข้อห้ามใช้ ข้อควรระวัง และยาแผนปัจจุบันที่ถูกทดแทน 19 รายการ ในกลุ่มอาการไข้หวัด ไอ ท้องอืด ท้องผูก ริดสีดวง ปวดเมื่อย คลายกล้ามเนื้อ แผลไฟไหม้ และเริมงูสวัด",
+    "content": "แผ่นภาพความรู้: ยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทน 19 รายการ (สำนักงานสาธารณสุขจังหวัดบุรีรัมย์):\n\n1. ยาฟ้าทะลายโจร: สารสกัดรับประทานครั้งละ 1.5-3 กรัม วันละ 4 ครั้ง หลังอาหารและก่อนนอน หรือผงบดรับประทานในขนาดที่มี andrographolide 180 มก./วัน แบ่ง 3 ครั้ง 5 วัน (ทดแทน: ยาบรรเทาอาการไข้ เจ็บคอ จาก Viral infection) [ข้อระวัง: ผู้ใช้ยาต้านการแข็งตัวของเลือด Warfarin, NOACs, ข้อห้าม: หญิงตั้งครรภ์/ให้นมบุตร/แพ้ฟ้าทะลายโจร]\n2. ยาตรีผลา: รับประทานครั้งละ 300-600 มก. วันละ 3-4 ครั้ง เมื่อมีอาการ (ทดแทน: ยาบรรเทาอาการไอ) [ข้อระวัง: ระวังในผู้ป่วยที่ท้องเสียง่าย]\n3. ยาแก้ไอผสมมะขามป้อม: จิบเมื่อมีอาการทุก 4 ชม. (ทดแทน: ยาบรรเทาอาการไอ) [ข้อห้าม: ผู้ป่วยเบาหวานที่ควบคุมระดับน้ำตาลไม่ได้]\n4. ยาอมมะแว้ง: ครั้งละ 1-1.4 กรัม เมื่อมีอาการ (ทดแทน: ยาบรรเทาอาการไอ) [ข้อห้าม: ผู้ที่แพ้สมุนไพรที่เป็นส่วนประกอบ]\n5. ยาขมิ้นชัน: รับประทานครั้งละ 500 มก. - 1 กรัม วันละ 4 ครั้ง หลังอาหารและก่อนนอน (ทดแทน: Omeprazole) [ข้อควรระวัง: ระวังการใช้กับผู้ป่วยโรคนิ่วในถุงน้ำดี หญิงตั้งครรภ์และเด็ก, ข้อห้าม: ผู้ที่ท่อน้ำดีอุดตัน หรือแพ้ยานี้]\n6. ยาขิง: รับประทานครั้งละ 2-4 กรัม หลังอาหาร (ทดแทน: Anti-Flatulence) [ข้อห้าม: ผู้ป่วยโรคนิ่วในถุงน้ำดี เด็กอายุต่ำกว่า 6 ปี]\n7. ยาธาตุอบเชย: รับประทานครั้งละ 15-30 มล. วันละ 3 ครั้ง หลังอาหาร (ทดแทน: Anti-Flatulence) [ข้อควรระวัง: ระวังการใช้ในผู้ที่มีความผิดปกติของตับและไต]\n8. ยาขิง (ป้องกันและบรรเทาคลื่นไส้อาเจียน เมารถ เมาเรือ): รับประทานครั้งละ 1-2 กรัม ก่อนเดินทาง 30 นาที - 1 ชม. หรือเมื่อมีอาการ (ทดแทน: Dimenhydrinate) [ข้อห้าม: นิ่วในถุงน้ำดี เด็กต่ำกว่า 6 ปี]\n9. ยามะขามแขก: รับประทานครั้งละ 800 มก. - 1.2 กรัม วันละ 1 ครั้ง ก่อนนอน (ทดแทน: Bisacodyl) [ข้อห้าม: ทางเดินอาหารอุดตัน ปวดท้องไม่ทราบสาเหตุ, ข้อระวัง: Inflammatory Bowel Disease เด็กต่ำกว่า 12 ปี หญิงตั้งครรภ์/ให้นมบุตร]\n10. ยาผสมเพชรสังฆาต: สูตร 1 รับประทานครั้งละ 1.2 กรัม วันละ 3 ครั้ง หลังอาหารทันที เช้า กลางวัน เย็น หรือ สูตร 2 รับประทานครั้งละ 500 มก. - 1 กรัม วันละ 3 ครั้ง หลังอาหารทันที (ทดแทน: Daflon) [ข้อควรระวัง: หญิงตั้งครรภ์ หญิงให้นมบุตร ผู้มีภาวะไตบกพร่อง]\n11. ยาเถาวัลย์เปรียง: รับประทานครั้งละ 500 มก. - 1 กรัม วันละ 3 ครั้ง หลังอาหารทันที (ทดแทน: ยาแก้ปวดอักเสบ NSAIDs) [ข้อห้าม: หญิงตั้งครรภ์, ข้อระวัง: ผู้ป่วยที่เป็นแผลในกระเพาะอาหาร]\n12. ยาสหัสธารา: รับประทานครั้งละ 1-1.5 กรัม วันละ 3 ครั้ง หลังอาหาร (ทดแทน: ยาแก้ปวดอักเสบ NSAIDs) [ข้อห้าม: หญิงตั้งครรภ์และผู้ที่มีไข้, ข้อระวัง: ความดันโลหิตสูง โรคหัวใจ แผลเปปติก กรดไหลย้อน]\n13. ยาประคบ: ประคบบริเวณที่มีอาการ วันละ 1-2 ครั้ง (ทดแทน: Balm หรือ Diclofenac gel)\n14. ไพลครีม: ทาและถูเบาๆ บริเวณที่มีอาการ วันละ 2-3 ครั้ง (ทดแทน: ยาทาบรรเทาปวดกล้ามเนื้อ)\n15. เจลพริก: ทาบริเวณที่ปวด วันละ 3-4 ครั้ง (ทดแทน: ยาทาบรรเทาปวดข้อ/กล้ามเนื้อ) [ข้อห้าม: ผู้ป่วยที่แพ้ capsaicin]\n16. ยาแก้ลมแก้เส้น: รับประทานครั้งละ 1-4 กรัม วันละ 2 ครั้ง ก่อนอาหาร เช้าและเย็น (ทดแทน: ยาในกลุ่ม Muscle Relaxant) [ข้อห้าม: หญิงตั้งครรภ์/ให้นมบุตร ผู้ที่มีไข้, ข้อระวัง: ผู้ป่วยโรคแผลเปปติก โรคกรดไหลย้อน]\n17. เจลว่านหางจระเข้: ทาบริเวณผิวหนังที่เป็นแผล วันละ 3-4 ครั้ง หรือตามแพทย์สั่ง (ทดแทน: Silver sulfadiazine) [ข้อห้าม: ผู้ที่แพ้ว่านหางจระเข้]\n18. ครีมบัวบก: ทาบริเวณที่เป็นแผล (หลังทำความสะอาดแผลด้วยยาฆ่าเชื้อ) วันละ 1-3 ครั้ง หรือตามแพทย์สั่ง (ทดแทน: Wound healing agent) [ข้อห้าม: ห้ามใช้ในแผลเปิด]\n19. กลีเซอรีนพญายอ: ทาบริเวณที่มีอาการของเริม งูสวัด วันละ 5 ครั้ง (ทดแทน: Acyclovir cream)",
+    "herbs": [
+      "ฟ้าทะลายโจร",
+      "ตรีผลา",
+      "มะขามป้อม",
+      "มะแว้ง",
+      "ขมิ้นชัน",
+      "ขิง",
+      "ธาตุอบเชย",
+      "มะขามแขก",
+      "เพชรสังฆาต",
+      "เถาวัลย์เปรียง",
+      "สหัสธารา",
+      "ประคบ",
+      "ไพลครีม",
+      "เจลพริก",
+      "แก้ลมแก้เส้น",
+      "ว่านหางจระเข้",
+      "บัวบก",
+      "กลีเซอรีนพญายอ"
+    ],
+    "modernDrugs": [
+      "Omeprazole",
+      "Anti-Flatulence",
+      "Dimenhydrinate",
+      "Bisacodyl",
+      "Daflon",
+      "NSAIDs",
+      "Diclofenac",
+      "Balm",
+      "Muscle Relaxant",
+      "Silver sulfadiazine",
+      "Wound healing agent",
+      "Acyclovir cream",
+      "Viral infection"
+    ],
+    "icdCodes": [
+      "K30",
+      "K59.0",
+      "I84",
+      "M79.1",
+      "T20-T32",
+      "B00",
+      "B02",
+      "J00",
+      "R05"
+    ],
+    "evidenceLevel": "แนวทางสรุปยาทดแทน 19 รายการ กระทรวงสาธารณสุข",
+    "apaCitation": "กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก สำนักงานสาธารณสุขจังหวัดบุรีรัมย์. (2567). ยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทน 19 รายการ [แผ่นภาพความรู้ A5]. กระทรวงสาธารณสุข.",
+    "sourceUrl": "herbbook/ยาทดแทน 19 รายการ A5.png"
   }
 ]

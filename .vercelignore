@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+dist
+herbbook/
+*.pdf
+*.zip
+*.docx
+*.xlsx
+*.log
+supabase/.temp/
+import_payload.json
+parsed_herb_drug.json
+.vercel
