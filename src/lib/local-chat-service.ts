@@ -1457,7 +1457,7 @@ export function buildSystemPrompt(settings?: KnowledgeSettings): string {
   const herbBooksSourceText = enableHerbBooks
     ? ", หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาสมุนไพรทดแทนยาแผนปัจจุบัน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, ประกาศบัญชียาหลักแห่งชาติ 2568 ฉบับที่ 2)"
     : "";
-  const scopeSourcesText = `เช่น ข้อมูล DDI มาจาก บัญชียาหลักแห่งชาติ${mahidolSourceText}${tuSourceText}${herbBooksSourceText}, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก`;
+  const scopeSourcesText = `เช่น ข้อมูล DDI มาจาก บัญชียาหลักแห่งชาติ${mahidolSourceText}${tuSourceText}${herbBooksSourceText}, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลังวิทยานิพนธ์และวิจัยไทย TDC (ThaiLIS), คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก`;
 
   const mahidolApaRule = enableMahidol
     ? `    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น):

@@ -401,7 +401,7 @@ const KnowledgeManager = () => {
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  ดึงงานวิจัยสากล (PubMed) และงานวิจัยไทย (ThaiJO) มาประกอบการตอบ พร้อมสร้างเอกสารอ้างอิงตามมาตรฐาน APA 7th Edition และตรวจสอบความถูกต้องตรงประเด็น
+                  ดึงงานวิจัยสากล (PubMed) และงานวิจัยไทย (ThaiJO / TDC ThaiLIS) มาประกอบการตอบ พร้อมสร้างเอกสารอ้างอิงตามมาตรฐาน APA 7th Edition และตรวจสอบความถูกต้องตรงประเด็น
                 </p>
                 <div className="flex items-center gap-1.5 pt-1 flex-wrap">
                   <Badge
@@ -421,6 +421,9 @@ const KnowledgeManager = () => {
                   </Badge>
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                     ThaiJO
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    TDC ThaiLIS
                   </Badge>
                   <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                     APA 7th

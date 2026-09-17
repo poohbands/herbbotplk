@@ -878,6 +878,15 @@ const ChatPage = () => {
             >
               📚 เอกสารวิชาการ
             </a>
+            <a
+              href="https://tdc.thailis.or.th/tdc/basic.php"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted flex items-center gap-1"
+              title="สืบค้นวิทยานิพนธ์และงานวิจัยไทย TDC (ThaiLIS)"
+            >
+              🎓 วิจัย TDC
+            </a>
             <a href="/herbs" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
               📖 สารานุกรม
             </a>
@@ -1182,6 +1191,30 @@ const ChatPage = () => {
                                   </div>
                                 </div>
                               ))}
+                            </div>
+                          )}
+
+                          {/* 3.1 คลังวิทยานิพนธ์และงานวิจัยไทย TDC (ThaiLIS) */}
+                          {knowledgeSettings.enable_external_research !== false && ((msg.sources.thaijo && msg.sources.thaijo.length > 0) || (msg.sources.pubmed && msg.sources.pubmed.length > 0)) && (
+                            <div className="p-2 rounded-lg bg-herb-gold/5 hover:bg-herb-gold/10 border border-herb-gold/20 flex items-center justify-between gap-2 text-xs transition-colors">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <BookOpen className="w-3.5 h-3.5 text-herb-gold shrink-0" />
+                                <div className="min-w-0">
+                                  <span className="font-medium text-foreground">ฐานข้อมูลวิทยานิพนธ์และวิจัยไทย TDC (ThaiLIS)</span>
+                                  <span className="text-muted-foreground block text-[11px] truncate">
+                                    คลังเอกสารฉบับเต็มระดับชาติ (สำนักงานปลัดกระทรวงการอุดมศึกษาฯ อว.)
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => openExternal("https://tdc.thailis.or.th/tdc/basic.php")}
+                                className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-background hover:bg-herb-gold/20 text-herb-gold border border-herb-gold/30 transition-colors cursor-pointer shrink-0"
+                                title="สืบค้นวิทยานิพนธ์และงานวิจัยบน TDC ThaiLIS"
+                              >
+                                <span>สืบค้น TDC</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </button>
                             </div>
                           )}
 
