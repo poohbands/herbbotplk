@@ -878,15 +878,6 @@ const ChatPage = () => {
             >
               📚 เอกสารวิชาการ
             </a>
-            <a
-              href="https://tdc.thailis.or.th/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted flex items-center gap-1"
-              title="สืบค้นวิทยานิพนธ์และงานวิจัยไทย TDC (ThaiLIS)"
-            >
-              🎓 วิจัย TDC
-            </a>
             <a href="/herbs" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
               📖 สารานุกรม
             </a>
