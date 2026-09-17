@@ -879,7 +879,7 @@ const ChatPage = () => {
               📚 เอกสารวิชาการ
             </a>
             <a
-              href="https://tdc.thailis.or.th/tdc/basic.php"
+              href="https://tdc.thailis.or.th/"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted flex items-center gap-1"
@@ -1208,7 +1208,7 @@ const ChatPage = () => {
                               </div>
                               <button
                                 type="button"
-                                onClick={() => openExternal("https://tdc.thailis.or.th/tdc/basic.php")}
+                                onClick={() => openExternal("https://tdc.thailis.or.th/")}
                                 className="inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-background hover:bg-herb-gold/20 text-herb-gold border border-herb-gold/30 transition-colors cursor-pointer shrink-0"
                                 title="สืบค้นวิทยานิพนธ์และงานวิจัยบน TDC ThaiLIS"
                               >
