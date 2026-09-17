@@ -1048,9 +1048,14 @@ const ChatPage = () => {
                        (msg.sources.thaijo && msg.sources.thaijo.length > 0) ||
                        (msg.sources.knowledge && msg.sources.knowledge.length > 0)) && (
                         <div className="mt-3 pt-3 border-t border-border/60 space-y-2.5">
-                          <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                            <BookOpen className="w-3.5 h-3.5 text-primary" />
-                            <span>แหล่งอ้างอิงที่ตรวจสอบได้</span>
+                          <div className="flex items-center justify-between gap-2 text-xs font-medium text-muted-foreground flex-wrap">
+                            <div className="flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5 text-primary" />
+                              <span>แหล่งอ้างอิงที่ตรวจสอบได้</span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground/90 bg-primary/5 border border-primary/15 px-2 py-0.5 rounded-md">
+                              💡 วิธีตรวจสอบย้อนกลับ: ตรวจสอบข้อมูลต้นทางได้ที่ เมนู <strong>"📚 เอกสารวิชาการ"</strong> ด้านบน
+                            </span>
                           </div>
 
                           {/* 1. ฐานข้อมูลภายใน (สมุนไพรเดี่ยว / ตำรับยาแผนไทย สสจ.พิษณุโลก) */}
@@ -1549,7 +1554,7 @@ const ChatPage = () => {
           </form>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-1 mt-2 text-[11px] text-muted-foreground">
             <span className="text-center sm:text-left">
-              ⚕️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | อ้างอิงจากฐานข้อมูลที่เชื่อถือได้
+              ⚕️ ข้อมูลนี้ไม่ใช่คำแนะนำทางการแพทย์ ควรปรึกษาแพทย์หรือเภสัชกรก่อนใช้ | วิธีตรวจสอบย้อนกลับ: ตรวจสอบข้อมูลต้นทางได้ที่ เมนู <strong>"เอกสารวิชาการ"</strong> ด้านบน
             </span>
             <span className="font-mono text-[10px] bg-muted/60 px-2 py-0.5 rounded border border-border/50 text-muted-foreground shrink-0 select-none">
               {APP_VERSION}
