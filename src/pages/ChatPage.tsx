@@ -869,6 +869,15 @@ const ChatPage = () => {
                 <Home className="w-4 h-4" /> หน้าแรก
               </button>
             )}
+            <a
+              href="https://drive.google.com/drive/folders/1sz0qE0VMWiyp-4bqmp_0phJpwTfpf7Oi?usp=sharing"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted flex items-center gap-1"
+              title="เปิดเอกสารวิชาการ (Google Drive)"
+            >
+              📚 เอกสารวิชาการ
+            </a>
             <a href="/herbs" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
               📖 สารานุกรม
             </a>
