@@ -1577,6 +1577,72 @@ export function hasLocalProviderKey(): boolean {
   return getAvailableLocalProviders().length > 0;
 }
 
+/**
+ * จัดรูปแบบชุดข้อความสนทนาให้เป็นไปตามมาตรฐาน OpenAI/DeepSeek API อย่างเคร่งครัด
+ * - มี system message เดียวที่ตำแหน่งแรกสุด
+ * - สลับ role (user -> assistant -> user) อย่างเคร่งครัด
+ * - ตัด assistant message ที่นำหน้าบทสนทนา (เช่น ข้อความต้อนรับ) ออก
+ * - ไม่ให้มี user ซ้ำซ้อนติดกัน โดยข้อความสุดท้ายต้องเป็นคำถามของผู้ใช้ (user) เสมอ
+ */
+export function buildNormalizedChatMessages(
+  systemPrompt: string,
+  history: { role: string; content: string }[],
+  currentQuestion: string
+): { role: string; content: string }[] {
+  const finalMessages: { role: string; content: string }[] = [
+    { role: "system", content: systemPrompt },
+  ];
+
+  // 1. คัดกรองบทสนทนาก่อนหน้า
+  const filteredTurns: { role: "user" | "assistant"; content: string }[] = [];
+  for (const m of history || []) {
+    if (m.role !== "user" && m.role !== "assistant") continue;
+    const content = (m.content || "").trim();
+    if (!content) continue;
+
+    // ข้าม assistant ที่อยู่นำหน้าสุดก่อนเริ่มมี user คนแรก (เช่น ข้อความต้อนรับ)
+    if (filteredTurns.length === 0 && m.role === "assistant") {
+      continue;
+    }
+
+    filteredTurns.push({ role: m.role as "user" | "assistant", content });
+  }
+
+  // 2. ถ้าข้อความสุดท้ายใน filteredTurns ตรงกับคำถามปัจจุบัน ให้ตัดออกเพื่อป้องกัน user เบิ้ลซ้ำ
+  if (
+    filteredTurns.length > 0 &&
+    filteredTurns[filteredTurns.length - 1].role === "user" &&
+    filteredTurns[filteredTurns.length - 1].content.trim() === currentQuestion.trim()
+  ) {
+    filteredTurns.pop();
+  }
+
+  // 3. ใช้ประวัติ 6 ตาคุยล่าสุด
+  const recent = filteredTurns.slice(-6);
+
+  // 4. บรรจุประวัติโดยรักษากฎสลับ user / assistant อย่างเคร่งครัด
+  for (const turn of recent) {
+    const prev = finalMessages[finalMessages.length - 1];
+    if (prev.role === turn.role) {
+      prev.content = `${prev.content}\n\n${turn.content}`;
+    } else {
+      finalMessages.push({ role: turn.role, content: turn.content });
+    }
+  }
+
+  // 5. ข้อความปิดท้ายต้องเป็นคำถามของผู้ใช้ (role: "user") เสมอ
+  const last = finalMessages[finalMessages.length - 1];
+  if (last.role === "user") {
+    if (last.content.trim() !== currentQuestion.trim()) {
+      last.content = `${last.content}\n\n${currentQuestion.trim()}`;
+    }
+  } else {
+    finalMessages.push({ role: "user", content: currentQuestion.trim() });
+  }
+
+  return finalMessages;
+}
+
 export async function processLocalChat(
   question: string,
   history: { role: string; content: string }[],
@@ -2055,12 +2121,10 @@ export async function processLocalChat(
     dynamicInstructions += "\n\n⚠️ **คำสั่งสำคัญเรื่องเอกสารอ้างอิง:** ขณะนี้ระบบปิดการแสดงผลหัวข้อเอกสารอ้างอิง APA 7th Edition ห้ามใส่หัวข้อ '### 📚 เอกสารอ้างอิง (APA 7th Edition)' หรือรายการอ้างอิง APA ใดๆ ท้ายคำตอบเด็ดขาด";
   }
 
-  // 4. เตรียมชุดข้อความส่งไปยัง AI Model
-  const messagesToSend = [
-    { role: "system", content: `${buildSystemPrompt(currentSettings)}${dynamicInstructions}\n\n<CONTEXT>\n${contextText}\n</CONTEXT>` },
-    ...history.slice(-6).map((m) => ({ role: m.role, content: m.content })),
-    { role: "user", content: question },
-  ];
+
+  // 4. เตรียมชุดข้อความส่งไปยัง AI Model (จัดรูปแบบ strict alternating user/assistant สำหรับ DeepSeek & OpenAI-compatible)
+  const fullSystemPrompt = `${buildSystemPrompt(currentSettings)}${dynamicInstructions}\n\n<CONTEXT>\n${contextText}\n</CONTEXT>`;
+  const messagesToSend = buildNormalizedChatMessages(fullSystemPrompt, history, question);
 
   // 5. เรียกใช้ AI พร้อมระบบ True Streaming (Token Streaming) เพื่อความเร็วสูงสุด (TTFT < 1s)
   let lastError: Error | null = null;
@@ -2100,14 +2164,14 @@ export async function processLocalChat(
           signal: safeTimeoutSignal(35000),
         });
 
-        if (resp.status === 404 || resp.status === 503 || resp.status === 429 || resp.status === 400) {
-          console.warn(`Model ${modelToUse} returned HTTP ${resp.status}. Trying next candidate...`);
-          continue;
-        }
-
         if (!resp.ok) {
           const errText = await resp.text().catch(() => "");
-          throw new Error(`HTTP ${resp.status}: ${errText.slice(0, 150)}`);
+          console.warn(`Model ${modelToUse} returned HTTP ${resp.status}:`, errText);
+          lastError = new Error(`HTTP ${resp.status}: ${errText.slice(0, 150)}`);
+          if (resp.status === 404 || resp.status === 503 || resp.status === 429) {
+            continue;
+          }
+          throw lastError;
         }
 
         // อ่าน Token แบบ Streaming (Server-Sent Events)

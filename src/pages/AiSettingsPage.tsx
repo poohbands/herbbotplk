@@ -183,19 +183,21 @@ const AiSettingsPage = () => {
       });
 
       if (result.success) {
-        setProviders((prev) =>
-          prev.map((p) =>
-            p.id === item.id
-              ? {
-                  ...p,
-                  test_status: "success",
-                  test_message: result.message,
-                  model_name: result.suggestedModel || p.model_name,
-                }
-              : p
-          )
+        const updated = providers.map((p) =>
+          p.id === item.id
+            ? {
+                ...p,
+                test_status: "success",
+                test_message: result.message,
+                model_name: result.suggestedModel || p.model_name,
+                is_active: true,
+                has_key: true,
+              }
+            : p
         );
-        toast.success(`${item.name}: ${result.message}`);
+        setProviders(updated);
+        saveLocalProviders(updated);
+        toast.success(`${item.name}: ${result.message} (บันทึกลงระบบพร้อมใช้งานทันที)`);
       } else {
         setProviders((prev) =>
           prev.map((p) =>

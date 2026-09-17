@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   DEFAULT_PROVIDERS,
   getLocalProviders,
@@ -53,4 +53,41 @@ describe("AI Providers Storage & KOB AI Integration", () => {
 
     expect(sanitizeKey(" sk-kobai-123\n")).toBe("sk-kobai-123");
   });
+
+  it("normalizes chat messages to strictly alternate roles for DeepSeek/OpenAI", async () => {
+    const { buildNormalizedChatMessages } = await import("../lib/local-chat-service");
+
+    // Case 1: Initial conversation starting with welcome message (assistant)
+    const historyWithWelcome = [
+      { role: "assistant", content: "สวัสดีครับ ผมคือผู้ช่วยเภสัชกรอัจฉริยะ" },
+      { role: "user", content: "ฟ้าทะลายโจรมีสรรพคุณอย่างไร" },
+    ];
+    const msgs1 = buildNormalizedChatMessages("SYSTEM_PROMPT", historyWithWelcome, "ฟ้าทะลายโจรมีสรรพคุณอย่างไร");
+
+    expect(msgs1.length).toBe(2);
+    expect(msgs1[0]).toEqual({ role: "system", content: "SYSTEM_PROMPT" });
+    expect(msgs1[1]).toEqual({ role: "user", content: "ฟ้าทะลายโจรมีสรรพคุณอย่างไร" });
+
+    // Case 2: Multi-turn conversation with consecutive same-role messages
+    const multiTurnHistory = [
+      { role: "assistant", content: "welcome" },
+      { role: "user", content: "ยาตัวแรก" },
+      { role: "assistant", content: "คำตอบตัวแรก" },
+      { role: "assistant", content: "คำตอบเพิ่มเติม" },
+      { role: "user", content: "ถามต่อ 1" },
+      { role: "user", content: "ถามต่อ 2" },
+    ];
+    const msgs2 = buildNormalizedChatMessages("SYSTEM_PROMPT", multiTurnHistory, "ถามต่อ 3");
+
+    // Every turn after system must alternate: user -> assistant -> user
+    expect(msgs2[0].role).toBe("system");
+    for (let i = 1; i < msgs2.length; i++) {
+      const expectedRole = i % 2 === 1 ? "user" : "assistant";
+      expect(msgs2[i].role).toBe(expectedRole);
+    }
+    // Last message must always be user
+    expect(msgs2[msgs2.length - 1].role).toBe("user");
+    expect(msgs2[msgs2.length - 1].content).toContain("ถามต่อ 3");
+  });
 });
+
