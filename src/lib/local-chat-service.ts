@@ -1198,23 +1198,30 @@ export function validateAndPruneSources(
 
 /** สร้าง AbortSignal พร้อม Timeout ที่ปลอดภัยสำหรับเบราว์เซอร์ทุกเวอร์ชัน (รวมถึง LINE/Facebook Webview) */
 export function safeTimeoutSignal(ms: number): AbortSignal | undefined {
-  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
-    try {
+  try {
+    if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
       return AbortSignal.timeout(ms);
-    } catch {
-      // fallback to AbortController
     }
+  } catch {
+    // fallback
   }
-  if (typeof AbortController !== "undefined") {
-    const controller = new AbortController();
-    setTimeout(() => {
-      try {
-        controller.abort();
-      } catch {
-        // ignore
+  try {
+    if (typeof AbortController !== "undefined") {
+      const controller = new AbortController();
+      const timer = setTimeout(() => {
+        try {
+          controller.abort();
+        } catch {
+          // ignore
+        }
+      }, ms);
+      if (typeof controller.signal?.addEventListener === "function") {
+        controller.signal.addEventListener("abort", () => clearTimeout(timer), { once: true });
       }
-    }, ms);
-    return controller.signal;
+      return controller.signal;
+    }
+  } catch {
+    // fallback
   }
   return undefined;
 }
@@ -1223,7 +1230,7 @@ export function safeTimeoutSignal(ms: number): AbortSignal | undefined {
 const pubmedCache = new Map<string, { at: number; data: PubMedItem[] }>();
 const PUBMED_CACHE_TTL = 30 * 60 * 1000; // แคชไว้ 30 นาที
 
-/** ค้นหางานวิจัยสากลจาก NCBI PubMed API พร้อม In-Memory Caching */
+/** ค้นหางานวิจัยสากลจาก NCBI PubMed API พร้อม In-Memory Caching และการป้องกัน Timeout */
 export async function fetchPubMedClient(query: string): Promise<PubMedItem[]> {
   const cleanQ = query.trim();
   if (!cleanQ) return [];
@@ -1233,48 +1240,78 @@ export async function fetchPubMedClient(query: string): Promise<PubMedItem[]> {
     return cached.data;
   }
 
-  try {
-    const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
-      cleanQ
-    )}&retmax=3&retmode=json&sort=relevance`;
-    const searchResp = await fetch(searchUrl, { signal: safeTimeoutSignal(2800) });
-    if (!searchResp.ok) return [];
-    const searchData = await searchResp.json();
-    const pmids: string[] = searchData?.esearchresult?.idlist || [];
-    if (pmids.length === 0) return [];
+  const fetchTask = async (): Promise<PubMedItem[]> => {
+    try {
+      const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
+        cleanQ
+      )}&retmax=3&retmode=json&sort=relevance`;
+      const searchSignal = safeTimeoutSignal(1800);
+      let searchResp: Response;
+      try {
+        searchResp = await fetch(searchUrl, searchSignal ? { signal: searchSignal } : {});
+      } catch (err: any) {
+        if (err?.message?.includes("AbortSignal") || err?.message?.includes("signal")) {
+          searchResp = await fetch(searchUrl);
+        } else {
+          throw err;
+        }
+      }
+      if (!searchResp.ok) return [];
+      const searchData = await searchResp.json();
+      const pmids: string[] = searchData?.esearchresult?.idlist || [];
+      if (pmids.length === 0) return [];
 
-    const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(
-      ","
-    )}&retmode=json`;
-    const summaryResp = await fetch(summaryUrl, { signal: safeTimeoutSignal(2800) });
-    if (!summaryResp.ok) return [];
-    const summaryData = await summaryResp.json();
+      const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(
+        ","
+      )}&retmode=json`;
+      const summarySignal = safeTimeoutSignal(1800);
+      let summaryResp: Response;
+      try {
+        summaryResp = await fetch(summaryUrl, summarySignal ? { signal: summarySignal } : {});
+      } catch (err: any) {
+        if (err?.message?.includes("AbortSignal") || err?.message?.includes("signal")) {
+          summaryResp = await fetch(summaryUrl);
+        } else {
+          throw err;
+        }
+      }
+      if (!summaryResp.ok) return [];
+      const summaryData = await summaryResp.json();
 
-    const results: PubMedItem[] = [];
-    for (const pmid of pmids) {
-      const item = summaryData?.result?.[pmid];
-      if (!item) continue;
-      const authors =
-        (item.authors || [])
-          .slice(0, 3)
-          .map((a: any) => a.name)
-          .join(", ") + ((item.authors?.length || 0) > 3 ? ", et al." : "");
-      const year = (item.pubdate || "").split(" ")[0] || "";
-      results.push({
-        pmid,
-        title: item.title || "",
-        authors: authors || "Unknown",
-        year,
-        journal: item.fulljournalname || item.source || "",
-      });
+      const results: PubMedItem[] = [];
+      for (const pmid of pmids) {
+        const item = summaryData?.result?.[pmid];
+        if (!item) continue;
+        const authors =
+          (item.authors || [])
+            .slice(0, 3)
+            .map((a: any) => a.name)
+            .join(", ") + ((item.authors?.length || 0) > 3 ? ", et al." : "");
+        const year = (item.pubdate || "").split(" ")[0] || "";
+        results.push({
+          pmid,
+          title: item.title || "",
+          authors: authors || "Unknown",
+          year,
+          journal: item.fulljournalname || item.source || "",
+        });
+      }
+
+      if (results.length > 0) {
+        pubmedCache.set(cleanQ, { at: Date.now(), data: results });
+      }
+      return results;
+    } catch (e) {
+      console.warn("Client PubMed search skipped or timed out:", e);
+      return [];
     }
+  };
 
-    pubmedCache.set(cleanQ, { at: Date.now(), data: results });
-    return results;
-  } catch (e) {
-    console.warn("Client PubMed search skipped or timed out:", e);
-    return [];
-  }
+  const timeoutFallback = new Promise<PubMedItem[]>((resolve) =>
+    setTimeout(() => resolve([]), 2000)
+  );
+
+  return Promise.race([fetchTask(), timeoutFallback]);
 }
 
 /** ค้นหางานวิจัยไทยจาก ThaiJO Catalog โดยจับคู่ตรงประเด็นและป้องกันการอ้างอิงข้ามสมุนไพร */
@@ -1887,14 +1924,19 @@ export async function processLocalChat(
     if (matchedHerbs.length > 0) {
       contextText += "\n[สมุนไพรที่เกี่ยวข้อง]\n";
       matchedHerbs.forEach((h) => {
-        contextText += `- ${h.name_thai} (${h.name_scientific || h.name_english || ""}): สรรพคุณ: ${(h.properties || []).join(", ")}, ขนาดใช้: ${h.dosage || "ตามคำแนะนำ"}, ข้อควรระวัง: ${(h.precautions || []).join(", ")}, ปฏิกิริยากับยา: ${(h.drug_interactions || []).join(", ")}\n`;
+        const props = Array.isArray(h.properties) ? h.properties.join(", ") : (h.properties || "");
+        const precautions = Array.isArray(h.precautions) ? h.precautions.join(", ") : (h.precautions || "");
+        const ddis = Array.isArray(h.drug_interactions) ? h.drug_interactions.join(", ") : (h.drug_interactions || "");
+        contextText += `- ${h.name_thai} (${h.name_scientific || h.name_english || ""}): สรรพคุณ: ${props}, ขนาดใช้: ${h.dosage || "ตามคำแนะนำ"}, ข้อควรระวัง: ${precautions}, ปฏิกิริยากับยา: ${ddis}\n`;
       });
     }
 
     if (matchedFormulas.length > 0) {
       contextText += "\n[ตำรับยาแผนไทยที่เกี่ยวข้อง]\n";
       matchedFormulas.forEach((f) => {
-        contextText += `- ${f.name_thai}: ข้อบ่งใช้: ${f.indication || ""}, วิธีใช้: ${f.usage_instructions || ""}, ข้อห้าม: ${(f.contraindications || []).join(", ")}, ปฏิกิริยากับยา: ${(f.drug_interactions || []).join(", ")}\n`;
+        const contraindications = Array.isArray(f.contraindications) ? f.contraindications.join(", ") : (f.contraindications || "");
+        const ddis = Array.isArray(f.drug_interactions) ? f.drug_interactions.join(", ") : (f.drug_interactions || "");
+        contextText += `- ${f.name_thai}: ข้อบ่งใช้: ${f.indication || ""}, วิธีใช้: ${f.usage_instructions || ""}, ข้อห้าม: ${contraindications}, ปฏิกิริยากับยา: ${ddis}\n`;
       });
     }
 
@@ -1937,7 +1979,10 @@ export async function processLocalChat(
   if (enableExternal && !isDdi && pubmedResults.length > 0) {
     contextText += "\n[งานวิจัยสากลจากฐานข้อมูล PubMed - สำหรับเป็นข้อมูลเสริม]:\n";
     pubmedResults.slice(0, 2).forEach((p) => {
-      contextText += `Title: ${p.title}\nAuthors: ${(p.authors || []).join(", ")} (${p.pubdate || ""})\nJournal: ${p.source}\nPMID: ${p.pmid}\n\n`;
+      const authorsStr = Array.isArray(p.authors) ? p.authors.join(", ") : (p.authors || "Unknown");
+      const yearStr = p.year || (p as any).pubdate || "";
+      const journalStr = p.journal || (p as any).source || "";
+      contextText += `Title: ${p.title}\nAuthors: ${authorsStr}${yearStr ? ` (${yearStr})` : ""}\nJournal: ${journalStr}\nPMID: ${p.pmid}\n\n`;
     });
   }
 
@@ -2149,20 +2194,42 @@ export async function processLocalChat(
 
     for (const modelToUse of modelCandidates) {
       try {
-        const resp = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${cleanKey}`,
-          },
-          body: JSON.stringify({
-            model: modelToUse,
-            messages: messagesToSend,
-            temperature: 0.2,
-            stream: true,
-          }),
-          signal: safeTimeoutSignal(35000),
-        });
+        let resp: Response;
+        const provSignal = safeTimeoutSignal(35000);
+        try {
+          resp = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${cleanKey}`,
+            },
+            body: JSON.stringify({
+              model: modelToUse,
+              messages: messagesToSend,
+              temperature: 0.2,
+              stream: true,
+            }),
+            ...(provSignal ? { signal: provSignal } : {}),
+          });
+        } catch (fetchErr: any) {
+          if (fetchErr?.message?.includes("AbortSignal") || fetchErr?.message?.includes("signal")) {
+            resp = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${cleanKey}`,
+              },
+              body: JSON.stringify({
+                model: modelToUse,
+                messages: messagesToSend,
+                temperature: 0.2,
+                stream: true,
+              }),
+            });
+          } else {
+            throw fetchErr;
+          }
+        }
 
         if (!resp.ok) {
           const errText = await resp.text().catch(() => "");

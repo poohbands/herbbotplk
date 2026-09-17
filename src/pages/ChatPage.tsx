@@ -613,6 +613,10 @@ const ChatPage = () => {
           cleanContent = stripAllApaReferences(cleanContent);
         }
 
+        if (!cleanContent.trim()) {
+          cleanContent = "ขออภัยครับ ระบบไม่ได้รับข้อความตอบกลับจากผู้ให้บริการ AI กรุณาลองส่งคำถามใหม่อีกครั้งครับ";
+        }
+
         setMessages((prev) => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant") {
@@ -769,17 +773,28 @@ const ChatPage = () => {
       console.error("Chat error:", e);
       const errMsg = e?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง";
       toast.error(errMsg);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          role: "assistant",
-          content: `⚠️ **เกิดข้อผิดพลาดในการสร้างคำตอบ:**\n\n${errMsg}\n\n👉 กรุณาตรวจสอบสถานะและ API Key ได้ที่เมนู **[⚙️ ตั้งค่า AI](/admin/ai-settings)** หรือลองใหม่อีกครั้งครับ`,
-          category: "general",
-          severity: "none",
-          timestamp: new Date(),
-        },
-      ]);
+      const errorMsgContent = `⚠️ **เกิดข้อผิดพลาดในการสร้างคำตอบ:**\n\n${errMsg}\n\n👉 กรุณาตรวจสอบสถานะและ API Key ได้ที่เมนู **[⚙️ ตั้งค่า AI](/admin/ai-settings)** หรือลองใหม่อีกครั้งครับ`;
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.role === "assistant") {
+          return prev.map((m, i) =>
+            i === prev.length - 1
+              ? { ...m, content: errorMsgContent, category: "general", severity: "none" }
+              : m
+          );
+        }
+        return [
+          ...prev,
+          {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: errorMsgContent,
+            category: "general",
+            severity: "none",
+            timestamp: new Date(),
+          },
+        ];
+      });
     } finally {
       clearStageTimers();
       setIsLoading(false);

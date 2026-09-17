@@ -89,5 +89,111 @@ describe("AI Providers Storage & KOB AI Integration", () => {
     expect(msgs2[msgs2.length - 1].role).toBe("user");
     expect(msgs2[msgs2.length - 1].content).toContain("ถามต่อ 3");
   });
+
+  it("traces processLocalChat for curcuma", async () => {
+    const { processLocalChat } = await import("../lib/local-chat-service");
+    localStorage.setItem(
+      "herbbot_ai_providers",
+      JSON.stringify([
+        {
+          id: "deepseek-default",
+          name: "DeepSeek",
+          provider_key: "deepseek",
+          base_url: "https://api.deepseek.com",
+          model_name: "deepseek-chat",
+          is_active: true,
+          priority: 1,
+          api_key: "sk-test-fake-key",
+        },
+      ])
+    );
+
+    let sentPayload: any = null;
+    // mock global fetch
+    const originalFetch = global.fetch;
+    global.fetch = async (url: any, opts: any) => {
+      if (String(url).includes("deepseek.com")) {
+        sentPayload = JSON.parse(opts.body);
+        return new Response('data: {"choices":[{"delta":{"content":"ขมิ้นชันช่วยย่อยอาหาร [METADATA]category: herbal_info\\nseverity: none[/METADATA][SOURCES]{\\"internal\\":[],\\"pubmed\\":[],\\"thaijo\\":[],\\"knowledge\\":[]}[/SOURCES]"}}]}\n\ndata: [DONE]\n\n', {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        });
+      }
+      return originalFetch(url, opts);
+    };
+
+    try {
+      const res = await processLocalChat("ขมิ้นชันใช้รักษาอะไรได้บ้าง?", []);
+      expect(res).toContain("ขมิ้นชัน");
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
+
+  it("handles PubMed results gracefully in processLocalChat without p.authors.join crash", async () => {
+    const { processLocalChat } = await import("../lib/local-chat-service");
+    localStorage.setItem(
+      "herbbot_ai_providers",
+      JSON.stringify([
+        {
+          id: "deepseek-default",
+          name: "DeepSeek",
+          provider_key: "deepseek",
+          base_url: "https://api.deepseek.com",
+          model_name: "deepseek-chat",
+          is_active: true,
+          priority: 1,
+          api_key: "sk-test-fake-key",
+        },
+      ])
+    );
+
+    let receivedSystemPrompt = "";
+    const originalFetch = global.fetch;
+    global.fetch = async (url: any, opts: any) => {
+      const urlStr = String(url);
+      if (urlStr.includes("esearch.fcgi")) {
+        return new Response(JSON.stringify({ esearchresult: { idlist: ["123456"] } }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      if (urlStr.includes("esummary.fcgi")) {
+        return new Response(
+          JSON.stringify({
+            result: {
+              "123456": {
+                title: "Curcumin clinical trials in digestive disorders",
+                authors: [{ name: "Aggarwal BB" }, { name: "Gupta SC" }],
+                pubdate: "2024 Jan 15",
+                source: "Phytomedicine",
+              },
+            },
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      }
+      if (urlStr.includes("deepseek.com")) {
+        const body = JSON.parse(opts.body);
+        receivedSystemPrompt = body.messages[0]?.content || "";
+        return new Response(
+          'data: {"choices":[{"delta":{"content":"ขมิ้นชันมีฤทธิ์ขับลม แก้อาการท้องอืด ท้องเฟ้อ [METADATA]category: herbal_info\\nseverity: none[/METADATA][SOURCES]{\\"internal\\":[],\\"pubmed\\":[],\\"thaijo\\":[],\\"knowledge\\":[]}[/SOURCES]"}}]}\n\ndata: [DONE]\n\n',
+          { status: 200, headers: { "Content-Type": "text/event-stream" } }
+        );
+      }
+      return originalFetch(url, opts);
+    };
+
+    try {
+      const res = await processLocalChat("กระชายดำใช้รักษาอะไรได้บ้าง?", []);
+      expect(res).toContain("ขมิ้นชันมีฤทธิ์ขับลม");
+      expect(receivedSystemPrompt).toContain("Curcumin clinical trials in digestive disorders");
+      expect(receivedSystemPrompt).toContain("Aggarwal BB, Gupta SC");
+      expect(receivedSystemPrompt).toContain("Phytomedicine");
+    } finally {
+      global.fetch = originalFetch;
+    }
+  });
 });
+
 
