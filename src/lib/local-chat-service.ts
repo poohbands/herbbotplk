@@ -1196,6 +1196,29 @@ export function validateAndPruneSources(
   };
 }
 
+/** สร้าง AbortSignal พร้อม Timeout ที่ปลอดภัยสำหรับเบราว์เซอร์ทุกเวอร์ชัน (รวมถึง LINE/Facebook Webview) */
+export function safeTimeoutSignal(ms: number): AbortSignal | undefined {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+    try {
+      return AbortSignal.timeout(ms);
+    } catch {
+      // fallback to AbortController
+    }
+  }
+  if (typeof AbortController !== "undefined") {
+    const controller = new AbortController();
+    setTimeout(() => {
+      try {
+        controller.abort();
+      } catch {
+        // ignore
+      }
+    }, ms);
+    return controller.signal;
+  }
+  return undefined;
+}
+
 // In-Memory Cache สำหรับผลค้นหา PubMed
 const pubmedCache = new Map<string, { at: number; data: PubMedItem[] }>();
 const PUBMED_CACHE_TTL = 30 * 60 * 1000; // แคชไว้ 30 นาที
@@ -1214,7 +1237,7 @@ export async function fetchPubMedClient(query: string): Promise<PubMedItem[]> {
     const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(
       cleanQ
     )}&retmax=3&retmode=json&sort=relevance`;
-    const searchResp = await fetch(searchUrl, { signal: AbortSignal.timeout(2800) });
+    const searchResp = await fetch(searchUrl, { signal: safeTimeoutSignal(2800) });
     if (!searchResp.ok) return [];
     const searchData = await searchResp.json();
     const pmids: string[] = searchData?.esearchresult?.idlist || [];
@@ -1223,7 +1246,7 @@ export async function fetchPubMedClient(query: string): Promise<PubMedItem[]> {
     const summaryUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=${pmids.join(
       ","
     )}&retmode=json`;
-    const summaryResp = await fetch(summaryUrl, { signal: AbortSignal.timeout(2800) });
+    const summaryResp = await fetch(summaryUrl, { signal: safeTimeoutSignal(2800) });
     if (!summaryResp.ok) return [];
     const summaryData = await summaryResp.json();
 
@@ -2049,9 +2072,9 @@ export async function processLocalChat(
     }
 
     const isGoogle = baseUrl.includes("google") || provider.provider_key === "gemini";
-    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-flash-latest" : "deepseek-chat");
+    const configuredModel = provider.model_name?.trim() || (isGoogle ? "gemini-1.5-flash" : "deepseek-chat");
     const modelCandidates = isGoogle
-      ? Array.from(new Set([configuredModel, "gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]))
+      ? Array.from(new Set([configuredModel, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-flash-latest"]))
       : [configuredModel];
 
     for (const modelToUse of modelCandidates) {
@@ -2068,10 +2091,10 @@ export async function processLocalChat(
             temperature: 0.2,
             stream: true,
           }),
-          signal: AbortSignal.timeout(35000),
+          signal: safeTimeoutSignal(35000),
         });
 
-        if (resp.status === 404 || resp.status === 503 || resp.status === 429) {
+        if (resp.status === 404 || resp.status === 503 || resp.status === 429 || resp.status === 400) {
           console.warn(`Model ${modelToUse} returned HTTP ${resp.status}. Trying next candidate...`);
           continue;
         }

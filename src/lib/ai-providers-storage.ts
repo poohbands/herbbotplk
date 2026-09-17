@@ -196,6 +196,24 @@ export function getActiveLocalProvider(): ProviderItem | null {
   return active[0] || null;
 }
 
+function safeTimeoutSignal(ms: number): AbortSignal | undefined {
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+    try {
+      return AbortSignal.timeout(ms);
+    } catch {}
+  }
+  if (typeof AbortController !== "undefined") {
+    const controller = new AbortController();
+    setTimeout(() => {
+      try {
+        controller.abort();
+      } catch {}
+    }, ms);
+    return controller.signal;
+  }
+  return undefined;
+}
+
 export async function testProviderDirectly(provider: {
   api_key?: string;
   base_url: string;
@@ -226,9 +244,9 @@ export async function testProviderDirectly(provider: {
   const isGoogle = url.includes("google") || provider.base_url?.includes("generativelanguage");
   const isKobAi = url.includes("kob-ai") || provider.base_url?.includes("kob-ai");
 
-  const modelsToTry = [model || (isGoogle ? "gemini-flash-latest" : isKobAi ? "claude-3-5-sonnet" : "deepseek-chat")];
+  const modelsToTry = [model || (isGoogle ? "gemini-1.5-flash" : isKobAi ? "claude-3-5-sonnet" : "deepseek-chat")];
   if (isGoogle) {
-    ["gemini-flash-latest", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"].forEach((cand) => {
+    ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-flash-latest"].forEach((cand) => {
       if (!modelsToTry.includes(cand)) modelsToTry.push(cand);
     });
   } else if (isKobAi) {
@@ -254,7 +272,7 @@ export async function testProviderDirectly(provider: {
           messages: [{ role: "user", content: "ตอบกลับสั้นๆ ว่า OK" }],
           max_tokens: 20,
         }),
-        signal: AbortSignal.timeout(20000),
+        signal: safeTimeoutSignal(20000),
       });
 
       lastStatus = resp.status;

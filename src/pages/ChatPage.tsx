@@ -741,7 +741,7 @@ const ChatPage = () => {
 
         // 3. ถ้า Cloud ล้มเหลว (เช่น เครดิต Lovable หมด / ไม่มีคีย์) และเครื่องยังไม่ได้ใส่คีย์
         if (!usedCloud) {
-          cleanContent = `ยินดีต้อนรับสู่ HerbBot PLK (หมอยาพิษณุโลก)!\n\nขณะนี้ระบบทำงานใน โหมดเครื่องส่วนตัว (Local Standalone Mode) เนื่องจากฟังก์ชันบน Cloud หรือเครดิต Lovable ไม่พร้อมใช้งาน`;
+          cleanContent = `⚠️ **ระบบไม่สามารถสร้างคำตอบได้ในขณะนี้**\n\nขณะนี้ **เครดิต AI ของระบบคลาวด์หมดลง** หรือยังไม่ได้เชื่อมต่อ API Key ของผู้ให้บริการ AI\n\n💡 **วิธีเปิดใช้งานสำหรับผู้ดูแลระบบ:**\n1. ไปที่เมนู **[⚙️ ตั้งค่า AI](/admin/ai-settings)** (รหัสผ่าน: \`sakura4923\`)\n2. นำ **Google Gemini API Key** (ขอใช้งานฟรีได้ที่ [Google AI Studio](https://aistudio.google.com/app/apikey)) หรือ **DeepSeek API Key** มาใส่และเปิดใช้งาน\n3. กด **"บันทึกการตั้งค่า"** เพื่อให้ระบบกลับมาตอบคำถามได้ทันทีครับ`;
 
           setMessages((prev) => [
             ...prev,
@@ -767,7 +767,19 @@ const ChatPage = () => {
       }
     } catch (e: any) {
       console.error("Chat error:", e);
-      toast.error(e.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
+      const errMsg = e?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง";
+      toast.error(errMsg);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `⚠️ **เกิดข้อผิดพลาดในการสร้างคำตอบ:**\n\n${errMsg}\n\n👉 กรุณาตรวจสอบสถานะและ API Key ได้ที่เมนู **[⚙️ ตั้งค่า AI](/admin/ai-settings)** หรือลองใหม่อีกครั้งครับ`,
+          category: "general",
+          severity: "none",
+          timestamp: new Date(),
+        },
+      ]);
     } finally {
       clearStageTimers();
       setIsLoading(false);
