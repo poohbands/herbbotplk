@@ -30,3 +30,4 @@ supabase/.temp/
 *.xlsx
 import_payload.json
 parsed_herb_drug.json
+herbbook/

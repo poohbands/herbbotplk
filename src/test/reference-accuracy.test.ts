@@ -695,6 +695,68 @@ drugs:
       // NLEM for unrecommended drug (ยาขมิ้นชัน) must be pruned
       expect(pruned.knowledge.some((k) => k.title.includes("ยาขมิ้นชัน"))).toBe(false);
     });
+
+    it("prunes all herb books documents when enable_herb_books is false", () => {
+      const q = "อยากทราบสมุนไพรทดแทนยา Omeprazole มีอะไรบ้าง";
+      const answer = "สามารถใช้ขมิ้นชันทดแทน Omeprazole ได้ครับ";
+      const rawSources = {
+        internal: [],
+        knowledge: [
+          {
+            id: "sub-1",
+            title: "ขมิ้นชัน (Curcuma longa) ทดแทน Omeprazole / Antacids",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            chapter: "กลุ่มโรคระบบทางเดินอาหาร",
+            herbs: ["ขมิ้นชัน"],
+            modernDrugs: ["Omeprazole", "Antacids"],
+            source: "แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ",
+          },
+        ],
+      };
+
+      const settingsDisabled = {
+        enable_external_research: true,
+        enable_internal_db: true,
+        enable_mahidol_ddi: true,
+        enable_tu_ddi: true,
+        enable_herb_books: false,
+      };
+
+      const pruned = validateAndPruneSources(q, answer, rawSources, settingsDisabled);
+      expect(pruned.knowledge.length).toBe(0);
+    });
+
+    it("retains relevant drug substitution guidelines and prunes unrelated book documents", () => {
+      const q = "กินยา omeprazole อยู่ อยากใช้สมุนไพรทดแทนได้ไหม";
+      const answer = "ขมิ้นชันสามารถใช้ทดแทน Omeprazole ในการบรรเทาอาการท้องอืด จุกเสียด และแผลในกระเพาะอาหารได้ครับ";
+      const rawSources = {
+        internal: [],
+        knowledge: [
+          {
+            id: "sub-curcuma",
+            title: "ขมิ้นชัน (Curcuma longa) ทดแทน Omeprazole / Antacids",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            chapter: "กลุ่มโรคระบบทางเดินอาหาร",
+            herbs: ["ขมิ้นชัน"],
+            modernDrugs: ["Omeprazole", "Antacids"],
+            source: "แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ",
+          },
+          {
+            id: "sub-thao-wan-priang",
+            title: "เถาวัลย์เปรียง (Derris scandens) ทดแทน NSAIDs",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            chapter: "กลุ่มโรคระบบกล้ามเนื้อและกระดูก",
+            herbs: ["เถาวัลย์เปรียง"],
+            modernDrugs: ["Diclofenac", "Ibuprofen"],
+            source: "แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(q, answer, rawSources);
+      expect(pruned.knowledge.some((k) => k.title.includes("ขมิ้นชัน"))).toBe(true);
+      expect(pruned.knowledge.some((k) => k.title.includes("เถาวัลย์เปรียง"))).toBe(false);
+    });
   });
 });
 

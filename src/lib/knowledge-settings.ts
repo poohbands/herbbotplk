@@ -24,6 +24,11 @@ export type KnowledgeSettings = {
    * เปิด-ปิดการใช้ฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศ. ดร.ภญ.อรุณพร อิฐรัตน์ ม.ธรรมศาสตร์)
    */
   enable_tu_ddi: boolean;
+
+  /**
+   * เปิด-ปิดการใช้หนังสือข้อมูลความรู้ด้านยาและแนวทางเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาทดแทน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, บัญชียาหลัก 2568)
+   */
+  enable_herb_books: boolean;
 };
 
 export const DEFAULT_KNOWLEDGE_SETTINGS: KnowledgeSettings = {
@@ -31,6 +36,7 @@ export const DEFAULT_KNOWLEDGE_SETTINGS: KnowledgeSettings = {
   enable_internal_db: true,
   enable_mahidol_ddi: true,
   enable_tu_ddi: true,
+  enable_herb_books: true,
 };
 
 const STORAGE_KEY = "plk_knowledge_source_settings";
@@ -63,6 +69,10 @@ export function getKnowledgeSettings(): KnowledgeSettings {
         typeof parsed.enable_tu_ddi === "boolean"
           ? parsed.enable_tu_ddi
           : DEFAULT_KNOWLEDGE_SETTINGS.enable_tu_ddi,
+      enable_herb_books:
+        typeof parsed.enable_herb_books === "boolean"
+          ? parsed.enable_herb_books
+          : DEFAULT_KNOWLEDGE_SETTINGS.enable_herb_books,
     };
   } catch (e) {
     console.warn("Failed to read knowledge settings from localStorage:", e);

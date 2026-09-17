@@ -34,7 +34,19 @@ import { APP_VERSION } from "@/lib/version";
 type PubMedSource = { pmid: string; title: string; authors: string; year: string; journal: string };
 type ThaiJoSource = { title: string; authors: string; year?: string; journal: string; url: string };
 type InternalSource = { type: "herb" | "formula"; id: string; name: string };
-type KnowledgeSource = { id: string; title: string; category?: string; source?: string; source_url?: string; content?: string };
+type KnowledgeSource = {
+  id: string;
+  title: string;
+  category?: string;
+  source?: string;
+  source_url?: string;
+  content?: string;
+  bookCategory?: string;
+  chapter?: string;
+  apaCitation?: string;
+  herbs?: string[];
+  modernDrugs?: string[];
+};
 type SourcesPayload = {
   pubmed?: PubMedSource[];
   internal?: InternalSource[];
@@ -130,6 +142,18 @@ function getKnowledgeLink(k: KnowledgeSource): string {
 
 /** ตรวจสอบว่าเอกสารความรู้นี้ได้รับอนุญาตให้แสดงผลตามการตั้งค่าหรือไม่ */
 function isKnowledgeAllowedBySettings(k: KnowledgeSource, settings: KnowledgeSettings): boolean {
+  if (settings.enable_herb_books === false) {
+    if (
+      k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" ||
+      k.category === "หนังสือและคู่มือความรู้ด้านยา" ||
+      k.bookCategory ||
+      k.source?.includes("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ") ||
+      k.source?.includes("ทดแทนยาแผนปัจจุบัน") ||
+      k.source?.includes("ปฐมภูมิ")
+    ) {
+      return false;
+    }
+  }
   if (settings.enable_mahidol_ddi === false) {
     if (
       k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" ||
@@ -157,6 +181,21 @@ function isKnowledgeAllowedBySettings(k: KnowledgeSource, settings: KnowledgeSet
 
 /** สร้างข้อความอ้างอิงมาตรฐาน APA 7th Edition สำหรับเอกสารความรู้ */
 function formatKnowledgeApa(k: KnowledgeSource): string {
+  if (k.apaCitation) {
+    return k.apaCitation;
+  }
+  const isHerbBook =
+    k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" ||
+    k.category === "หนังสือและคู่มือความรู้ด้านยา" ||
+    Boolean(k.bookCategory) ||
+    k.source?.includes("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ") ||
+    k.source?.includes("ทดแทนยาแผนปัจจุบัน");
+  if (isHerbBook) {
+    if (k.source?.includes("กรมการแพทย์")) {
+      return `กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.`;
+    }
+    return `กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ${k.title}. กระทรวงสาธารณสุข.`;
+  }
   const isTuDdi =
     k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" ||
     k.source?.includes("ธรรมศาสตร์") ||

@@ -3,6 +3,7 @@ import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, DEFAULT_KNOWLEDGE_SETTINGS, type KnowledgeSettings } from "./knowledge-settings";
 import { searchHerbs97ByName, searchHerbs97BySymptom, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
+import { searchHerbBooks, formatHerbBooksForAiContext, type HerbBookItem } from "./herb-books-service";
 import tuDdiDataset from "@/data/tu-ddi-dataset.json";
 
 // พจนานุกรมอาการภาษาไทยเพื่อจับคู่สมุนไพร
@@ -642,6 +643,12 @@ export function extractAllowedEntitiesFromSources(sources: {
     if (k.title) allowed.add(k.title);
     if (k.herb_name) allowed.add(k.herb_name);
     if (k.drug_name) allowed.add(k.drug_name);
+    if (Array.isArray(k.herbs)) {
+      k.herbs.forEach((h: string) => allowed.add(h));
+    }
+    if (Array.isArray(k.modernDrugs)) {
+      k.modernDrugs.forEach((d: string) => allowed.add(d));
+    }
   }
   for (const t of sources.thaijo || []) {
     if (t.title) allowed.add(t.title);
@@ -719,8 +726,10 @@ export function sanitizeUnrelatedApaReferences(
       }
 
       const isGeneralOfficialDoc =
-        /(?:คณะกรรมการพัฒนาระบบยาแห่งชาติ|กรมการแพทย์แผนไทยและการแพทย์ทางเลือก|กระทรวงสาธารณสุข|บัญชียาหลักแห่งชาติ)/i.test(line) ||
-        /คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น\s*10\s*กลุ่มอาการ/i.test(line);
+        /(?:คณะกรรมการพัฒนาระบบยาแห่งชาติ|กรมการแพทย์แผนไทยและการแพทย์ทางเลือก|กรมการแพทย์|กระทรวงสาธารณสุข|บัญชียาหลักแห่งชาติ)/i.test(line) ||
+        /คู่มือการใช้ยาสมุนไพร/i.test(line) ||
+        /แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน/i.test(line) ||
+        /แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร/i.test(line);
 
       if (isAllowed || isGeneralOfficialDoc) {
         filteredLines.push(line);
@@ -763,6 +772,7 @@ export function validateAndPruneSources(
   const currentSettings = settings || getKnowledgeSettings();
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
   const enableTu = currentSettings.enable_tu_ddi !== false;
+  const enableHerbBooks = currentSettings.enable_herb_books !== false;
   const enableInternal = currentSettings.enable_internal_db !== false;
   const enableExternal = currentSettings.enable_external_research !== false;
 
@@ -781,6 +791,17 @@ export function validateAndPruneSources(
   for (const k of rawKnowledge) {
     const title = (k.title || "").trim();
     if (!title || seenKnowledgeTitles.has(title)) continue;
+
+    // ถ้าปิดการใช้งานหนังสือข้อมูลความรู้ด้านยา ให้ตัดเอกสารในกลุ่มหนังสือทิ้งทั้งหมด
+    if (!enableHerbBooks) {
+      if (
+        k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" ||
+        k.category === "หนังสือและคู่มือความรู้ด้านยา" ||
+        (k.source && (k.source.includes("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ") || k.source.includes("ทดแทนยาแผนปัจจุบัน") || k.source.includes("ปฐมภูมิ")))
+      ) {
+        continue;
+      }
+    }
 
     // ถ้าปิดการใช้งานฐานข้อมูล DDI มหิดล ให้ตัดเอกสาร DDI หรือเอกสารที่มาจาก ม.มหิดล ทิ้งทั้งหมด 100%
     if (!enableMahidol) {
@@ -918,6 +939,27 @@ export function validateAndPruneSources(
       if (!drugMentioned && !isSourceInquiry) {
         continue; // ตัดเอกสารบัญชียาหลักที่ไม่เกี่ยวข้องทิ้ง
       }
+    } else if (
+      k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" ||
+      k.category === "หนังสือและคู่มือความรู้ด้านยา" ||
+      (k.source && (k.source.includes("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ") || k.source.includes("ทดแทนยาแผนปัจจุบัน") || k.source.includes("ปฐมภูมิ")))
+    ) {
+      const isSourceInquiry = /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง)/i.test(question);
+
+      const bookHerbs: string[] = k.herbs || [];
+      const bookDrugs: string[] = k.modernDrugs || [];
+      const bookTitle = (k.title || "").toLowerCase();
+      const bookChapter = (k.chapter || "").toLowerCase();
+      const combinedText = `${bookTitle} ${bookChapter} ${(k.indications || []).join(" ")}`.toLowerCase();
+
+      const herbMatch = bookHerbs.some((h: string) => qLower.includes(h.toLowerCase()) || aLower.includes(h.toLowerCase()));
+      const drugMatch = bookDrugs.some((d: string) => qLower.includes(d.toLowerCase()) || aLower.includes(d.toLowerCase()));
+      const symptomsMatch = SYMPTOM_MAP.some((s) => s.match.test(qLower) && (s.match.test(combinedText) || s.terms.some((t) => combinedText.includes(t.toLowerCase()))));
+      const qWordsMatch = qLower.split(/\s+/).some((w: string) => w.length >= 3 && combinedText.includes(w));
+
+      if (!herbMatch && !drugMatch && !symptomsMatch && !qWordsMatch && !isSourceInquiry && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion) {
+        continue;
+      }
     }
 
     seenKnowledgeTitles.add(title);
@@ -935,6 +977,10 @@ export function validateAndPruneSources(
         ? mDrug[1].trim()
         : title.replace(/^บัญชียาหลักแห่งชาติด้านสมุนไพร:\s*/, "").replace(/\s*\(พ\.ศ\..*?\)$/, "").trim();
       docUrl = drugName ? `/herbs?name=${encodeURIComponent(drugName)}` : "/herbs";
+    }
+
+    if (k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" && !docUrl) {
+      docUrl = `/knowledge?tab=books&id=${encodeURIComponent(k.id || "")}`;
     }
 
     validKnowledge.push({
@@ -1245,10 +1291,14 @@ export function buildSystemPrompt(settings?: KnowledgeSettings): string {
   const currentSettings = settings || getKnowledgeSettings();
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
   const enableTu = currentSettings.enable_tu_ddi !== false;
+  const enableHerbBooks = currentSettings.enable_herb_books !== false;
 
   const mahidolSourceText = enableMahidol ? ", ม.มหิดล" : "";
   const tuSourceText = enableTu ? ", ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์)" : "";
-  const scopeSourcesText = `เช่น ข้อมูล DDI มาจาก บัญชียาหลักแห่งชาติ${mahidolSourceText}${tuSourceText}, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก`;
+  const herbBooksSourceText = enableHerbBooks
+    ? ", หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาสมุนไพรทดแทนยาแผนปัจจุบัน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, ประกาศบัญชียาหลักแห่งชาติ 2568 ฉบับที่ 2)"
+    : "";
+  const scopeSourcesText = `เช่น ข้อมูล DDI มาจาก บัญชียาหลักแห่งชาติ${mahidolSourceText}${tuSourceText}${herbBooksSourceText}, 10 กลุ่มอาการ สธ., PubMed, ThaiJO, คลัง 97 รายการ และทีมเภสัชกร สสจ.พิษณุโลก`;
 
   const mahidolApaRule = enableMahidol
     ? `    - กรณีอ้างอิงฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.มหิดล (อ้างอิงเฉพาะคู่สมุนไพรและยาที่ผู้ใช้ถามเท่านั้น):
@@ -1259,6 +1309,15 @@ export function buildSystemPrompt(settings?: KnowledgeSettings): string {
     ? `    - กรณีอ้างอิงฐานข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์):
       อิฐรัตน์, อ. (2566). *ข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interaction)*. สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์.`
     : `    - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.ธรรมศาสตร์:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยธรรมศาสตร์", "ม.ธรรมศาสตร์", "อรุณพร อิฐรัตน์" หรือ "สถานการแพทย์แผนไทยประยุกต์ มหาวิทยาลัยธรรมศาสตร์" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
+
+  const herbBooksApaRule = enableHerbBooks
+    ? `    - กรณีอ้างอิงหนังสือและแนวทางเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาสมุนไพรทดแทนยาแผนปัจจุบัน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, บัญชียาหลัก 2568 - อ้างอิงเฉพาะเล่มที่ตรงกับเรื่องที่ตอบ):
+      * กรมการแพทย์. (2568). *คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ*. กระทรวงสาธารณสุข.
+      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ*. กระทรวงสาธารณสุข.
+      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ*. กระทรวงสาธารณสุข.
+      * คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
+      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย*. กระทรวงสาธารณสุข.`
+    : `    - ⚠️ **ข้อห้ามเรื่องหนังสือความรู้ด้านยา:** ปัจจุบันระบบปิดการใช้หนังสือข้อมูลความรู้ด้านยา ห้ามเอ่ยถึง อ้างอิง หรือระบุเอกสารของ "กรมการแพทย์ (2568)", "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ", หรือ "แนวทางการใช้ยาสมุนไพรทดแทนยาแผนปัจจุบัน" ในคำตอบและเอกสารอ้างอิงเด็ดขาด!`;
 
   return `คุณคือ "หมอยาพิษณุโลก" ผู้เชี่ยวชาญด้านเภสัชกรรมไทยและอันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลก
 
@@ -1340,6 +1399,7 @@ drugs:
       กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ*. กระทรวงสาธารณสุข.
 ${mahidolApaRule}
 ${tuApaRule}
+${herbBooksApaRule}
     - กรณีอ้างอิงงานวิจัยสากล PubMed (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
       Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
     - กรณีอ้างอิงงานวิจัยไทย ThaiJO (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
@@ -1386,6 +1446,7 @@ export async function processLocalChat(
   const enableInternal = currentSettings.enable_internal_db !== false;
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
   const enableTu = currentSettings.enable_tu_ddi !== false;
+  const enableHerbBooks = currentSettings.enable_herb_books !== false;
 
   // 0. ตรวจจับคำถามที่อยู่นอกขอบเขตชัดเจน (Fast short-circuit ตอบปฏิเสธทันที ไม่ต้องต่อ API)
   if (isBlatantlyOutOfScope(question, history)) {
@@ -1576,6 +1637,9 @@ export async function processLocalChat(
     ? findRelevantThaiJo(question, matchedHerbs, matchedFormulas)
     : [];
 
+  // ค้นหาข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์, ยาทดแทน 32 รายการ, แผนภูมิปฐมภูมิ, บัญชียาหลัก 2568)
+  const matchedHerbBooks = enableHerbBooks ? searchHerbBooks(question, 4) : [];
+
   // 3. สร้าง Context ที่รวบรวมทั้งข้อมูลภายในและงานวิจัยภายนอก (ตามการตั้งค่าเปิด-ปิด)
   let contextText = "";
 
@@ -1618,6 +1682,11 @@ export async function processLocalChat(
         });
       }
     }
+  }
+
+  // 3.2 แทรกข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์, ยาทดแทน 32 รายการ, แผนภูมิปฐมภูมิ, บัญชียาหลัก 2568)
+  if (enableHerbBooks && matchedHerbBooks.length > 0) {
+    contextText += "\n" + formatHerbBooksForAiContext(matchedHerbBooks) + "\n";
   }
 
   // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
@@ -1725,6 +1794,15 @@ export async function processLocalChat(
       `   - ข้อมูล: แนวทางการใช้ยาสมุนไพรดูแลอาการเจ็บป่วยเบื้องต้น 10 กลุ่มอาการสำหรับประชาชนและหน่วยบริการปฐมภูมิ`
     );
 
+    if (enableHerbBooks) {
+      sourcesList.push(
+        `${idx++}. หนังสือข้อมูลความรู้ด้านยาและแนวทางเวชปฏิบัติ (Clinical Practice Guidelines & Drug Reference Books):\n` +
+        `   - หน่วยงาน: กรมการแพทย์ และ กรมการแพทย์แผนไทยและการแพทย์ทางเลือก กระทรวงสาธารณสุข\n` +
+        `   - ข้อมูล: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (เม.ย. 2568), แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน 32 รายการ (ธ.ค. 2567), แผนภูมิการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ 11 กลุ่มอาการ (ICD-10 / ICD-10-TM), และประกาศบัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568\n` +
+        `   - การตรวจสอบ: ตรวจสอบได้จากเมนู "คลังความรู้" หมวดหนังสือข้อมูลความรู้ด้านยา (/knowledge) หรือดูในปุ่ม "แหล่งอ้างอิง" ของระบบ พร้อมรูปแบบการอ้างอิงตามมาตรฐาน APA 7th Edition`
+      );
+    }
+
     if (enableExternal) {
       sourcesList.push(
         `${idx++}. ฐานข้อมูลงานวิจัยทางการแพทย์สากลและไทย (Evidence-based Research):\n` +
@@ -1743,6 +1821,7 @@ export async function processLocalChat(
 
     const verifyCheckItems = [
       'ปุ่มแหล่งอ้างอิง',
+      enableHerbBooks ? 'หมวดหนังสือความรู้ด้านยา (/knowledge)' : '',
       enableExternal ? 'รหัส PMID' : '',
       enableMahidol ? 'ลิงก์มหิดล' : '',
       enableTu ? 'เอกสารวิชาการ ม.ธรรมศาสตร์' : '',
@@ -2039,6 +2118,23 @@ export async function processLocalChat(
           );
         }
       }
+    }
+    if (enableHerbBooks && matchedHerbBooks.length > 0) {
+      knowledgeItems.push(
+        ...matchedHerbBooks.map((b) => ({
+          id: b.id,
+          title: b.title,
+          category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+          bookCategory: b.category,
+          chapter: b.chapter,
+          content: b.content,
+          source: b.source,
+          source_url: `/knowledge?tab=books&id=${encodeURIComponent(b.id)}`,
+          apaCitation: b.apaCitation,
+          herbs: b.herbs,
+          modernDrugs: b.modernDrugs,
+        }))
+      );
     }
     if (knowledgeItems.length > 0) {
       rawSourcesPayload.knowledge = knowledgeItems;
