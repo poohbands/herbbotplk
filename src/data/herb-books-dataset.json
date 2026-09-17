@@ -1109,5 +1109,475 @@
     "evidenceLevel": "Public Health Guideline",
     "apaCitation": "กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย. กระทรวงสาธารณสุข.",
     "sourceUrl": "https://www.dtam.moph.go.th"
+  },
+  {
+    "id": "cpg-2568-mono-01-curcuma",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ขมิ้นชัน (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ขมิ้นชัน กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ขมิ้นชัน (Curcuma longa L.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Warfarin, Aspirin, Anticoagulants, Antiplatelets, Doxorubicin",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ขมิ้นชัน (Turmeric)\n• ชื่อวิทยาศาสตร์: Curcuma longa L.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 1 (หน้า 161-166)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n)\n1. ยาต้านการแข็งตัวของเลือด กลุ่ม anticoagulant ได้แก่ warfarin และกลุ่ม antiplatelets \nได้แก่ aspirin เนื่องจากเสี่ยงภาวะเลือดออก (11, 12) \n2. ยาที่มีกระบวนการเมทาบอลิซึมผ่านเอ็นไซม์ cytochrome P450 เนื่องจาก curcumin ยับยั้ง \nCYP3A4, CYP1A2 แต่กระตุ้น CYP2A6 (13)\n3. ยารักษาโรคมะเร็งบางชนิด เช่น doxorubicin, cyclophosphamide, chlormethine  \nและ camptothecin เนื่องจาก curcumin มีฤทธิ์ต้านยาดังกล่าว (14)\nค�ำแนะน�ำเพิ่มเติม\n1. ควรใช้ขมิ้นชันในขนาดที่แนะน�า และไม่เกินปริมาณที่ก�าหนด\n2. หากใช้ติดต่อกันเป็นเวลานาน ควรอยู่ภายใต้การดูแลของแพทย์\n3. การรับประทานพร้อมพริกไทยด�าอาจช่วยเพิ่มการดูดซึมของเคอร์คูมิน (15)147\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nWarfarin, Aspirin, Anticoagulants, Antiplatelets, Doxorubicin, Cyclophosphamide, Chlormethine, Camptothecin, CYP3A4, CYP1A2, CYP2A6\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n143\nขมิ้นชัน\nเภสัชกรหญิงสุกัลยำ ยิดนรดิน\nนำยแพทย์ยงยศ เหลืองวิชชเจริญ\nชื่อสำมัญ (1)  (ไทย)  ขมิ้นชัน \n   (อังกฤษ)  Turmeric \nชื่อวิทยำศำสตร์  Curcuma longa L.\n   Curcuma domestica Valeton (ชื่อพ้อง)\nชื่อวงศ์ (1)  Zingiberaceae \nชื่อท้องถิ่น (2)  ขมิ้น ขมิ้นแกง ขมิ้นหยอก ขมิ้นหัว ขี้มิ้น ตายอ สะยอ หมิ้น\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้ \nผงเหง้า (rhisome) น�าเหง้าขมิ้นชันที่ล้างสะอาดแล้วมาหั่นเป็นแว่น อบให้แห้งแล้วบดเป็นผง  \nโดยใช้ผงเหง้าขมิ้นชันที่มีสาร curcuminoids ไม่น้อยกว่าร้อยละ 5.0 โดยน�้าหนัก และน�้ามันหอมระเหย \n(volatile oil) ไม่น้อยกว่าร้อยละ 6.0 โดยปริมาตรต่อน�้าหนัก (2) เตรียมเป็นต�ารับยา\nสำรออกฤทธิ์หลัก (Active ingredient) (3)\nผงเหง้าขมิ้นชันที่มีสาร curcuminoids ไม่น้อยกว่าร้อยละ 5.0 โดยน�้าหนัก และน�้ามันหอมระเหย \n(volatile oil) ไม่น้อยกว่าร้อยละ 6.0 โดยปริมาตรต่อน�้าหนัก (2) \n- สารกลุ่ม curcuminoids ท�าให้เหง้าขมิ้นชันมีสีเข้ม และร้อยละ 50 - 60 ของสารกลุ่มนี้  \nประกอบด้วย สารผสมของ curcumin, dimethoxy curcumin, bisdemethoxycurcumin\n- น�้ามันหอมระเหย เรียกว่าขมิ้นชัน (turmeric oil) มีสีเหลืองส้ม แยกสกัดได้ด้วยการกลั่น  \nส่วนใหญ่ประกอบด้วย สารกลุ่ม monoterpenes และ sesquiterpenes เช่น  α–turmerone และ \nß-tumerone, ar-turmerone, zingiberene, curcumene\nสูตรเคมี (Chemical Formula) \nสูตร: C21H20O6\nที่มา : https://en.wikipedia.org/wiki/Curcumin\nกลไกกำรออกฤทธิ์ (Mechanism of Action)\n1. มีการศึกษา metabolism ของ curcumin โดยใช้ microsome จากล�าไส้ และจากตับของคน \nและของหนูขาว พบว่า curcumin ถูก metabolized อย่างมาก โดยเกิด conjugation (glucuronide \n& amp; sulfate) และ reduction (เป็น tetrahydro curcumin & hexahydro curcumin)  \nในทางเดินอาหาร (ล�าไส้และตับ) และ metabolism ในล�าไส้ของคน (4)\n2. สารสกัดจากเหง้าขมิ้นชันแห้งด้วยเมทานอล และ curcumin จากขมิ้นชัน สามารถยับยั้ง  \nการเจริญเติบโต ของ H.pyroli 19 สายพันธุ์ รวมทั้งสายพันธุ์ cagA+ 5 สายพันธุ์ ค่า MIC อยู่ระหว่าง \n6.25 - 50 ไมโครกรัมต่อมิลลิลิตร Foryst-Ludwig และคณะ ศึกษา curcumin จากขมิ้นชันความเข้มข้น  \n40 หรือ 80 ไมโครโมล ไม่มีผลยับยั้ง H.Pyroli เมื่อทดสอบโดยการนับจ�านวน colony ของเชื้อแบคทีเรีย\ncurcumin Keto form \ncurcumin Enol form 145\nที่ยังมีชีวิตอยู่ ไม่แตกต่างจาก colony ที่ไม่ได้รับ curcumin แต่พบว่า curcumin จะยับยั้งการท�างาน\nของ NF-kappa B ซึ่งก่อให้เกิดการอักเสบ โด\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ขมิ้นชัน",
+      "ขมิ้น",
+      "Curcuma longa",
+      "Turmeric",
+      "เคอร์คูมิน"
+    ],
+    "modernDrugs": [
+      "Warfarin",
+      "Aspirin",
+      "Anticoagulants",
+      "Antiplatelets",
+      "Doxorubicin",
+      "Cyclophosphamide",
+      "Chlormethine",
+      "Camptothecin",
+      "CYP3A4",
+      "CYP1A2",
+      "CYP2A6"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-01-curcuma"
+  },
+  {
+    "id": "cpg-2568-mono-02-ginger",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ขิง (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ขิง กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ขิง (Zingiber officinale Roscoe) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Warfarin, Aspirin, Anticoagulants, Antiplatelet agents, Nifedipine",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ขิง (Ginger)\n• ชื่อวิทยาศาสตร์: Zingiber officinale Roscoe\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 2 (หน้า 167-170)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (6, 7)\n1. anticoagulants \n2. antiplatelet agents \n3. Nifedipine เนื่องจากมีรายงานว ่าการให้ร่วมกันของขิงและ nifedipine ยับยั้งการเกาะกลุ ่ม\nของเกล็ดเลือด\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nWarfarin, Aspirin, Anticoagulants, Antiplatelet agents, Nifedipine\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n149\nขิง\nเภสัชกรหญิงปริญดำ พีรธรรมำนนท์\nเภสัชกรสุพรพงษ์ ทองกั๊ก\nชื่อสำมัญ  (ไทย)  ขิง\n   (อังกฤษ)  Ginger \nชื่อวิทยำศำสตร์ (1) Zingiber officinale Roscoe \nชื่อวงศ์ (1)  Zingiberaceae \nชื่อท้องถิ่น  ขิงแกลง ขิงแดง ขิงเผือก สะเอ\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้ (2)\nส่วนเหง้าสด (rhisome) โดยใช้ผงเหง้าขิงแก่ ที่มีน�้ามันหอมระเหย ไม่น้อยกว่าร้อยละ 2.0 โดย\nปริมาตรต่อน�้าหนัก (V/W) เตรียมต�ารับยา\nสำรออกฤทธิ์หลัก (Active ingredient) (2, 3)\nในเหง้าขิงมีน�้ามันหอมระเหยประมาณ 1 - 3 % (1, 2) ขึ้นอยู่กับวิธีปลูก และช่วงการเก็บรักษา เช่น \nmenthol , borneol , fenchone , 6-shogoal และ 9-gingerol menthol ซึ่งเป็นส่วนประกอบที่ส�าคัญ\nในการออกฤทธิ์ สารรสเผ็ดร้อน (pungent) จากเหง้าขิง เรียกว่า gingerols และ shogoals  \n1. Phenolic compounds: gingerols (6-gingerol, 8-gingerol, 10-gingerol), shogaols,  \nparadols, quercetin, zingerone, gingerenone-A, 6-dehydrogingerdione)\n2. Terpene compounds: β -bisabolene, α-curcumene, zingiberene, α-farnesene, \nβ-sesquiphellandrene\nสูตรเคมี (Chemical Formula)\nGingerol: C17H26O4\nที่มา : https://pubchem.ncbi.nlm.nih.gov/compound/Gingerol#section=Structures \nShogaol: C17H24O3\nที่มา : https://pubchem.ncbi.nlm.nih.gov/compound/Gingerol#section=Structures \nกลไกกำรออกฤทธิ์ (Mechanism of Action) (3)\n1. ขับลม เนื่องจากมีน�้ามันหอมระเหย ซึ่งมีสารออกฤทธิ์ คือ menthol และ cineole ซึ่งช่วยขับลม \nและสารสกัดด้วยอะซีโตน ได้แก่ shogaol และ gingerol ช่วยเพิ่มการเคลื่อนไหวของทางเดินอาหาร\n2. ต้านการอาเจียน เนื่องจากมี shogaol และ gingerol ลดการบีบเกร็งตัวของล�าไส้ และ  \nกระเพาะอาหาร\n3. ต้านอนุมูลอิสระ เนื่องจาก 6-shogaol และ Ginger oleoresin สามารถลดการสร้าง ROS\n4. ต้านการอักเสบ เนื่องจาก 6-shogaol and 6-gingerol, 6-dehydroshogaol สามารถยับยั้ง \nการสร้างสารก่อการอักเสบ เช่น NO, PGE2, TNF-α, IL-6 และ IL-1β จึงมีการใช้ในการรักษาอาการปวดข้อ\n5. ต้านการเจริญเติบโตของเชื้อ\ny\tStaphylococcus aureus โดย gingerenone-A และ 6-shogaol ยับยั้งกระบวนการ \n6-hydroxymethyl-7, 8-dihydropterin pyrophosphokinase ของเชื้อ\ny\tStreptococcus mutans โดยมีข้อมูลจากการศึกษาการใช้ crude extract  \nและ methanolic fraction จากขิง ยับยั้งการสร้าง biofilm การสังเคราะห์ glucan  \nและการยึดเกาะของเชื้อ\n151\ny\tFusarium verticillioides โดยน�้ามันหอมระเหยจากขิง สามารถยับยั้งการเติบโต\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ขิง",
+      "Zingiber officinale",
+      "Ginger"
+    ],
+    "modernDrugs": [
+      "Warfarin",
+      "Aspirin",
+      "Anticoagulants",
+      "Antiplatelet agents",
+      "Nifedipine"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-02-ginger"
+  },
+  {
+    "id": "cpg-2568-mono-03-senna",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: มะขามแขก (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง มะขามแขก กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: มะขามแขก (Senna alexandrina Mill.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Digoxin, Azithromycin, Ciprofloxacin, ยาลดโพแทสเซียม, ยาขับปัสสาวะ",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: มะขามแขก (Senna)\n• ชื่อวิทยาศาสตร์: Senna alexandrina Mill.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 3 (หน้า 171-174)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n)\n1. Digoxin เพิ่มความเสี่ยงต่อการเกิด Digoxin toxicity เนื่องจากมีการสูญเสียโพแทสเซียมจาก\nฤทธิ์ระบาย\n2. การใช้ยาที่มีฤทธิ์ระบาย (laxative effect) ในปริมาณสูงอาจท�าให้ระดับแมกนีเซียม หรือ\nโพแทสเซียมในเลือดลดลง ซึ่งอาจเพิ่มความเสี่ยงต่อการเกิดภาวะ QT prolongation โดยเฉพาะ  \nในผู้ที่ใช้ยา ซึ่งมีผลข้างเคียงต่อการเกิด QT prolongation เช่น Azithromycin, Ciprofloxacin เป็นต้น\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nDigoxin, Azithromycin, Ciprofloxacin, ยาลดโพแทสเซียม, ยาขับปัสสาวะ, QT prolongation\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n153\nมะขามแขก\nเภสัชกรธนณัฏฐ์ แสงอังคนำวิน\nชื่อสำมัญ (1, 2)  (ไทย)  มะขามแขก\n   (อังกฤษ)  Senna, Alexandria senna, Indian senna, \n     Tinnevelly senna \nชื่อวิทยำศำสตร์  Senna alexandrina Mill\n   Cassia acutifolia Delile,Cassia angustifolia  Vahl,\n   Cassia obovata  Collad., Cassia senna  L. (ชื่อพ้อง)\nชื่อวงศ์   Fabaceae (Leguminosae)-Caesalpinioideae\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้ (2)\nใบและฝัก (leaf and fruit) โดยใช้ผงใบ หรือผงใบและฝักของมะขามแขก ที่มีสารส�าคัญ  \nhydroxyanthracene glycosides ไม่น้อยกว่าร้อยละ 2.5 โดยค�านวณจาก sennoside B เตรียมต�ารับยา\nสำรออกฤทธิ์หลัก (Active Ingredients)\nสารกลุ่ม hydroxyanthracene glycosides ได้แก่ sennoside A (SA) และ sennoside B (SB)\nสูตรเคมี (Chemical Formula)\n                Sennoside A                             Sennoside B\nที่มา : Pharmacology, Toxicology, and Metabolism of Sennoside A, A Medicinal  \nPlant-Derived Natural Compound\nกลไกกำรออกฤทธิ์ (Mechanism of Action)\nSennoside มีฤทธิ์เป็นยาระบายชนิดกระตุ้นการเคลื่อนไหวของล�าไส้ (Stimulant Laxative)  \nเมื่อถูกรับประทานจะเปลี่ยนเป็น rhein anthrone ซึ่งออกฤทธิ์กระตุ้นการขับถ่ายในล�าไส้  (3) โดยจาก \nการศึกษาของ Kobayashi et al. ในปี 2007 พบว่า SA (30 mg/kg) ยับยั้งการหดตัวของล�าไส้ใหญ่ส่วนต้น \nลดระยะเวลาการเดินทางของเนื้อหาในล�า ไส้และการดูดซึมน�้า  ท�า ให้การเคลื่อนที่ของเนื้อหาในล� าไส้ \nส่วนปลายเร็วขึ้น (4) และจากการศึกษาของ Kon et al. ในปี 2014 พบว่า SA (50 mg/kg) สามารถลด \nAquaporins (AQPs) ในล�าไส้ใหญ่ ส่งผลให้การดูดซึมน�้าจากล�าไส้เข้าสู่กระแสเลือดลดลง ท�าให้เกิดการ\nขับถ่ายได้มากขึ้น โดยกลไกส�าคัญ คือ rhein anthrone กระตุ้น Macrophages ให้หลั่ง Prostaglandin \nE2 (PGE2) ซึ่งลด AQP3 ในเยื่อบุล�าไส้ใหญ่ (5) \nขนำดและวิธีใช้ (Dose and Administration) (2)\nส�าหรับบรรเทาอาการท้องผูก \nยารูปแบบแคปซูล รับประทานครั้งละ 800 มิลลิกรัม – 1,200 มิลลิกรัม วันละ 1 ครั้ง ก่อนนอน\nอำกำรไม่พึงประสงค์ (Adverse Reaction)\n1. ปวดมวนท้อง\n2. ภาวะอิเล็กโทรไลต์ต�่า\n3. ผื่น Senna induced dermatitis\n155\nข้อห้ำมใช้ (Contraindication)\n1. ห้ามใช้ในผู้ป่วยที่มีภาวะอุดตันในทางเดินอาหาร (gastrointestinal obstruction) หรือ  \nปวดท้อง โดยไม่ทราบสาเหตุ\n2. ห้ามใช้ในผู้มีประวัติแพ้ยานี้\nข้อควรระวัง (Precaution)\n1. ระวังการใช้ในผู้ป่วยอายุต�่ากว่า 12 ปี\n2. ระวังการใช้ในผู้ป่วยโรคล\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "มะขามแขก",
+      "Senna alexandrina",
+      "Senna",
+      "เซนโนไซด์"
+    ],
+    "modernDrugs": [
+      "Digoxin",
+      "Azithromycin",
+      "Ciprofloxacin",
+      "ยาลดโพแทสเซียม",
+      "ยาขับปัสสาวะ",
+      "QT prolongation"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-03-senna"
+  },
+  {
+    "id": "cpg-2568-mono-04-cissus",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: เพชรสังฆาต (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง เพชรสังฆาต กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: เพชรสังฆาต (Cissus quadrangularis L.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Warfarin, Anticoagulants, INR",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: เพชรสังฆาต (Cissus)\n• ชื่อวิทยาศาสตร์: Cissus quadrangularis L.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 4 (หน้า 175-180)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n)\nยังไม่พบรายงานอันตรกิริยาของยาเพชรสังฆาต กับยา warfarin หากใช้ร่วมกัน แนะน� าติดตาม\nค่า INR (3, 9)\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nWarfarin, Anticoagulants, INR\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n157\nเพชรสังฆาต\nเภสัชกรหญิงสุกัลยำ ยิดนรดิน\nแพทย์แผนไทยประยุกต์พลภัส เอกรังสี\nชื่อสำมัญ (1, 2, 3)  (ไทย)  เพชรสังฆาต \n    (อังกฤษ)  Veld grape, Devil’s backbone\nชื่อวิทยำศำสตร์  Cissus quadrangularis L.\nชื่อวงศ์   Vitaceae\nชื่อท้องถิ่น  สันชะฆาต ขันข้อ (ราชบุรี) สามร้อยต่อ (ประจวบคีรีขันธ์) สันชะควด\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nเถา (ล�าต้น) (stem)\nสำรออกฤทธิ์หลัก (Active ingredient) (4, 5) \nเพชรสังฆาต พบสารเคมีหลายชนิด ได้แก่ \nFlavonoids (flavonol): quercetin, quercitrin, isoquercetin, kaempferol, luteolin \nTriterpenoids: lopenone, epifriedelinol, isoarborenol  \nSteroid: β-sitosterol\nStilbene: resveratrol, piceatannol, pallidol, parthenocissine A, quadrangularins A, \nquadrangularins B, quadrangularins C \nVitamin: vitamin C, vitamin E \ncalcium oxalate, potassium, phosphorus\nสูตรเคมี (Chemical Formula)\nFlavonoids (flavonol)\n                 Quercetin      Luteolin\n  Quercitrin     Luteolin\nSteroid\n   β-sitosterol\n159\nStilbene\n                    Resveratrol                 Quadrangularin A\n             Calcium oxalate\nที่มา http://en.wikipedia.org/wiki/\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (6,7,8,9)\nสารสกัดเพชรสังฆาต มีสรรพคุณใช้เป็นยารักษาริดสีดวง มีฤทธิ์กระตุ้นหลอดเลือดด�า เหมาะส�าหรับ\nคนที่เป็นโรคริดสีดวงทวาร ซึ่งมักจะเกิดภาวะเลือดด�าคั่งจนท�าให้ส่วนปลายสุดของล�าไส้ใหญ่เกิดอาการ \nโป่งพองคล้ายกับมีติ่งยื่นออกมาจากทวารหนัก ซึ่งอาจท�าให้เกิดการอักเสบ หรือติดเชื้อได้ง่าย การรับประทาน \nเพชรสังฆาตจึงช่วยให้มีความตึงตัวเพิ่มขึ้น คล้ายกับส่วนผสมของไบโอฟลาโวนอยด์ 2 ชนิด ได้แก่  \nไดออสมิน 90 % และฮิสเพอริดิน 10 % ที่พบในต�ารับยาแผนปัจจุบัน ช่วยลดอาการอักเสบ รวมทั้ง \nช่วยท�าให้หลอดเลือดด�าที่มีอาการบวมเป่งอยู่บริเวณทวารหนักหดตัว ฝ่อเล็กลงได้อีกด้วย\nฤทธิ์ต้านการอักเสบเฉียบพลัน สารสกัดเมทานอลยับยั้งการบวมของใบหู และการบวมของอุ้งเท้า\nของหนูขาว ที่ถูกกระตุ้นด้วยสารเคมี สารสกัดเฮกเซนที่ความเข้มข้นร้อยละ 1 และสารสกัดเอทานอลที่\nความเข้มข้นร้อยละ 5 ลดอาการบวมของใบหูหนูที่เหนี่ยวน�าด้วยสารเคมี ได้ที่เวลา 30 นาที ตรวจพบ\nองค์ประกอบทางเคมีของสาร lupeol ในสารสกัดเฮกเซน\nฤทธิ์แก้ปวด สารสกัดเมทานอลลดจ�านวนครั้งที่หนูถีบจักรยืดบิดตัวจากอาการเจ็บปวดท้อง \nเนื่องจากได้รับกรดอะซีติกที่ฉีดเข้าทางช่องท้อง และลดระยะเวลาของการเลียเท้าหลังทั้ง 2 ระยะ ในการ\nทดสอบด้ว\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "เพชรสังฆาต",
+      "Cissus quadrangularis",
+      "Cissus"
+    ],
+    "modernDrugs": [
+      "Warfarin",
+      "Anticoagulants",
+      "INR"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-04-cissus"
+  },
+  {
+    "id": "cpg-2568-mono-05-emblica",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: มะขามป้อม (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง มะขามป้อม กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: มะขามป้อม (Phyllanthus emblica L.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Warfarin, Aspirin, Heparin, Clopidogrel, NSAIDs",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: มะขามป้อม (Indian Gooseberry)\n• ชื่อวิทยาศาสตร์: Phyllanthus emblica L.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 5 (หน้า 181-186)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n)\nแม้จะยังไม่มีรายงานปฏิกิริยาระหว่างยาที่เด่นชัดจ�านวนมาก แต่งานวิจัยระบุว่าควรใช้  \nความระมัดระวังเมื่อบริโภคมะขามป้อมร่วมกับยาบางชนิด \n1. ยาต้านการแข็งตัวของเลือดและยาต้านเกล็ดเลือด: มะขามป้อมมีฤทธิ์ยับยั้งการจับตัวของ  \nเกล็ดเลือด จึงอาจเสริมฤทธิ์ยากลุ่มต้านการแข็งตัว/เกล็ดเลือด เช่น แอสไพริน, วาร์ฟาริน, เฮพาริน,  \nคลอพิโดเกรล หรือยาแก้อักเสบ NSAIDs และเพิ่มความเสี่ยงต่อการเลือดออกได้ ผู้ป่วยที่ใช้ยากลุ่มนี้  \nควรหลีกเลี่ยง หรือปรึกษาแพทย์ก่อนรับประทานสมุนไพรมะขามป้อมเสริม (5)\n2. ยาลดระดับน�้าตาลในเลือด: มะขามป้อมมีฤทธิ์ช่วยลดน�้าตาลในเลือด ดังนั้นการรับประทาน\nร่วมกับยาเบาหวาน (เช่น อินซูลิน หรือยาลดน�้าตาลชนิดรับประทาน) อาจเสริมฤทธิ์ยาจนท�าให้เสี่ยง\nภาวะน�้าตาลต�่าได้ ผู้ป่วยเบาหวานที่ต้องการใช้มะขามป้อมควรตรวจระดับน�้าตาล และอยู่ในความดูแล\nของแพทย์ (5)\n3. ธาตุเหล็ก: สารแทนนินจ�านวนมากในมะขามป้อมสามารถจับกับธาตุเหล็ก และลดการดูดซึม\nของเหล็ก ในทางเดินอาหารได้ ดังนั้นไม่ควรรับประทานมะขามป้อม หรือผลิตภัณฑ์เสริมที่มีมะขามป้อม\nพร้อมกับยา หรืออาหารเสริมธาตุเหล็ก ควรแยกเวลารับประทานกัน เพื่อป้องกันการรบกวนการดูดซึม (5)167\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nWarfarin, Aspirin, Heparin, Clopidogrel, NSAIDs, Anticoagulants, Antiplatelets\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n163\nมะขามป้อม\nเภสัชกรหญิงวริษฐำ โยธำสมุทร\nชื่อสำมัญ (ไทย)   มะขามป้อม\n  (อังกฤษ)  Indian gooseberry, Emblic, Malacca tree, Myrobalan\nชื่อวิทยำศำสตร์ Phyllanthus emblica  Linn. \n  Emblica officinalis Gaertn. (ชื่อพ้อง)\nชื่อวงศ์ (1) Euphorbiaceae (วงศ์ยางพารา) \nชื่อท้องถิ่น กันโตด ก�าทวด มั่งลู่ สันยาส่า\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nผล (fruits)  \nสำรออกฤทธิ์หลัก (Active Ingredients)\nมะขามป้อม มีองค์ประกอบสารเคมีออกฤทธิ์หลายชนิดที่ส�าคัญ ได้แก่ วิตามินซี (กรดแอสคอร์บิก) \nในปริมาณสูง และสารประกอบในกลุ่มโพลีฟีนอลจ�านวนมาก เช่น แทนนิน และกรดฟีนอลิกต่าง ๆ (เช่น \nกรดเอลลาจิก, กรดแกลลิก) รวมถึงแทนนินชนิดพิเศษที่พบในมะขามป้อมอย่าง emblicanin, corilagin \nและ geraniin นอกจากนี้ยังมีสารกลุ่มฟลาโวนอยด์ เช่น quercetin และ kaempferol รวมถึง  \nโปรแอนโทไซยานิดิน และไกลโคไซด์อื่น ๆ สารเหล่านี้ร่วมกันเป็นแหล่งของฤทธิ์ทางชีวภาพหลากหลาย \nของมะขามป้อม (2)\nสูตรเคมี (Chemical Formula)\nสูตรเคมีของสารส�าคัญในมะขามป้อมมีหลายชนิด ตัวอย่างได้แก่\ny\tกรดแอสคอร์บิก (วิตามินซี) – มีสูตรเคมี C6H8O6 \ny\tกรดแกลลิก – มีสูตรเคมี C7H6O5\ny\tกรดเอลลาจิก – มีสูตรเคมี C14H6O8\n \nAscorbic acid\nที่มา : Chemistry of ascorbic acid - Wikipedia\nEllagic acid\nที่มา : https://www.researchgate.net/figure/Fig-1-Chemical-structure-of-ellagic-acid_fig1_ \n316988579 \nGallic acid\nที่มา :  https://pubchem.ncbi.nlm.nih.gov/compound/Gallic-Acid\n165\nกลไกกำรออกฤทธิ์ (Mechanism of Action)\n1. ฤทธิ์ต้านอนุมูลอิสระ มะขามป้อมมีฤทธิ์ต้านอนุมูลอิสระที่เด่นชัด จากวิตามินซี และ  \nสารโพลีฟีนอลในผล โดยสารเหล่านี้ช่วยก�าจัด หรือยับยั้งการสร้างอนุมูลอิสระ ป้องกันการท�าลายเซลล์ \nและเนื้อเยื่อจาก oxidative stress ซึ่งกลไกนี้เชื่อว่าอยู่เบื้องหลังประโยชน์ต่อสุขภาพหลายประการ  \nของมะขามป้อม (1)\n2. ฤทธิ์ต้านการอักเสบ สารสกัดมะขามป้อมสามารถลดการอักเสบโดยยับยั้งเอนไซม์ส�าคัญ  \nในกระบวนการอักเสบ เช่น ไซโคลออกซีจีเนส-1 และ -2 (COX-1, COX-2) และ ไลโปออกซีจีเนส (5-LOX) \nซึ่งเป็นเอนไซม์ที่สร้างสารสื่ออักเสบ นอกจากนี้ยังลดการสร้างไนตริกออกไซด์ส่วนเกินในเซลล์ภูมิคุ้มกัน \nส่งผลให้การอักเสบในเนื้อเยื่อลดลง กลไกหลายด้านเหล่านี้ช่วยเสริมฤทธิ์กัน และอธิบายคุณสมบัติ  \nต้านการอักเสบ ต้านอนุมูลอิสระ รวมถึงฤทธิ์อื่น ๆ เช่น ฤทธิ์เสริมภูมิคุ้มกันของมะขามป้อมที่พบ ในงานวิจัย (1) \nเป็นต้น\nขนำดและวิธีใช้ (Dose and Administration)\n1. ค�ำแน\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "มะขามป้อม",
+      "Phyllanthus emblica",
+      "Emblica",
+      "ยาแก้ไอผสมมะขามป้อม"
+    ],
+    "modernDrugs": [
+      "Warfarin",
+      "Aspirin",
+      "Heparin",
+      "Clopidogrel",
+      "NSAIDs",
+      "Anticoagulants",
+      "Antiplatelets"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-05-emblica"
+  },
+  {
+    "id": "cpg-2568-mono-06-solanum",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: มะแว้ง (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง มะแว้ง กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: มะแว้ง (Solanum trilobatum L. / Solanum indicum L.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: มะแว้ง (Solanum)\n• ชื่อวิทยาศาสตร์: Solanum trilobatum L. / Solanum indicum L.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 6 (หน้า 187-190)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) -\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nไม่มีรายงานยาที่เกิดอันตรกิริยาชัดเจน (ยาทาภายนอก/ยาใช้เฉพาะที่)\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n169\nมะแว้ง\nเภสัชกรหญิงวริษฐำ โยธำสมุทร\nชื่อสำมัญ  (ไทย)  มะแว้งเครือ, มะแว้งต้น\n   (อังกฤษ) -\nชื่อวิทยำศำสตร์ (1, 2) มะแว้งเครือ Solanum trilobatum L.\n   มะแว้งต้น Solanum indicum L., S. sanitwongsei Craib C\n   และ S. violaceum Ortega. \n   (ลักษณะทางพฤกษศาสตร์ที่คล้ายกัน แต่แตกต่างกันที่ลักษณะสีของผล \n   ลวดลายของผล และลักษณะการมีและไม่มีหนามตามส่วนต่าง ๆ ของต้น\n   เท่านั้น)\nชื่อวงศ์ (1)  Solanaceae \nชื่อท้องถิ่น  มะแว้งเครือ : แขว้งเคีย\n   มะแว้งต้น : กันโตด ก�าทวด มั่งลู่ สันยาส่า\nสูตรต�ำรับ (ยำประสะมะแว้ง) (3) \nสูตรต�ารับ ผงยา 96 กรัม ประกอบด้วย\n1. มะแว้งต้น, มะแว้งเครือ อย่างละ 24 กรัม\n2. ใบสวาด, ใบตานหม่อน, ใบกะเพรา อย่างละ 12 กรัม\n3. เหง้าขมิ้นอ้อย 9 กรัม\n4. สารส้มสะตุ 3 กรัม\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nผลแก่สด (fruit)\nสำรออกฤทธิ์หลัก (Active ingredient)\nมะแว้งตรวจพบสารเคมีเป็นสารอัลคาลอยด์ (Alkaloids) พบหลายชนิด เช่น Solanine และ \nSolasodine, ไกลโคไซด์ (Glycosides), สเตอรอล (Sterols), ไตรเตอปีนอยด์ (triterpenoids),  \nฟลาโวนอยด์ (flavonoids) และแทนนิน (tannins)\nสูตรเคมี (Chemical Formula)\n \nSolanine\nที่มา : https://en.wikipedia.org/wiki/Solanine\nSolasodine\nที่มา : https://en.wikipedia.org/wiki/Solasodine\n171\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (2)\ny\tผลมะแว้งต้นพบสาร Alkaloids หลายชนิด เช่น Solanine และ Solasodine (สารนี้พบ \nได้ทั้งในส่วนของผล ใบ และต้น) อีกทั้งยังพบสารไกลโคไซด์ (Glycosides), สเตอรอล \n(Sterols), ไตรเตอปีนอยด์ (triterpenoids), ฟลาโวนอยด์ (flavonoids) ส่วนในเมล็ด\nมะแว้งต้นพบวิตามินซี\ny\tสารสกัดจากมะแว้งต้นมีฤทธิ์แก้ปวด แก้อาการอักเสบได้ โดยสารดังกล่าวออกฤทธิ์คล้าย\nกับ Cortisone\ny\tสาร Solasodine เป็นสารที่มีประสิทธิภาพขับเสมหะ และแก้อาการไอได้ดี\nขนำดและวิธีใช้ (Dose and Administration) (3)\nสูตรต�ารับ (ยาประสะมะแว้ง) (3) ผงยา 96 กรัม ประกอบด้วย\n1. มะแว้งต้น, มะแว้งเครือ อย่างละ 24 กรัม\n2. ใบสวาด, ใบตานหม่อน, ใบกะเพรา อย่างละ 12 กรัม\n3. เหง้าขมิ้นอ้อย 9 กรัม\n4. สารส้มสะตุ 3 กรัม\nส�าหรับบรรเทาอาการไอ มีเสมหะ ท�าให้ชุ่มคอ ช่วยขับเสมหะ\nยารูปแบบเม็ด และลูกกลอน ละลายน�้ามะนาวแทรกเกลือรับประทาน หรือใช้อม \nผู้ใหญ่ รับประทานครั้งละ 1 - 1.4 กรัม เมื่อมีอาการ\nเด็ก 6 - 12 ปี รับประทานครั้งละ 200 - 400 มิลลิกรัม เมื่อมีอาการ\nอำกำรไม่พึงประสงค์ (Adverse Reaction) -\nข้อห้ำมใช้ (Contraindication) -\nข้อควรระวัง (Precaution) (3\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "มะแว้ง",
+      "มะแว้งเครือ",
+      "มะแว้งต้น",
+      "ยาประสะมะแว้ง"
+    ],
+    "modernDrugs": [],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-06-solanum"
+  },
+  {
+    "id": "cpg-2568-mono-07-prabchompoo",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ยาปราบชมพูทวีป (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ยาปราบชมพูทวีป กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ยาปราบชมพูทวีป (Prabchompoothaweep Formula) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Phenytoin, Propranolol, Theophylline, Rifampicin, CYP3A4",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ยาปราบชมพูทวีป (Prabchompoothaweep)\n• ชื่อวิทยาศาสตร์: Prabchompoothaweep Formula\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 7 (หน้า 191-194)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (1, 2)\nควรระวังการใช้ยานี้ ร่วมกับยา phenytoin , propranolol , theophylline และ rifampicin \nเนื่องจากต�ารับนี้มีพริกไทยในปริมาณสูง\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nPhenytoin, Propranolol, Theophylline, Rifampicin, CYP3A4, CYP450\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n173\nยาปราบชมพูทวีป\nเภสัชกรหญิงวริษฐำ โยธำสมุทร\nชื่อต�ำรับ  ยาปราบชมพูทวีป\nส่วนประกอบ\nสมุนไพร 23 ชนิด (1) ในผงยา 465 กรัม ประกอบด้วย เหงือกปลาหมอ (ทั้งต้น) พริกไทยด�า  \nใบกัญชาเทศ อย่างละ 120 กรัม, หัศคุณเทศ ดอกกานพลู อย่างละ 10 กรัม, เนื้อลูกสมอเทศ เหง้าขิง \nเนื้อลูกสมอไทย หัวบุกรอ รากเจตมูลเพลิงแดง อย่างละ 8 กรัม, เทียนแกลบ เทียนแดง เทียนตาตั๊กแตน \nอย่างละ 6 กรัม, โกศเขมา เทียนด�า ลูกพิลังกาสา โกศสอ ล�าพันหางหมู อย่างละ 4 กรัม ดอกดีปลี การบูร \nอย่างละ 2 กรัม ดอกจันทน์ ลูกกระวาน ลูกจันทน์ อย่างละ 1 กรัม\nสำรออกฤทธิ์หลัก (Active ingredient) (2, 3)\nพริกไทยด�า, ดอกดีปลี : Piperine \nใบกัญชาเทศ : Leonurine \nเทียนแกลบ เทียนแดง เทียนตาตั๊กแตน เทียนด�า กัญชาเทศ ล�าพันหางหมู หัศคุณเทศ การบูร : \nสำรผสมของ β-sitosterol, stigmasterol และ pentacosanoic acid \nสูตรเคมี (Chemical Formula)\nPiperine\nที่มา : https://www.researchgate.net/figure/Piperine-Structure-19_fig1_328263885\nLeonurine \nที่มา : https://en.wikipedia.org/wiki/Leonurine\nβ- sitosterol  \nที่มา : https://en.wikipedia.org/wiki/%CE%92-Sitosterol\n \nstigmasterol  \nที่มา : https://en.wikipedia.org/wiki/Stigmasterol\npentacosanoic acid or Pentacosylic acid  \nที่มา : https://en.wikipedia.org/wiki/Pentacosylic_acid\n175\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (2)\n1. ฤทธิ์ต้านการแพ้ โดยยับยั้งการหลั่งของเอนไซม์ β-hexosaminidase \n2. ฤทธิ์ลดการอักเสบ โดยยับยั้งการหลั่งไนตริกออกไซด์\n3. ฤทธิ์ต้านอนุมูลอิสระ\nขนำดและวิธีใช้ (Dose and Administration) (1)\nรับประทานวันละ 3 - 4 กรัม แบ่งให้วันละ 3 ครั้ง หลังอาหาร เช้า กลางวัน เย็น\nอำกำรไม่พึงประสงค์ (Adverse Reaction) (1) \nแสบร้อนยอดอก\nข้อห้ำมใช้ (Contraindication) (1)\n1. ห้ามใช้ในหญิงตั้งครรภ์ ผู้ที่มีไข้ เด็ก\n2. ห้ามใช้เมื่อพบภาวะแทรกซ้อนจากการแพ้อากาศ เช่น ไซนัสอักเสบ การติดเชื้อแบคทีเรียที่มี  \nการเจ็บบริเวณไซนัส ไข้สูง น�้ามูก และเสมหะเขียว เป็นต้น\nข้อควรระวัง (Precaution) (1) \n1. ควรระวังการใช้กับผู้ป่วยโรคความดันโลหิตสูง โรคหัวใจ โรคแผลเปื่อยเพปติก และโรคกรดไหลย้อน \nเนื่องจากเป็นต�ารับยารสร้อน\n2. ควรระวังการใช้ยาเกินขนาดในผู้ป่วยที่มีความผิดปกติของตับ ไต หรือทางเดินปัสสาวะ เนื่องจาก\nอาจเกิดพิษจากการบูร\nอันตรกิริยำระหว่ำงสมุนไพรกับยำ (Herb-Drug Interactions) (1, 2)\nควรระวังการใช้ยานี้ ร่วมกับยา phenytoin , propranolol , theophylline และ rifampicin \nเนื่องจากต�ารับนี้มีพริกไทยในปริมาณ\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ยาปราบชมพูทวีป",
+      "ปราบชมพูทวีป",
+      "พริกไทย"
+    ],
+    "modernDrugs": [
+      "Phenytoin",
+      "Propranolol",
+      "Theophylline",
+      "Rifampicin",
+      "CYP3A4",
+      "CYP450"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-07-prabchompoo"
+  },
+  {
+    "id": "cpg-2568-mono-08-andrographis",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ฟ้าทะลายโจร (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ฟ้าทะลายโจร กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ฟ้าทะลายโจร (Andrographis paniculata (Burm.f.) Nees) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Aspirin, Clopidogrel, Warfarin, Antiplatelet drugs, Anticoagulants",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ฟ้าทะลายโจร (Andrographis)\n• ชื่อวิทยาศาสตร์: Andrographis paniculata (Burm.f.) Nees\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 8 (หน้า 195-198)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (4)\ny\tยาต้านการจับตัวของเกล็ดเลือด (antiplatelet drugs) เช่น aspirin, clopidogrel (3) \nเป็นต้น\ny\tควรระวังการใช้ร่วมกับยาที่มีกระบวนการ metabolism ผ่านเอนไซม์ Cytochrome \nP450 (CYP) เนื่องจากฟ้าทะลายโจร มีฤทธิ์ยับยั้งเอนไซม์ CYP1A2, CYP2C9 และ CYP \n3A4 ส่งผลให้ยาอยู่ในร่างกายนานขึ้น ออกฤทธิ์ได้นานขึ้น หรืออาจเกิดผลข้างเคียงที่\nมากขึ้น แต่ยังไม่เคยพบรายงานการเกิด Drug interaction ที่รุนแรงเนื่องจากส่วนใหญ่\nใช้ระยะเวลาสั้น (4)\nตำรำงที่ 1 ตัวอย่างชนิดของยาที่เป็น substrate ตัวยับยั้งเอนไซม์ ของ Cytochrome P450 (ฟ้าทะลายโจร)\nCYP Substrate\n1A2 Caffeine, Clozapine, Fluvoxamine, imipramine, Olanzapine\nPropanolol, Theophylline, Warfarin\n2C9 Amitriptyline, Celecoxib, Diclofenac, Ibuprofen, Lorsartan, Naproxen, Phenytoin, \nPiroxicam, Sulfamethoxazole, Warfarin \n3A4 Alprazolam, Calcium Channel blockers, Carbamazepine, cyclosporine,  \nDoxorubicin, Erythromycin, Ethinyl estradiol, Etoposide, HIV protease inhibitors, \nMidazolam, Simvastatin, Tacrolimus, Prednisolone\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nAspirin, Clopidogrel, Warfarin, Antiplatelet drugs, Anticoagulants, Caffeine, Clozapine, Fluvoxamine, CYP1A2, CYP2C9, CYP3A4\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n177\nฟ้าทะลายโจร\nเภสัชกรหญิงวริษฐำ โยธำสมุทร\nรองศำสตรำจำรย์ ดร.จุฑำมำศ สัตยวิวัฒน์\nชื่อสำมัญ  (ไทย)  ฟ้าทะลายโจร \n   (อังกฤษ) Creat, Kariyat, Indian Echinaceatree, Myrobalan\nชื่อวิทยำศำสตร์ (1) Andrographis paniculata  ( Burm.f. ) Wall. ex Nees \nชื่อวงศ์ (1)  Acanthaceae\nชื่อท้องถิ่น  ซีปังกี ฟ้าทะลาย หญ้ากันงู\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nใบ (leaf) หรือส่วนเหนือดิน (leaf and stem) ของฟ้าทะลายโจร\nสำรออกฤทธิ์หลัก (Active ingredient) (1)\nAndrographolide\nสูตรเคมี (Chemical Formula) \nC20H30O5\nที่มา : https://th.wikipedia.org/wiki/แอนโดรกราโฟไลด์\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (2)\n1. ฟ้าทะลายโจร มีสารเคมีอยู่หลายประเภทแต่สารส�าคัญในการออกฤทธิ์ คือ สารกลุ่ม Lactone \nคือ สารแอนโดรกราโฟไลด์ (andrographolide) มีศักยภาพในการป้องกันไวรัสเข้าเซลล์ และป้องกัน \nการแบ่งตัวของไวรัส และมีฤทธิ์กระตุ้นภูมิคุ้มกัน ต้านการอักเสบ และลดไข้ เนื่องจากมีผลลดระดับ \ninflammatory cytokines และมีฤทธิ์กระตุ้นภูมิคุ้มกัน ต้านการอักเสบ เนื่องจากมีฤทธิ์เพิ่มการท�างาน\nของ T lymphocyte และ เพิ่มฤทธิ์การท�างานของ natural killer cell (NK-cell) \n2. ฟ้าทะลายโจรมีฤทธิ์ลดไข้ ต้านการอักเสบ กระตุ้นภูมิคุ้มกัน แต่ไม่มีฤทธิ์ หรือมีฤทธิ์อ่อนมาก \nในการต้านเชื้อแบคทีเรียที่ก่อให้เกิดโรคทางเดินหายใจส่วนบน\nขนำดและวิธีใช้ (Dose and Administration)\n1. ผู้ที่มีอาการของโรคหวัด (common cold) เช่น เจ็บคอ ปวดเมื่อยกล้ามเนื้อ โดยทั่วไปในผู้ใหญ่\nแนะน�ารับประทานฟ้าทะลายโจรที่มี Andrographolide 60 - 120 มิลลิกรัมต่อวัน แบ่งรับประทาน  \nวันละ 3 - 4 ครั้งติดต่อกัน ไม่เกิน 5 วัน (3)\n2. ผู้ที่ติดเชื้อโควิด-19 ที่มีอาการไม่รุนแรง ในผู้ใหญ่แนะน�าให้รับประทานยาฟ้าทะลายโจรที่มี \nAndrographolide 180 มิลลิกรัมต่อวัน แบ่งรับประทานวันละ 3 ครั้ง ติดต่อกัน 5 วัน (4)\nจากการศึกษาทางเภสัชจลนศาสตร์ของฟ้าทะลายโจรชนิดผง สกัดด้วยน�้า สกัดด้วยแอลกอฮอลล์ \nจะพบว่า ปริมาณของสาร Andrographolide ในกระแสเลือดจะแตกต่างกัน เนื่องมาจากการละลาย\nตัว (Dissolution) ของสารส�าคัญต่างกัน โดยพบว่า การเปรียบเทียบปริมาณ Andrographolide (AP1) \nขนาด Andrographolide วันละ 60 และ 120 mg ติดต่อกัน 5 วัน ของสารสกัดน�้าฟ้าทะลายโจร  \nจะมีปริมาณ AP1 ในกระแสเลือดสูงกว่าสารสกัดแอลกอฮอลล์ 5.8 เท่า และ 9.8 เท่า ตามล�าดับ ดังนั้น \nในสารสกัดน�้าฟ้าทะลายโจร สามารถลดขนาดยาลงได้ โดยใช้ Andrographolide ในขนาด 60 - 80 mg \nต่อวัน ติดต่อกัน 5 วัน \n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ฟ้าทะลายโจร",
+      "Andrographis paniculata",
+      "Andrographolide",
+      "แอนโดรกราโฟไลด์"
+    ],
+    "modernDrugs": [
+      "Aspirin",
+      "Clopidogrel",
+      "Warfarin",
+      "Antiplatelet drugs",
+      "Anticoagulants",
+      "Caffeine",
+      "Clozapine",
+      "Fluvoxamine",
+      "CYP1A2",
+      "CYP2C9",
+      "CYP3A4"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-08-andrographis"
+  },
+  {
+    "id": "cpg-2568-mono-09-derris",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: เถาวัลย์เปรียง (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง เถาวัลย์เปรียง กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: เถาวัลย์เปรียง (Derris scandens (Roxb.) Benth.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: NSAIDs, Diclofenac, Ibuprofen, ยารักษาแผลในกระเพาะอาหาร",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: เถาวัลย์เปรียง (Derris scandens)\n• ชื่อวิทยาศาสตร์: Derris scandens (Roxb.) Benth.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 9 (หน้า 199-202)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (12)\nเสริมฤทธิ์ยาแก้ปวดกลุ่มยาต้านอักเสบที่ไม่ใช่สเตียรอยด์ (NSAIDs)\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nNSAIDs, Diclofenac, Ibuprofen, ยารักษาแผลในกระเพาะอาหาร\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n181\nเถาวัลย์เปรียง\nนำยแพทย์ปิยชำติ สุทธินำค\nเภสัชกรธนณัฏฐ์ แสงอังคนำวิน\nแพทย์แผนไทยชุลีรัตน์ สิทธิวงศ์\nชื่อสำมัญ  (ไทย)  เถาวัลย์เปรียง\n   (อังกฤษ)  -\nชื่อวิทยำศำสตร์ (1) Derris scandens (Roxb.) Benth \n   Brachypterum scandens (Roxb.) Wight, Brachypterum scandens  \n   Benth., Brachypterum timorense Benth., Dalbergia scandens Roxb.,  \n   Dalbergia timoriensis DC., Deguelia timoriensis (DC.) Taub., Derris  \n   timoriensis (DC.) Pittier, Galedupa frutescens Blanco, Millettia  \n   litoralis (ชื่อพ้อง) \nชื่อวงศ์ (1)  Papilionaceae\nชื่อท้องถิ่น (1)   เครือเขาหนัง เถาตาปลา เครือตาปลา (นครราชสีมา) ย่านเหมาะ \n   (นครศรีธรรมราช) พานไสน (ชุมพร) เครือตับปลา \nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nเถา (ล�าต้น) (stem)\nสำรออกฤทธิ์หลัก (Active ingredient)\nเถาวัลย์เปรียง พบสารเคมีกลุ่ม Isoflavonoids ได้แก่ genistein, derrisisoflavone A, lupalbigenin, \n6, 8-diprenylgenistein, genistein-7-O-[γ-rhamnopyranosyl-(1→6)-β-glucopyranoside]\nสูตรเคมี (Chemical Formula)\nที่มา : https://www.researchgate.net/figure/Molecular-structure-of-genistein-daidzein-  \nand-their-corresponding-7-O-glucuronides-the_fig2_272099404 \nกลไกกำรออกฤทธิ์ (Mechanism of Action) (2-9)\nสารสกัดเถาวัลย์เปรียง มีฤทธิ์ต้านการอักเสบโดยสามารถยับยั้งการหลั่ง Nitric oxide ได้อย่าง\nมีนัยส�าคัญ โดยให้ผลใกล้เคียงกับ diclofenac 500 μM และยังสามารถยับยั้งการแสดงออกของ  \nInflammatory genes เช่น inducible nitric oxide synthase (iNOS), cyclooxygenase-2 (COX-2), \ninterleukin-6 (IL-6), and 5-lipoxygenase (5-LOX) เป็นต้น และยังมีการศึกษาที่พบว่าสามารถยับยั้ง\nเอนไซม์ cyclooxygenase 1 (COX-1) และลดการสร้าง leukotriene-B4 (LTB4), ลดการหลั่งเอนไซม์ \nMyeloperoxidase และลดการสร้าง Eicosanoid จากการศึกษาประสิทธิภาพของสารสกัดล�าต้น  \nเถาวัลย์เปรียง 200 มิลลิกรัม วันละ 3 ครั้งในผู้ป่วย Osteoarthritis เทียบกับ Diclofenac 25 มิลลิกรัม \nวันละ 3 ครั้ง พบว่า ผู้ป่วยทั้งสองกลุ่มมีอาการปวดลดลงอย่างชัดเจน ส�าหรับอาการไม่พึงประสงค์ พบว่า \nอาการไม่พึงประสงค์ต่อระบบทางเดินอาหารพบได้มากที่สุดในผู้ป่วยทั้ง 2 กลุ่มโดยไม่มีความแตกต่างกัน \nทางสถิติ\nขนำดยำและวิธีใช้ (Dose and Administration) \nส�าหรับบรรเทาอาการปวดกล้ามเนื้อ ลดการอักเสบของกล้ามเนื้อ \nยารูปแบบแคปซูล เตรียมเป็นผงจากเถาของเถาวัลย์เปรียง รับประทานครั้งละ 500 มิลลิกรัม – 1 กร\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "เถาวัลย์เปรียง",
+      "Derris scandens"
+    ],
+    "modernDrugs": [
+      "NSAIDs",
+      "Diclofenac",
+      "Ibuprofen",
+      "ยารักษาแผลในกระเพาะอาหาร"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-09-derris"
+  },
+  {
+    "id": "cpg-2568-mono-10-plai",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ไพล (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ไพล กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ไพล (Zingiber montanum (J.Koenig) Link ex A.Dietr.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ไพล (Plai)\n• ชื่อวิทยาศาสตร์: Zingiber montanum (J.Koenig) Link ex A.Dietr.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 10 (หน้า 203-206)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) -\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nไม่มีรายงานยาที่เกิดอันตรกิริยาชัดเจน (ยาทาภายนอก/ยาใช้เฉพาะที่)\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n185\nไพล\nนำยแพทย์ปิยชำติ สุทธินำค\nเภสัชกรหญิงสุกัลยำ ยิดนรดิน\nเภสัชกรเกียรติศักดิ์ ทวีค�ำ\nแพทย์แผนไทยชุลีรัตน์ สิทธิวงศ์\nชื่อสำมัญ  (ไทย)  ไพล\n   (อังกฤษ)  -\nชื่อวิทยำศำสตร์ (1) Zingiber cassumunar Roxb.\n   Zingiber purpureum Roscoe (ชื่อพ้อง) \nชื่อวงศ์ (1)  Zingiberaceae\nชื่อท้องถิ่น (1)   ปูลอย ปูเลย มิ้นสะล่าง ว่านไฟ \nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nเหง้า (rhizome)\nสำรออกฤทธิ์หลัก (Active ingredient)\n1. น�้ามันระเหยง่าย มีสารส�าคัญที่เป็นองค์ประกอบ ได้แก่ terpinen-4-ol, sabinene,  \ncaryophyllene, cineol, alpha-pinene, beta-pinene, myrcene, terpinene, limonene,  \np-cymene, terpinolene, eugenol, farneraol, alflabene, 3,4 dimethoxy benzaldehyde \n2. สารสีเหลือง curcumin, cassumunarins A, B, C \n3. สารกลุ่มฟีนิลบิวทานอยด์ หลายชนิด เช่น (E)-1-(3,4-dimethoxyphenyl) butadiene (DMPBD) \nที่มีฤทธิ์ลดการอักเสบ และสารอื่น ๆ ได้แก่ 4-(4-hydroxyl-1-butenyl)-veratrole, naphthoquinone \nderivative, vanillin, vanillic acid, veratric acid, β-sitosterol\nสูตรเคมี (Chemical Formula)\nที่มา : https://demo1.nbt.or.th/herb_details/29 \nกลไกกำรออกฤทธิ์ (Mechanism of Action) \n1. ฤทธิ์ลดกำรอักเสบ\nเมื่อทดลองน�าครีมไพล (ไพลจีซาล) ที่มีส่วนผสมของน�้ามันไพลร้อยละ 14 ไปใช้ในผู้ป่วยข้อเท้าแพลง \nโดยให้ทาวันละ 2 ครั้ง พบว่า สามารถลดการปวดบวมได้มากกว่ากลุ่มควบคุมเมื่อใช้ไปได้ 4 วัน และมีการ \nกินยาแก้ปวด (paracetamol) ใน 2 วันแรก น้อยกว่ากลุ่มควบคุมด้วย ผู้ป่วยที่ได้รับไพลจีซาลสามารถ\nงอข้อเท้าได้มากกว่ากลุ่มควบคุม แต่ความสามารถงอส่วนฝ่าเท้าไม่แตกต่างกัน เมื่อน�าน�้ามันไพลที่อยู่\nในรูปของเจล (ไพลเจล) มาทดสอบ พบว่า ไพลเจลสามารถลดการอักเสบของอุ้งเท้าหนูได้ โดยสามารถ \nลดการบวมได้เทียบเท่ากับ piroxicam gel ทั้งยังลดความแดง และบรรเทาอาการปวดได้ด้วย \n187\nจากการศึกษา พบว่า เฉพาะน�้ามันสกัดดิบเท่านั้นที่ให้ผลลดอาการบวมที่อุ้งเท้าหนู ส่วนสกัด\nย่อยอื่น ๆ ไม่ได้ผล ในการศึกษาเบื้องต้นทางคลินิก พบว่า น�้ามันไพลให้ผลรักษาอาการปวดกล้ามเนื้อ \nปวดข้อและเคล็ดต่าง ๆ เช่นกัน มีรายงานฤทธิ์ในการลดการอักเสบของสารสกัดไพลด้วยเฮกเซน รวมถึงสาร \nที่สกัดได้จากไพลหลายชนิด เช่น เคอร์คิวมิน ซึ่งเป็นสารสีเหลือง น�้ามันหอมระเหย และสารอื่น ๆ เช่น \nสาร (E)-4 (3’,4’-dimethylphenyl) but-3-en-l-ol พบว่า มีฤทธิ์ยับยั้ง prostaglandin นอกจากนี้ \nสาร (E)-1- (3,4-dimethoxyphenyl) but-3-en-2-ol เมื่อป้อนเข้าสู่กระเพา\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ไพล",
+      "Zingiber montanum",
+      "น้ำมันไพล",
+      "ครีมไพล"
+    ],
+    "modernDrugs": [],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-10-plai"
+  },
+  {
+    "id": "cpg-2568-mono-11-sahasatara",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ยาสหัศธารา (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ยาสหัศธารา กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ยาสหัศธารา (Sahasatara Formula) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Ritonavir, Nifedipine, Cyclosporine, Triazolam, Alfentanil",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ยาสหัศธารา (Sahasatara)\n• ชื่อวิทยาศาสตร์: Sahasatara Formula\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 11 (หน้า 207-210)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (6)\n1. พบว่า piperine เพิ่ม AUC ของยากลุ่มที่เป็น CYP3A4 substrate ได้แก่ ritonavir, nifedipine, \ncyclosporine, triazolam, alfentanil และ simvastatin\n2. อาจมีผลเสริมฤทธิ์กับยาต้านการแข็งตัวของเลือด (warfarin)\nค�ำแนะน�ำเพิ่มเติม \n1. หลีกเลี่ยงการใช้ในระยะเวลานานโดยไม่ได้รับค�าแนะน�าจากแพทย์\n2. ควรเก็บยาในที่แห้งและเย็น ห่างจากแสงแดดและความชื้น\n3. หากใช้แล้วอาการไม่ดีขึ้นใน 7 วัน ควรปรึกษาแพทย์\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nRitonavir, Nifedipine, Cyclosporine, Triazolam, Alfentanil, Simvastatin, Warfarin, CYP3A4, NSAIDs, Diclofenac\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n189\nยาสหัศธารา\nเภสัชกรหญิงรุ่งทิพย์ ตั้งสง่ำศักดิ์ศรี\nชื่อต�ำรับ  ยาสหัศธารา หรือ สหัสธารา\nส่วนประกอบ ในผงยา 1,000 กรัม ประกอบด้วย \n1. พริกไทยล่อนหนัก 240 กรัม, รากเจตมูลเพลิงแดงหนัก 224 กรัม, ดอกดีปลีหนัก 96 กรัม, \nหัศคุณเทศ หนัก 48 กรัม \n2. เนื้อผลสมอไทย หนัก 104 กรัม รากตองแตก หนัก 80 กรัม\n3. เหง้าว่านน�้า หนัก 88 กรัม \n4. การบูรหนัก 14 กรัม ดอกจันทน์หนัก 13 กรัม เทียนแดงหนัก 11 กรัม ลูกจันทน์หนัก 12 กรัม \nเทียนตาตั๊กแตน มหาหิงคุ์ หนักอย่างละ 10 กรัม เทียนสัตตบุษย์หนัก 9 กรัม เทียนขาว รากจิงจ้อ  \nหนักอย่างละ 8 กรัม เทียนด�าหนัก 7 กรัม โกฐกักกราหนัก 6 กรัม โกฐเขมาหนัก 5 กรัม โกฐก้านพร้าว \nหนัก 4 กรัม โกฐพุงปลา หนัก 3 กรัม (1)\nหมายเหตุ: สัดส่วนอาจปรับเปลี่ยนเล็กน้อยตามสูตรที่ใช้งานในแต่ละสถานบริการ แต่โดยทั่วไป  \nจะเป็นไปตามสัดส่วนข้างต้น\nสำรออกฤทธิ์หลัก (Active ingredient) (2)\n1. ยาสมุนไพรสหัศธาราเป็นยาที่ผลิตจากสมุนไพรไทยหลากหลาย 21 ชนิด ได้แก่ พริกไทยล่อน \nรากเจตมูลเพลิงแดง ดอกดีปลี เนื้อลูกสมอไทย หัศคุณเทศ รากตองแตก เหง้าว่านน�้า การบูร ดอกจันทน์ \nเทียนแดง ลูกจันทน์ เทียนตาตั๊กแตน มหาหิงคุ์ เทียนสัตตบุษย์ เทียนขาว รากจิงจ้อ เทียนด�า โกฐกักกรา \nโกฐเขมา โกฐก้านพร้าว โกฐพุงปลา ซึ่งส่วนใหญ่มีฤทธิ์ลดการอักเสบ และบรรเทาอาการปวด \n2. พริกไทยล่อนมีสารพิเพอรีน (piperine: C17H19NO3) เป็นสารส�าคัญ\nสูตรเคมี (Chemical Formula)\nPiperine \nที่มา : https://www.researchgate.net/figure/Piperine-Structure-19_fig1_328263885\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (3)\nPiperine มีฤทธิ์ต้านการอักเสบ (Anti-inflammatory effects) ยับยั้งการแสดงออกของไซโตไคน์ \nเช่น IL-6, TNF-α, และ IL-1β ลดการสร้างพรอสตาแกลนดิน (PGE2) ซึ่งเป็นสารก่อการอักเสบ ยับยั้ง\nเอนไซม์ COX-2 และ LOX-5 ซึ่งมีบทบาทส�าคัญในการอักเสบ ลดการกระตุ้นของ NF-KB และ AP-1 \nซึ่งเป็นตัวควบคุมการอักเสบ สมุนไพรในต�ารับมีฤทธิ์ต้านการอักเสบโดยลดการสร้างสารที่ก่อให้เกิด  \nการอักเสบ เช่น Prostaglandin เป็นต้น และช่วยกระตุ้นการไหลเวียนโลหิต ลดอาการปวดและบวม  \nบริเวณที่มีอาการ\nขนำดและวิธีใช้ (Dose and Administration) (1)\nบรรเทาอาการปวดกล้ามเนื้อ บรรเทาอาการของโรคข้อเข่าเสื่อม ลดอาการอักเสบในระบบ  \nกล้ามเนื้อและข้อ บรรเทาอาการปวดเส้นประสาทส่วนปลาย \nรับประทานครั้งละ 1 - 1.5 กรัม วันละ 3 ครั้ง หลังอาหาร เช้า กลางวัน เย็น โดยดื่มน�้าอุ่นตาม \nเพื่อเพิ่มประสิทธิภาพการดูดซึม\nอำกำรไม่พึงประสงค์ (Adverse Reaction) (1, 4, 5) \n1. อาการระคายเคืองในก\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ยาสหัศธารา",
+      "สหัศธารา",
+      "พริกไทย",
+      "ไพเพอรีน",
+      "Piperine"
+    ],
+    "modernDrugs": [
+      "Ritonavir",
+      "Nifedipine",
+      "Cyclosporine",
+      "Triazolam",
+      "Alfentanil",
+      "Simvastatin",
+      "Warfarin",
+      "CYP3A4",
+      "NSAIDs",
+      "Diclofenac"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-11-sahasatara"
+  },
+  {
+    "id": "cpg-2568-mono-12-compress",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ยาประคบ (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ยาประคบ กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ยาประคบ (Herbal Compress) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Capsaicin, แผ่นแปะร้อน, ครีมพริก, NSAIDs, Diclofenac",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ยาประคบ (Herbal Compress)\n• ชื่อวิทยาศาสตร์: Herbal Compress\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 12 (หน้า 211-214)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n)\n1. ไม่ควรใช้ร่วมกับยาแก้ปวดเฉพาะที่ เช่น ครีมพริก (Capsaicin) หรือบาล์มที่มีเมนทอล  \nเพราะอาจท�าให้เกิดการระคายเคืองมากขึ้น\n2. หลีกเลี่ยงการใช้ร่วมกับแผ่นแปะร้อน หรือยาทาภายนอกที่มี NSAIDs เช่น ไดโคลฟีแนค  \nเพราะอาจเพิ่มความร้อนมากเกินไป\n3. หากใช้ร่วมกับยาต้านการแข็งตัวของเลือด (Anticoagulants) เช่น วาร์ฟาริน ควรปรึกษา  \nแพทย์ก่อน\nค�ำแนะน�ำเพิ่มเติม\n1. ทดสอบอุณหภูมิของลูกประคบก่อนใช้ เพื่อลดความเสี่ยงของการลวกผิวหนัง\n2. หากใช้แล้วมีอาการแพ้ หรือระคายเคือง ควรหยุดใช้ และล้างออกด้วยน�้าสะอาด\n3. เก็บลูกประคบที่ใช้แล้วในที่แห้ง หรือช่องแช่แข็ง เพื่อป้องกันเชื้อรา\n4. ไม่ควรใช้ลูกประคบซ�้าเกิน 3 - 5 ครั้ง เพราะสมุนไพรจะเสื่อมประสิทธิภาพ\n5. ไม่ควรอาบน�้าทันทีภายหลังการประคบเสร็จ เพราะร่างกายจะยังไม่สามารถปรับตัวกับอุณหภูมิ \nที่เปลี่ยนแปลงทันที และจะเป็นการล้างตัวยาจากผิวหนังออกไปอีกด้วย\n6. ในผู้ป่วยอัมพาต เด็ก และผู้ป่วยสูงอายุ รวมทั้งผู้ที่มีโรคประจ�าตัว เช่น โรคเบาหวาน  \nควรปรึกษาแพทย์ก่อนใช้\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nCapsaicin, แผ่นแปะร้อน, ครีมพริก, NSAIDs, Diclofenac, Warfarin, Anticoagulants\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n193\nยาประคบ\nนำยแพทย์พำสรรค์ ผลโภค\nชื่อต�ำรับ  ยาประคบสมุนไพร (Herbal Compress)\nส่วนประกอบ (1) ในยา 130 กรัม ประกอบด้วย\n 1. เหง้าไพล 50 กรัม ใบมะขาม 30 กรัม ผิวมะกรูด 20 กรัม เหง้าขมิ้นชัน 10 กรัม  \n  ตะไคร้ (ล�าต้น) 10 กรัม ใบส้มป่อย 10 กรัม\n 2. เกลือเม็ด 1 ช้อนโต๊ะ การบูร 2 ช้อนโต๊ะ \nหมำยเหตุ: สูตรอาจจะแตกต่างกันไปตามแต่ละภูมิภาค\n ความแรง ขึ้นอยู่กับอุณหภูมิที่ใช้และชนิดของสมุนไพรที่ผสม\nสำรออกฤทธิ์หลัก (Active ingredient)\nประกอบด้วยสมุนไพรหลายชนิด เช่น\nไพล: ลดการอักเสบ และบรรเทาอาการปวด\nขมิ้นชัน: ฆ่าเชื้อ ลดการอักเสบ\nตะไคร้: ช่วยผ่อนคลายกล้ามเนื้อ\nการบูร: ช่วยลดอาการบวม และตึงของกล้ามเนื้อ\nเกลือ: ช่วยดูดซับความชื้น และคงความร้อน\nกลไกกำรออกฤทธิ์ (Mechanism of Action)\n1. ความร้อนช่วยขยายหลอดเลือด ส่งผลให้การไหลเวียนโลหิตดีขึ้น ลดอาการปวดและบวม\n2. สารส�าคัญจากสมุนไพร เช่น ไพลและตะไคร้ มีฤทธิ์ต้านการอักเสบ ลดอาการปวด และช่วยให้\nกล้ามเนื้อผ่อนคลาย\n3. กลไกของการกด และนวดจากลูกประคบ ช่วยคลายความตึงของกล้ามเนื้อ\nขนำดและวิธีใช้ (Dose and Administration)\nส�าหรับบรรเทาอาการปวดเมื่อย คลายกล้ามเนื้อและข้อต่อ ลดอาการบวม อักเสบจากการ  \nเคล็ดขัดยอก ฟกช�้า บรรเทาอาการปวดจากโรคข้อเสื่อม และอาการปวดหลังส่วนล่าง หรือช่วยเพิ่ม  \nการไหลเวียนโลหิต และท�าให้กล้ามเนื้อผ่อนคลาย (2-4)\n1. ส�ำหรับลูกประคบสมุนไพร\n1.1 น�าลูกประคบไปนึ่ง หรืออบไอน�้าให้ร้อนประมาณ 10 - 15 นาที\n1.2 ทดสอบความร้อนโดยแตะที่แขนก่อนใช้\n1.3 ประคบบริเวณที่มีอาการปวด ครั้งละ 10 - 15 นาที\n1.4 ใช้ซ�้าได้ 2 - 3 ครั้งต่อวัน หรือบ่อยตามต้องการ\n1.5 ลูกประคบที่ใช้แล้วควรเก็บไว้ในที่แห้ง หรือแช่แข็งเพื่อยืดอายุการใช้งาน โดยทั่วไปแล้ว  \nลูกประคบ 1 ลูก สามารถใช้ได้ 3 - 4 ครั้ง\n2. ส�ำหรับสเปรย์สมุนไพรประคบ\n2.1 ฉีดพ่นบริเวณที่มีอาการปวดกล้ามเนื้อหรือข้อ วันละ 2 - 3 ครั้ง\n2.2 นวดเบา ๆ ให้ตัวยาซึมซับเข้าสู่ผิว\n2.3 หลีกเลี่ยงการฉีดพ่นใกล้ดวงตา ปาก หรือบริเวณที่มีแผล\nอำกำรไม่พึงประสงค์ (Adverse Reaction)\n1. ผิวหนังแดง หรือรู้สึกแสบร้อนหลังการใช้\n2. อาการคัน หรือระคายเคือง หากแพ้ส่วนประกอบของสมุนไพร\n3. อาจเกิดรอยไหม้หากใช้ลูกประคบร้อนเกินไป\nข้อห้ำมใช้ (Contraindication)\n1. ห้ามใช้ในบริเวณที่มีแผลเปิด แผลไฟไหม้ หรือแผลติดเชื้อ\n2. ห้ามใช้ในผู้ที่มีผิวบอบบาง แพ้ง่าย หรือมีอาการแพ้สมุนไพร\n3. ไม่ควรใช้ในผู้ที่มีโรคเส้นเลือดขอดรุนแรง หรือโรคที่เกี่ยวข้องกับการไหลเวียนโลหิต\n4. ห้ามใช้ในหญิงตั้งครรภ์ที่มีความเสี่ยงต่อการแท้ง\n5. ไม่ควรใช้ในบริเว\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ยาประคบ",
+      "ลูกประคบ",
+      "ลูกประคบสมุนไพร"
+    ],
+    "modernDrugs": [
+      "Capsaicin",
+      "แผ่นแปะร้อน",
+      "ครีมพริก",
+      "NSAIDs",
+      "Diclofenac",
+      "Warfarin",
+      "Anticoagulants"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-12-compress"
+  },
+  {
+    "id": "cpg-2568-mono-13-cannabis-cbd",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: สารสกัดจากกัญชา CBD Enriched (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง สารสกัดจากกัญชา CBD Enriched กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: สารสกัดจากกัญชา CBD Enriched (Cannabis sativa L. (CBD Enriched)) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Fluoxetine, Rifampicin, Carbamazepine, Phenytoin, Valproate",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: สารสกัดจากกัญชา CBD Enriched (CBD Enriched Extract)\n• ชื่อวิทยาศาสตร์: Cannabis sativa L. (CBD Enriched)\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 13 (หน้า 215-222)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (9, 10) \n1. ยาอื่นที่ส่งผลให้ระดับยาในเลือดของ THC และ CBD เปลี่ยนแปลง\nเนื่องจากสาร THC และ CBD ถูก metabolized โดย cytochrome P450 (CYP) หลายชนิด ดังนี้\n- THC ถูก metabolized โดย CYP2C9, CYP2C19 และ CYP3A4\n- CBD ถูก metabolized โดย CYP2C19 และ CYP3A4 เป็นส่วนใหญ่ และถูก metabolized \nส่วนน้อยโดย CYP1A1, CYP1A2, CYP2C9 และ CYP2D6\nดังนั้น การใช้ THC และ CBD ร่วมกับยาอื่นที่มีผลยับยั้ง CYPP450 โดยเฉพาะ CYP2C19 \nและ CYP3A4 เช่น fluoxetine อาจมีผลท�าให้ระดับ THC และ CBD ในเลือดสูงขึ้น จนเกิดอาการ  \nไม่พึงประสงค์ได้ ในทางตรงกันข้าม ถ้าใช้ THC และ CBD ร่วมกับยาที่มีฤทธิ์เป็น enzyme induces \nเช่น rifampicin, carbamazepine จะท�าให้ระดับ THC และ CBD ในเลือดลดลง\n2. THC และ CBD มีฤทธิ์เปลี่ยนแปลงระดับยาอื่น เนื่องจาก THC และ CBD มีผลเป็นทั้ง enzyme \ninducer และ enzyme inhibitor ดังนี้\n- THC มีผลเหนี่ยวน�า CYP1A2\n- THC มีผลยับยั้ง CYP2C9, CYP2D6 และ CYP3A4 ซึ่งอาจส่งผลให้ยาอื่นที่ถูก metabolized ด้วย \nCYP เหล่านี้ จะมีระดับยาสูงขึ้น เช่น warfarin (ถูก metabolized ด้วย CYP2C9) มีผลให้ INR สูงขึ้นได้\n- CBD มีผลยับยั้ง CYP1A1, CYP1A2, CYP1B1, CYP2B6, CYP2C19, CYP3A4 และ CYP2C9 \nอย่างแรง ดังนั้น การใช้ CBD ร่วมกับยาอื่นที่ถูก metabolized ด้วย CYP เหล่านี้ ตัวอย่างเช่น Warfarin, \nClobazam (ถูก metabolized ด้วย CYP3A4 และ CYP2C19), ยากลุ่ม Fluoroquinolones  \n(ถูก metabolized ด้วย CYP1A2), ยากลุ่ม Dihydropyridines (ถูก metabolized ด้วย CYP3A4) \nจะมีระดับยาสูงขึ้น ซึ่งอาจเกิดอาการไม่พึงประสงค์ได้\nดังนั้น การใช้กัญชาทางการแพทย์ ต้องระวังปฏิกิริยาระหว่างยากับยาอื่นที่ผู้ป่วยใช้อยู่ก่อนด้วย \nเพื่อความปลอดภัยของผู้ป่วย\nกำรเก็บรักษำ\nควรเก็บน�้ามันกัญชาในขวดเดิม เก็บที่อุณหภูมิห้อง 20 – 25 °C (68 – 77 °F) สามารถเก็บที่  \nการเปลี่ยนแปลงอุณหภูมิได้ระหว่าง 15 - 30°C (59 – 86 °F) ห้ามแช่เย็น หรือแช่แข็ง ปิดฝาให้แน่น \nควรใช้ภายใน 12 สัปดาห์หลังจากเปิดขวดครั้งแรก 203\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nFluoxetine, Rifampicin, Carbamazepine, Phenytoin, Valproate, Clobazam, CYP2C19, CYP3A4, CYP1A2, CYP2C9, CYP2D6\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n197\nสารสกัดจากกัญชา\nCBD Enriched\nเภสัชกรหญิงรวิวรรณ วิทวัสส�ำรำญกุล\nชื่อสำมัญ (1)  (ไทย)  กัญชา\n   (อังกฤษ)  Cannabis, Marihuana, Indian Hemp, pot (10)\nชื่อวิทยำศำสตร์ (1) Cannabis sativa L. subsp. indica (10)\nชื่อวงศ์ (1)  Cannabidaceae (10) [Cannabaceae]\nชื่อท้องถิ่น  กัญชาจีน คุนเช้า ปาง ยานอ (10)\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nใบและช่อดอกเพศเมีย (leaf and florescense)\nสำรออกฤทธิ์หลัก (Active ingredient)\nสารสกัดกัญชา CBD Enriched ที่น�ามาใช้ส�าหรับโรคลมชักที่รักษายาก และโรคลมชักที่ดื้อต่อ  \nยารักษา (intractable epilepsy) มี cannabidiol (CBD) 100 mg/ml และมี THC ในอัตราส่วนที่ \nCBD : THC มากกว่าหรือเท่ากับ 20 : 1 \nสูตรเคมี (Chemical Formula)\nที่มา: https://www.mdpi.com/2076-3921/11/4/660\nข้อมูลทำงเภสัชวิทยำ (Pharmacology)\nCannabidiol (C21H30O2) หรือ CBD เป็นสารสกัดที่ได้จากกัญชา ไม่จัดเป็นยาเสพติด ไม่ออกฤทธิ์ \nทางระบบประสาทที่ท�าให้มึนเมา หรือเสพติด สาร Cannabidiol จะมีฤทธิ์ต้านการชัก ลดความเจ็บปวด \nลดอาการคลื่นไส้ ต้านฤทธิ์ต่อจิตประสาท คลายกังวล ปกป้องเซลล์ประสาท และยังมีการศึกษาฤทธิ์ยับยั้ง\nเซลล์มะเร็ง Cannabidiol จึงถูกน�ามาใช้ประโยชน์เป็นผลิตภัณฑ์สมุนไพร ยาแผนไทย เช่น ยาต้านการชัก \nในผู้ป่วยลมชักรักษายาก ใช้ช่วยดูแลผู้ป่วยแบบประคับประคองเพื่อให้มีคุณภาพชีวิตดีขึ้น เป็นต้น  \nCannabidiol (CBD) ไม่ได้ออกฤทธิ์ผ่านตัวรับ Cannabinoid receptor type 1 (CB 1) และ type 2 \n(CB2) แต่มีฤทธิ์ทางเภสัชวิทยาต่อตัวรับอื่น ๆ ส่งผลให้ CBD มีฤทธิ์ทางเภสัชวิทยาหลากหลาย เช่น  \nฤทธิ์ต้านการท�างานของ Δ9-THCs ผ่านการกระตุ้น non-competitive negative allosteric modulator \nต่อตัวรับ CB 1, ฤทธิ์ลดภาวะวิตกกังวลผ่านการกระตุ้นตัวรับ 5-HT2A, ฤทธิ์ยับยั้งการชักผ่านการ  \nกระตุ้นตัวรับ Glycine receptor alpha3 (GlyR) และ GABA A Receptor และฤทธิ์ระงับปวดผ่านการ \nกระตุ้นตัวรับ TRPV1(2)\nในขณะที่ Delta-9-Tetrahydrocannabinol (THC) ออกฤทธิ์ผ่าน receptor หลัก 2 ชนิด คือ \n1. Cannabinoid receptor type 1 (CB1) บริเวณระบบประสาทส่วนกลาง (สมองและไขสันหลัง) \nซึ่งมีฤทธิ์ต่อจิตประสาทได้ถ้าใช้ปริมาณสูง แต่อาจพบได้ที่เนื้อเยื่อส่วนปลาย (peripheral tissues)  \nออกฤทธิ์เกี่ยวข้องกับการนอน ความอยากอาหาร การรับรู้เวลา ความจ�าระยะสั้น และการท�างานประสาน \nการเคลื่อนไหวของกล้ามเนื้อ \n2. Cannabinoid receptor type 2 (CB2) มักจะพบบนเซลล์ของระบบภูมิคุ้มกัน จะเกี่ยวข้องกับ \nความปวด อักเสบ และ\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "กัญชา",
+      "CBD",
+      "Cannabidiol",
+      "สารสกัดจากกัญชา CBD Enriched"
+    ],
+    "modernDrugs": [
+      "Fluoxetine",
+      "Rifampicin",
+      "Carbamazepine",
+      "Phenytoin",
+      "Valproate",
+      "Clobazam",
+      "CYP2C19",
+      "CYP3A4",
+      "CYP1A2",
+      "CYP2C9",
+      "CYP2D6"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-13-cannabis-cbd"
+  },
+  {
+    "id": "cpg-2568-mono-14-cannabis-1-1",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: สารสกัดกัญชาทางการแพทย์ชนิด THC:CBD 1:1 (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง สารสกัดกัญชาทางการแพทย์ชนิด THC:CBD 1:1 กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: สารสกัดกัญชาทางการแพทย์ชนิด THC:CBD 1:1 (Cannabis Extract THC:CBD (1:1)) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Fluoxetine, Rifampicin, Carbamazepine, CYP2C9, CYP2C19",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: สารสกัดกัญชาทางการแพทย์ชนิด THC:CBD 1:1 (Cannabis THC:CBD 1:1 Extract)\n• ชื่อวิทยาศาสตร์: Cannabis Extract THC:CBD (1:1)\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 14 (หน้า 223-230)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (2)\n1. ยาอื่นที่ส่งผลให้ระดับยาในเลือดของ THC และ CBD เปลี่ยนแปลง เนื่องจากสาร THC และ \nCBD ถูก metabolized โดย cytochrome P450 (CYP) หลายชนิด ดังนี้ \ny\tTHC ถูก metabolized โดย CYP2C9, CYP2C19 และ CYP3A4 \ny\tCBD ถูก metabolized โดย CYP2C19 และ CYP3A4 เป็นส่วนใหญ่ และถูก metabolized \nส่วนน้อยโดย CYP1A1, CYP1A2, CYP2C9 และ CYP2D6 \nดังนั้น การใช้ THC และ CBD ร่วมกับยาอื่นที่มีผลยับยั้ง CYPP450 โดยเฉพาะ CYP2C19  \nและ CYP3A4 เช่น fluoxetine อาจมีผลท�าให้ระดับ THC และ CBD ในเลือดสูงขึ้น จนเกิดอาการ  \nไม่พึงประสงค์ได้ ในทางตรงกันข้าม ถ้าใช้ THC และ CBD ร่วมกับยาที่มีฤทธิ์เป็น enzyme induces \nเช่น rifampicin, carbamazepine จะท�าให้ระดับ THC และ CBD ในเลือดลดลง\n2. THC และ CBD มีฤทธิ์เปลี่ยนแปลงระดับยาอื่น เนื่องจาก THC และ CBD มีผลเป็นทั้ง enzyme \ninducer และ enzyme inhibitor ดังนี้ \ny\tTHC มีผลเหนี่ยวน�า CYP1A2 \ny\tTHC มีผลยับยั้ง CYP2C9, CYP2D6 และ CYP3A4 ซึ่งอาจส่งผลให้ยาอื่นที่ถูก metabolized \nด้วย CYP เหล่านี้ จะมีระดับยาสูงขึ้น เช่น warfarin (ถูก metabolized ด้วย CYP2C9)  \nมีผลให้ INR สูงขึ้นได้ \ny\tCBD มีผลยับยั้ง CYP1A1, CYP1A2, CYP1B1, CYP2B6, CYP2C19, CYP3A4 และ CYP2C9 \nอย่างแรง ดังนั้น การใช้ CBD ร่วมกับยาอื่นที่ถูก metabolized ด้วย CYP เหล่านี้ ตัวอย่างเช่น \nwarfarin, clobazam (ถูก metabolized ด้วย CYP3A4 และ CYP2C19), ยากลุ่ม  \nfluoroquinolones (ถูก metabolized ด้วย CYP1A2), ยากลุ่ม dihydropyridines  \n(ถูก metabolized ด้วย CYP3A4) จะมีระดับยาสูงขึ้น ซึ่งอาจเกิดอาการไม่พึงประสงค์ได้211\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nFluoxetine, Rifampicin, Carbamazepine, CYP2C9, CYP2C19, CYP3A4, ยาแก้ปวดกลุ่ม Opioids, Sedatives\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n205\nสารสกัดกัญชาทางการแพทย์\nชนิดอัตราส่วน THC:CBD\nเป็น 1:1\nเภสัชกรหญิงธนรัตน์ สว่ำงฤทธิ์\nชื่อสำมัญ (1)  (ไทย)  กัญชา\n   (อังกฤษ)  Cannabis, Marihuana, Indian Hemp, pot \nชื่อวิทยำศำสตร์ (1) Cannabis sativa L. subsp. indica \nชื่อวงศ์ (1)  Cannabidaceae [Cannabaceae]\nชื่อท้องถิ่น (1)  กัญชาจีน คุนเช้า ปาง ยานอ\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nใบและช่อดอกเพศเมีย (leaf and florescense)\nสำรออกฤทธิ์หลัก (Active ingredient) (2)\nสารประกอบ cannabinoids ที่สกัดได้จากพืชกัญชา (Cannabis sativa L.) คือ delta-9-  \nTetrahydrocannabinol (THC) และสาร Cannabidiol (CBD) ซึ่งเป็นสารสกัดกัญชาชนิดอัตราส่วน \nTHC:CBD เป็น 1:1 โดย 1 ml มี THC 27 mg และ CBD 25 mg หรือ 1 หยดมี THC 1 mg และ \nCBD 1 mg \nสูตรเคมี (Chemical Formula)\nที่มา: https://www.mdpi.com/2076-3921/11/4/660\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (2, 11)\nสารประกอบ cannabinoids ที่สกัดได้จากพืชกัญชา สามารถใช้ในการรักษาโรคได้ โดยสารที่ออกฤทธิ์หลัก \nที่น�ามาใช้ในทางการแพทย์ คือ delta-9- Tetrahydrocannabinol (THC) ที่ออกฤทธิ์ต่อ  \nจิตประสาท และ cannabidiol (CBD) ที่ไม่มีฤทธิ์เสพติด สารประกอบ cannabinoids ออกฤทธิ์ผ่าน \ncannabinoid receptor หลัก 2 ชนิด คือ CB1 receptor ซึ่งพบมากในสมองและร่างกาย มีความสัมพันธ์\nกับการตัดสินใจ ความจ�า ความเข้าใจ อารมณ์ การรับรู้ความปวด และการเคลื่อนไหว ส่วน CB2 receptor \nพบที่ระบบภูมิคุ้มกัน และระบบประสาทส่วนปลาย ม้าม ทอนซิล ต่อมไทมัส กระดูก ผิวหนัง และเลือด \nmonocyte, macrophages, B-cells และ T-cells ในร่างกายสามารถสร้าง endocannabinoid ซึ่งเป็น \ncannabinoids โดยธรรมชาติ (ที่มีการศึกษาส่วนใหญ่ คือ anandamide และ arachidonoyl-glycerol \n(2-AG)) endocannabinoid ถูกสร้างขึ้นเพื่อก�ากับการท�างานต่าง ๆ ของร่างกาย โดยจะไปจับกับ CB1\nและ CB 2 receptor มีความส�าคัญในการควบคุมระบบประสาท และระบบภูมิคุ้มกันของร่างกาย  \nสารดังกล่าวสามารถผ่าน blood brain barrier และกระจายไปยังเนื้อเยื่อที่มีไขมัน (lipid-laden) เช่น \nเนื้อสมอง และเยื่อหุ้มเซลล์ประสาท เป็นต้น สาร cannabinoids มีผลทางการรักษาในหลายโรค เช่น \nอาการอาเจียน อาการปวด การอักเสบ มะเร็ง โรคเส้นเลือดและหัวใจ โรคลมชัก รวมถึงภาวะแข็งเกร็ง \nของกล้ามเนื้อ\nขนำดและวิธีใช้ (Dose and Administration)\nรักษาอาการกล้ามเนื้อหดเกร็ง (spasticity) และอาการปวดจากระบบประสาทส่วนกลาง (central \nneuropathic pain) ในผู้ป่วยโรคปลอกประสาทส่วนกลางอักเสบ (m\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "กัญชา",
+      "THC",
+      "CBD",
+      "สารสกัดกัญชา THC:CBD 1:1",
+      "กัญชาทางการแพทย์"
+    ],
+    "modernDrugs": [
+      "Fluoxetine",
+      "Rifampicin",
+      "Carbamazepine",
+      "CYP2C9",
+      "CYP2C19",
+      "CYP3A4",
+      "ยาแก้ปวดกลุ่ม Opioids",
+      "Sedatives"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-14-cannabis-1-1"
+  },
+  {
+    "id": "cpg-2568-mono-15-capsicum",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: พริก (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง พริก กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: พริก (Capsicum annuum L. / Capsaicin) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: ACE inhibitors, Theophylline, Anticoagulants, Antiplatelet agents, Barbiturates",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: พริก (Chili / Capsaicin)\n• ชื่อวิทยาศาสตร์: Capsicum annuum L. / Capsaicin\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 15 (หน้า 231-234)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\n) (3) \n1. การใช้กับยารักษาโรคหัวใจ ยาลดความดันโลหิต กลุ่ม angiotensin-converting enzyme \ninhibitors (ACE inhibitor) อาจท�าให้เกิดอาการไอเพิ่มขึ้น\n2. อาจเพิ่มการดูดซึมของยาโรคหอบหืด คือ theophylline ชนิดออกฤทธิ์เนิ่นนาน\n3. ควรระมัดระวัง และปรึกษาแพทย์ก่อน เมื่อใช้ยาพริกร่วมกับยากลุ่มต่อไปนี้ \ny\tAngiotensin-converting enzyme inhibitors\ny\tAnticoagulants\ny\tAntiplatelet agents\ny\tBarbiturates\ny\tLow molecular weight heparins\ny\tTheophylline\ny\tThrombolytic agents\n4. หลีกเลี่ยงการใช้ร่วมกับผลิตภัณฑ์ให้ความร้อน เช่น แผ่นประคบร้อน หรือครีมร้อน เพราะอาจ\nท�าให้เกิดการระคายเคืองรุนแรง\nค�ำแนะน�ำเพิ่มเติม\n1. ทดสอบการแพ้โดยทาบริเวณเล็ก ๆ ก่อนใช้จริง\n2. หากมีอาการแสบร้อน ระคายเคืองรุนแรง ให้ล้างออกด้วยน�้าสบู่อ่อน ๆ แชมพู หรือน�้ามันพืช \nออยล์ ครีม แล้วปรึกษาแพทย์ภายหลัง\n3. เก็บยาให้พ้นมือเด็ก และไม่ควรใช้กับสัตว์เลี้ยง\n4. สามารถใช้ต่อเนื่องจนอาการดีขึ้น\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nACE inhibitors, Theophylline, Anticoagulants, Antiplatelet agents, Barbiturates, Heparins, Thrombolytics, Warfarin\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n213\nพริก\nนำยแพทย์พำสรรค์ ผลโภค\nเภสัชกรหญิงธฤษำ อัศวุตมำงกุร\nชื่อสำมัญ (1)  (ไทย)  พริก\n   (อังกฤษ)  Chili Pepper, Bird Pepper, Cayenne Pepper \nชื่อวิทยำศำสตร์ (1) Capsicum annuum L.\n    Capsicum frutescens L. \n   Capsicum minimum Roxb (ชื่อพ้อง)\nชื่อวงศ์ (1)  Solanaceae \nชื่อท้องถิ่น (1)  พริกขี้หนู ครี ปะแกว พริกขี้นก พริกแด้ พริกแต้ มือส่าโพ หมักเพ็ด\nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nผลแห้ง (dried fruit)\nสำรออกฤทธิ์หลัก (Active ingredient) \nยาที่มีสารสกัดจากผลพริกแห้ง [Capsicum annuum L., Capsicum frutescens L.] ได้แก่  \nสารแคปไซซิน (capsaicin; 8-methyl-N-Vanillyl-6-nonenamide: C18H27NO3) มีในรูปแบบต่าง ๆ เช่น \nสเปรย์ ขี้ผึ้ง โลชั่น เจล และแผ่นแปะ (2) โดยยาที่มีสารสกัดเอทิลแอลกอฮอล์ (95 %) จากผลพริกแห้ง \nในรูปแบบยาทาเฉพาะที่ (ยาเจล ยาทา และยาขี้ผึ้ง) จัดอยู่ในบัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2566 \nโดยควบคุมความแรง ในรูปแบบผลิตภัณฑ์ส�าเร็จรูป ร้อยละ 0.025 % โดยน�้าหนัก (w/w) (3) \nสูตรเคมี (Chemical Formula)\n \nCapsaicin\nที่มา : https://en.wikipedia.org/wiki/Capsaicin\nกลไกกำรออกฤทธิ์ (Mechanism of Action)\nแคปไซซิน (capsaicin) ออกฤทธิ์โดยยับยั้งสารสื่อประสาท (Substance P) ซึ่งมีบทบาทในการ \nส่งสัญญาณความเจ็บปวด เมื่อใช้เป็นประจ�าจะท�าให้ปริมาณสารนี้ลดลง ส่งผลให้ความรู้สึกปวดลดลง \nตามไปด้วย\nขนำดและวิธีใช้ (Dose and Administration) (3)\nบรรเทาอาการปวดเส้นประสาท (Neuropathic pain) (2, 4-10) ยารูปแบบเจลความแรง 0.025 % \nโดยน�้าหนัก\nรูปแบบ: เจลทาภายนอก\n1. ทาบาง ๆ ในปริมาณครึ่งข้อนิ้ว บริเวณที่มีอาการปวด วันละ 3 - 4 ครั้ง\n2. ล้างมือให้สะอาดหลังการใช้\n3. หลีกเลี่ยงการอาบน�้า หรือสัมผัสน�้าร้อน ภายใน 30 นาที หลังทายา\n4. สามารถทาได้ติดต่อกันนานเป็นเดือนได้จนกว่าอาการจะทุเลาลง\nอำกำรไม่พึงประสงค์ (Adverse Reaction) (3)\n1. รู้สึกแสบร้อนบริเวณที่ทา\n2. ผิวหนังแดง ระคายเคือง หรือเป็นผื่น\n3. คันหรือแสบในกรณีที่สัมผัสเยื่อบุ เช่น ดวงตา หรือปาก เป็นต้น\n215\nข้อห้ำมใช้ (Contraindication) (3)\n1. ผู้ที่แพ้แคปไซซิน หรือสารในตระกูลพริก\n2. ห้ามใช้กับผิวหนังที่มีแผลเปิด แผลไหม้ หรือมีการอักเสบรุนแรง\n3. ห้ามใช้ในเด็กอายุต�่ากว่า 2 ปี\n4. หลีกเลี่ยงการใช้ในบริเวณใกล้ดวงตา จมูก ปาก หรือเยื่อเมือก\nข้อควรระวัง (Precaution) (3)\nควรระมัดระวังการใช้ยาพริกบริเวณผิวที่บอบบาง หรือบริเวณผิวหนังที่แตก เนื่องจากท�า ให้เกิด\nอาการระคายเคือง\nอันตรกิริยำระหว่ำงสมุนไพรกับยำ (Herb-D\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "พริก",
+      "แคปไซซิน",
+      "Capsaicin",
+      "เจลพริก",
+      "ครีมพริก"
+    ],
+    "modernDrugs": [
+      "ACE inhibitors",
+      "Theophylline",
+      "Anticoagulants",
+      "Antiplatelet agents",
+      "Barbiturates",
+      "Heparins",
+      "Thrombolytics",
+      "Warfarin"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-15-capsicum"
+  },
+  {
+    "id": "cpg-2568-mono-16-aloe",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: ว่านหางจระเข้ (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง ว่านหางจระเข้ กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: ว่านหางจระเข้ (Aloe vera (L.) Burm.f.) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: ยาทาภายนอก",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: ว่านหางจระเข้ (Aloe Vera)\n• ชื่อวิทยาศาสตร์: Aloe vera (L.) Burm.f.\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 16 (หน้า 235-238)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\nยังไม่พบรายงานอันตรกิริยาระหว่างยากับยาแผนปัจจุบันที่เด่นชัดในขนาดยาปกติ\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nยาทาภายนอก\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n217\nว่านหางจระเข้\nเภสัชกรหญิงอมรรัตน์ วิจิตรลีลำ\nเภสัชกรหญิงกฤติยำภรณ์ สุนัน\nเภสัชกรหญิงกุมำริน สินทรัพย์\nเภสัชกรธนณัฏฐ์ แสงอังคนำวิน\nชื่อสำมัญ (1, 2)  (ไทย)  ว่านหางจระเข้ \n   (อังกฤษ)  Aloe, Barbados aloe, Crocodile’ tongue,\n     Indian aloe, Jafferbad, Mediteranean aloe,\n     Star cactus, True aloe \nชื่อวิทยำศำสตร์ (1) Aloe vera (L.) Burm.f \n   Aloe barbardensis Mill., Aloe indica Royle (ชื่อพ้อง) \nชื่อวงศ์ (1)  Xanthorrhoeaceae (Liliaceae) \nชื่อท้องถิ่น (1)  ว่านไฟไหม้ (ภาคเหนือ) หรือ หางตะเข้ (ภาคกลาง) \nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nวุ้นจากใบ (gel from the inner leaf)\nสำรออกฤทธิ์หลัก (Active ingredient) \nสารส�าคัญในว่านหางจระเข้ ประกอบด้วย สารกลุ่ม Polysaccharides (Acemannan),  \nAnthraquinones (Aloin, Emodin), Coumarin derivatives (Aloesin)\nสูตรเคมี (Chemical Formula)\nที่มา : https://encyclopedia.pub/entry/25567\nกลไกกำรออกฤทธิ์ (Mechanism of Action) (3-7)\n1. Immunomodulatory และ anti-inflammatory โดย Acemanan กระตุ้นระบบภูมิคุ้มกัน \nโดยก�าเนิด (innate immune system) ได้แก่ macrophages และ dendritic cells (DCs) ท�าให้เกิด \nการหลั่งของสาร cytokines เช่น IL-1, IL-6, IL-12, TNF-α, colony-stimulating factors (CSFs) และ \nstem cell factors นอกจากนี้ยังกระตุ้นการหลั่ง IL-12 ที่ไปกระตุ้นการท�างานของ natural killer cells \nรวมถึงช่วยในการแบ่งตัว และกระตุ้นการสร้าง T cell ตามรูปภาพ\n2. Wound-healing โดย aloesin, aloin และ emodin เพิ่มการแสดงออกของ TGF-β1, bFGF \nและ VEGF-A ใน fibroblast และกระตุ้นการเพิ่มจ�านวนของ keratinocytes นอกจากนี้ Aloin ยังช่วย \nปกป้องผิว โดยลดการผลิต IL-8 และการสร้าง ROS219\nรูปภาพ : กระบวนการ Immunomodulatory โดย Acemanan\nขนำดและวิธีใช้ (Dose and Administration) (8)\nยาชนิดเจล เป็นยาที่มีปริมาณของวุ้นว่านหางจระเข้ [Aloe vera (L.) Burm.f.] ไม่น้อยกว่า  \nร้อยละ 70 โดยน�้าหนัก ใช้ทาบริเวณผิวหนังที่ถูกไฟไหม้ น�้าร้อนลวก ผิวหนังอักเสบจากการฉายรังสี  \nวันละ 3 – 4 ครั้ง\nอำกำรไม่พึงประสงค์ (Adverse Reaction) (8)\nอาจท�าให้เกิดอาการคัน มีผื่นแดง หรือผื่นแพ้สัมผัสได้ หากมีอาการดังกล่าวให้หยุดใช้ยา\nข้อห้ำมใช้ (Contraindication) -\nข้อควรระวัง (Precaution) (8)\nไม่ควรใช้ในผู้ที่มีประวัติแพ้ว่านหางจระเข้ หรือผลิตภัณฑ์ที่ผสมว่านหางจระเข้\nอันตรกิริยำระหว่ำงสมุนไพรกับยำ (Herb-Drug Interaction) -\n  เอกสารอ้างอิง\n1. ฐานข้อมูลสมุนไพรสาธา\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "ว่านหางจระเข้",
+      "Aloe vera",
+      "วุ้นว่านหางจระเข้",
+      "เจลว่านหางจระเข้"
+    ],
+    "modernDrugs": [
+      "ยาทาภายนอก"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-16-aloe"
+  },
+  {
+    "id": "cpg-2568-mono-17-phayayor",
+    "bookCategory": "cpg_medical_services_2568",
+    "bookCategoryTitle": "1. คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (CPG เม.ย. 2568)",
+    "bookTitle": "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ",
+    "chapter": "กลุ่มที่ 7 ข้อมูลยาสมุนไพรไทย: พญายอ (Herb-Drug Interactions)",
+    "title": "อันตรกิริยาระหว่าง พญายอ กับยาแผนปัจจุบัน (คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ 2568)",
+    "summary": "ข้อมูลยาสมุนไพรและอันตรกิริยาต่อยาแผนปัจจุบัน: พญายอ (Clinacanthus nutans (Burm.f.) Lindau) ตามคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 | ยาที่ต้องระวัง: Acyclovir",
+    "content": "【ข้อมูลยาสมุนไพรและอันตรกิริยาระหว่างยา (Herb-Drug Interactions) — กรมการแพทย์ พ.ศ. 2568】\n• ชื่อสามัญ: พญายอ (Clinacanthus nutans)\n• ชื่อวิทยาศาสตร์: Clinacanthus nutans (Burm.f.) Lindau\n• แหล่งข้อมูลอ้างอิง: คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ กระทรวงสาธารณสุข (เมษายน พ.ศ. 2568)\n• กลุ่มที่ 7: ข้อมูลยาสมุนไพรไทย ลำดับที่ 17 (หน้า 239-244)\n\n[อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)]:\nยังไม่พบรายงานอันตรกิริยาระหว่างยากับยาแผนปัจจุบันที่เด่นชัดในขนาดยาปกติ\n\n[สรุปยาแผนปัจจุบันที่เกี่ยวข้องหรือต้องระวัง]:\nAcyclovir\n\n[รายละเอียดทางคลินิกและข้อมูลสำคัญ]:\n221\nพญายอ \nเภสัชกรหญิงอมรรัตน์ วิจิตรลีลำ\nเภสัชกรหญิงกฤติยำภรณ์ สุนัน\nเภสัชกรหญิงกุมำริน สินทรัพย์\nเภสัชกรธนณัฏฐ์ แสงอังคนำวิน\nชื่อสำมัญ (1)  (ไทย)  พญายอ \n   (อังกฤษ)   -\nชื่อวิทยำศำสตร์ (1) Clinacanthus nutans (Burm. f.) Lindau \n   Clinacanthus burmanni Nees (ชื่อพ้อง)   \nชื่อวงศ์ (1)  Acanthaceae \nชื่อท้องถิ่น (1)  ผักมันไก่  ผักลิ้นเขียด  พญาปล้องค�า  พญาปล้องด�า พญายอ  โพะโซ่\n   จาง เสลดพังพอนตัวเมีย \nส่วนที่ใช้ และสำรออกฤทธิ์หลัก (Active Ingredients)\nส่วนที่ใช้\nใบ (leaf)\nTHAI\n16\nHERB\nGroup\n07\nสำรออกฤทธิ์หลัก (Active ingredient) \n1. สารที่มีฤทธิ์ต้านไวรัส (Antiviral) ต่อ Herpes simplex virus (HSV-1 และ HSV-2) คือ  \nสารกลุ่ม beta-galactosyl diglyceride เช่น Monogalactosyl diglyceride (MGDG) เป็นต้น\n2. สารที่มีฤทธิ์ต้านอักเสบ (Anti-inflammatory effect) ได้แก่ สารกลุ่ม Flavonoids เช่น  \nShaftoside, Orientin, Vitexin, Isoorientin และ Isovitexin สารกลุ่ม Triterpenoids เช่น Lupeol \nและ Phytosterols ได้แก่ Stigmasterol และ β-Sitosterol\nสูตรเคมี (Chemical Formula)\nMonogalactosyl diglyceride มีสูตรเคมีแตกต่างกัน ขึ้นกับชนิดของ Fatty Acid 2 ต�าแหน่งที่\nเกาะอยู่บน Glycerol backbone\nMonogalactosyl diglyceride \n ที่มา : https://en.wikipedia.org/wiki/ \nGalactolipid \nShaftoside  \nที่มา : https://www.bocsci.com/product/ \nschaftoside-cas-51938-32-0-464554.html \nOrientin  \nที่มา : https://en.wikipedia.org/wiki/Orientin 223\nVitexin  \nที่มา : https://en.wikipedia.org/wiki/Orientin \nLupeol  \nที่มา : https://en.wikipedia.org/wiki/Lupeol \nβ- sitosterol  \nที่มา : https://en.wikipedia.org/\nwiki/%CE%92-Sitosterol \nstigmasterol  \nที่มา : https://en.wikipedia.org/wiki/\nStigmasterol \nTHAI\n16\nHERB\nGroup\n07\nกลไกกำรออกฤทธิ์ (Mechanism of Action) \n1. ฤทธิ์ต้านไวรัส จากการศึกษาของ Pongmuangmul และคณะ (2016) ใน Vero cells พบว่า \nมีฤทธิ์ Antiviral activity โดยออกฤทธิ์ยับยั้งการเพิ่มจ�านวนไวรัส HSV-1 และ HSV-2 ในระยะหลัง  \nการติดเชื้อ (Inhibit Viral Replication in Post-infection stage) โดยค่า IC50 ของ MGDG และ DGDG \nส�าหรับ HSV-1 เท่ากับ 36.00 และ 40.00 μg/mL และส�าหรับ HSV-2 เท่ากับ 41.00 และ 43.20 μg/mL \nตามล�าดับ (2) และการศึกษาของ Hayashi และคณะ (2019) พบว่า MGDG มีฤทธิ์ต้านไวรัสเริม  \n(HSV-1 และ HSV-2) ผ่านหลายกลไก ได้แก่ ท�าลายโครงสร้างของไวรัส (Viral Envelope Disruption) \nท�าให้ไวรัสไม่\n\n• เอกสารอ้างอิง (APA 7th Edition): กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "herbs": [
+      "พญายอ",
+      "เสลดพังพอนตัวเมีย",
+      "Clinacanthus nutans",
+      "ครีมพญายอ",
+      "คาลาไมน์พญายอ"
+    ],
+    "modernDrugs": [
+      "Acyclovir"
+    ],
+    "icdCodes": [],
+    "evidenceLevel": "CPG กรมการแพทย์ 2568",
+    "apaCitation": "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+    "sourceUrl": "/knowledge?tab=books&id=cpg-2568-mono-17-phayayor"
   }
 ]

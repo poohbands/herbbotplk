@@ -83,11 +83,20 @@ function normalizeQuery(text: string): string {
     .replace(/\s+/g, "");
 }
 
+/** ตรวจสอบว่าคำถามเป็นคำถามเกี่ยวกับอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันหรือไม่ */
+export function isHerbDrugInteractionQuery(query: string): boolean {
+  const qLower = (query || "").toLowerCase();
+  return /(?:อันตรกิริยา|ตีกัน|ยาตี|กินร่วม|ร่วมกับ|กินคู่|ทานคู่|พร้อมยา|กับยา|ห้ามกินกับ|ห้ามใช้ร่วม|ใช้ร่วมกับ|มีผลต่อยา|ปฏิกิริยาต่อกัน|drug[- ]?herb|herb[- ]?drug|interaction|ddi|hdi)/i.test(
+    qLower
+  );
+}
+
 export function searchHerbBooks(query: string, maxResults = 3): HerbBookItem[] {
   const qLower = (query || "").trim().toLowerCase();
   if (!qLower) return [];
 
   const qNorm = normalizeQuery(qLower);
+  const isDdiIntent = isHerbDrugInteractionQuery(qLower);
   const isSubstitutionIntent =
     /(?:ทดแทน|แทน(?:ยา)?|ใช้แทน|เปลี่ยนจากยา|กินแทน|กินแทนยา|มียาอะไรแทน|แทน\s*[a-zA-Z]+)/i.test(
       qLower
@@ -151,6 +160,19 @@ export function searchHerbBooks(query: string, maxResults = 3): HerbBookItem[] {
     }
 
     // 5. โบนัสเจตนา
+    // 5.1 เจตนาเรื่องอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions)
+    // ให้ความสำคัญสูงสุดกับคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568
+    if (isDdiIntent && item.bookCategory === "cpg_medical_services_2568") {
+      if (
+        item.chapter.includes("อันตรกิริยา") ||
+        item.title.includes("อันตรกิริยา") ||
+        item.content.includes("อันตรกิริยาระหว่างสมุนไพรกับยา")
+      ) {
+        score += 80;
+      } else {
+        score += 30;
+      }
+    }
     if (isSubstitutionIntent && item.bookCategory === "substitution_modern_drugs_2567") {
       score += 30;
     }
@@ -195,4 +217,44 @@ export function formatHerbBooksForAiContext(items: HerbBookItem[]): string {
   });
 
   return out;
+}
+
+/** ค้นหาข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาจากคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568 โดยเฉพาะ */
+export function searchCpgHerbDrugInteractions(
+  query: string,
+  maxResults = 3
+): HerbBookItem[] {
+  const qLower = (query || "").trim().toLowerCase();
+  const cpgDdiItems = HERB_BOOKS_DATA.filter(
+    (item) =>
+      item.bookCategory === "cpg_medical_services_2568" &&
+      (item.chapter.includes("อันตรกิริยา") ||
+        item.title.includes("อันตรกิริยา") ||
+        item.content.includes("อันตรกิริยาระหว่างสมุนไพรกับยา"))
+  );
+
+  if (!qLower) return cpgDdiItems.slice(0, maxResults);
+
+  const scored = cpgDdiItems.map((item) => {
+    let score = 0;
+    // ตรวจชื่อสมุนไพร
+    if (item.herbs?.some((h) => qLower.includes(h.toLowerCase()))) {
+      score += 50;
+    }
+    // ตรวจชื่อยาแผนปัจจุบัน
+    if (item.modernDrugs?.some((d) => qLower.includes(d.toLowerCase()))) {
+      score += 40;
+    }
+    // ตรวจเนื้อหาและหัวข้อ
+    if (item.title.toLowerCase().split(/\s+/).some((w) => w.length >= 3 && qLower.includes(w))) {
+      score += 20;
+    }
+    if (item.content.toLowerCase().split(/\s+/).some((w) => w.length >= 4 && qLower.includes(w))) {
+      score += 10;
+    }
+    return { item, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.filter((s) => s.score > 0).slice(0, maxResults).map((s) => s.item);
 }

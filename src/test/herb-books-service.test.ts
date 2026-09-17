@@ -4,22 +4,24 @@ import {
   HERB_BOOK_CATEGORIES,
   searchHerbBooks,
   formatHerbBooksForAiContext,
+  isHerbDrugInteractionQuery,
+  searchCpgHerbDrugInteractions,
 } from '../lib/herb-books-service';
 
 describe('Herb Books & CPG Guidelines Service (5th Category)', () => {
-  it('loads all 36 clinical reference items across 5 subcategories', () => {
-    expect(HERB_BOOKS_DATA.length).toBe(36);
+  it('loads all 53 clinical reference items across 5 subcategories', () => {
+    expect(HERB_BOOKS_DATA.length).toBe(53);
     expect(HERB_BOOK_CATEGORIES.length).toBe(5);
 
     const categories = new Set(HERB_BOOKS_DATA.map((b) => b.bookCategory));
     expect(categories.size).toBe(5);
   });
 
-  it('contains CPG Department of Medical Services 2568 items with evidence grades', () => {
+  it('contains CPG Department of Medical Services 2568 items with evidence grades and monographs', () => {
     const cpgItems = HERB_BOOKS_DATA.filter(
       (b) => b.bookCategory === 'cpg_medical_services_2568'
     );
-    expect(cpgItems.length).toBe(9);
+    expect(cpgItems.length).toBe(26);
     expect(cpgItems.some((b) => b.evidenceLevel?.includes('ก') || b.content.includes('ก1') || b.content.includes('ก2'))).toBe(true);
     expect(cpgItems.every((b) => b.apaCitation.includes('กรมการแพทย์. (2568)'))).toBe(true);
   });
@@ -83,4 +85,36 @@ describe('Herb Books & CPG Guidelines Service (5th Category)', () => {
     expect(context).toContain('Omeprazole');
     expect(context).toContain('เอกสารอ้างอิง (APA 7th Edition):');
   });
+
+  it('isHerbDrugInteractionQuery correctly detects DDI queries', () => {
+    expect(isHerbDrugInteractionQuery('ขมิ้นชันกินร่วมกับ warfarin ได้ไหม')).toBe(true);
+    expect(isHerbDrugInteractionQuery('ฟ้าทะลายโจรมีอันตรกิริยากับยาอะไรบ้าง')).toBe(true);
+    expect(isHerbDrugInteractionQuery('กินขิงพร้อมยาแอสไพรินตีกันไหม')).toBe(true);
+    expect(isHerbDrugInteractionQuery('คนกิน warfarin ห้ามกินกับยาสมุนไพรอะไร')).toBe(true);
+    expect(isHerbDrugInteractionQuery('สรรพคุณของขมิ้นชันมีอะไรบ้าง')).toBe(false);
+    expect(isHerbDrugInteractionQuery('คนไข้มีอาการน้ำเหลืองเสีย ผื่นคัน เรามียาอะไรบ้าง')).toBe(false);
+  });
+
+  it('searchCpgHerbDrugInteractions searches exclusively in CPG 2568 monographs', () => {
+    const curcumaDdi = searchCpgHerbDrugInteractions('ขมิ้นชันกับ warfarin', 2);
+    expect(curcumaDdi.length).toBeGreaterThan(0);
+    expect(curcumaDdi[0].bookCategory).toBe('cpg_medical_services_2568');
+    expect(curcumaDdi[0].herbs).toContain('ขมิ้นชัน');
+    expect(curcumaDdi[0].modernDrugs).toContain('Warfarin');
+    expect(curcumaDdi[0].apaCitation).toBe('กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.');
+
+    const andrographisDdi = searchCpgHerbDrugInteractions('ฟ้าทะลายโจร', 1);
+    expect(andrographisDdi.length).toBeGreaterThan(0);
+    expect(andrographisDdi[0].herbs).toContain('ฟ้าทะลายโจร');
+    expect(andrographisDdi[0].modernDrugs).toContain('Warfarin');
+  });
+
+  it('searchHerbBooks prioritizes CPG monograph DDI item when asked about DDI', () => {
+    const results = searchHerbBooks('ขมิ้นชันกินร่วมกับ warfarin ได้ไหม', 3);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results[0].bookCategory).toBe('cpg_medical_services_2568');
+    expect(results[0].herbs).toContain('ขมิ้นชัน');
+    expect(results[0].title).toContain('อันตรกิริยา');
+  });
 });
+

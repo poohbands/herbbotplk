@@ -23,6 +23,7 @@ import {
   KNOWLEDGE_SETTINGS_EVENT,
   type KnowledgeSettings,
 } from "@/lib/knowledge-settings";
+import { isHerbDrugInteractionQuery } from "@/lib/herb-books-service";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { useMaintenanceMode } from "@/lib/maintenance-service";
@@ -588,10 +589,11 @@ const ChatPage = () => {
 
         const parsed = parseMetadata(fullResponse);
         cleanContent = parsed.cleanContent;
-        if (currentSettings.enable_mahidol_ddi === false) {
+        const isDdiQuery = isHerbDrugInteractionQuery(userContent);
+        if (currentSettings.enable_mahidol_ddi === false || isDdiQuery) {
           cleanContent = sanitizeMahidolReferences(cleanContent);
         }
-        if (currentSettings.enable_tu_ddi === false) {
+        if (currentSettings.enable_tu_ddi === false || isDdiQuery) {
           cleanContent = sanitizeTuReferences(cleanContent);
         }
         category = parsed.category;
@@ -698,10 +700,11 @@ const ChatPage = () => {
 
             const parsed = parseMetadata(assistantContent);
             cleanContent = parsed.cleanContent;
-            if (currentSettings.enable_mahidol_ddi === false) {
+            const isDdiQuery = isHerbDrugInteractionQuery(userContent);
+            if (currentSettings.enable_mahidol_ddi === false || isDdiQuery) {
               cleanContent = sanitizeMahidolReferences(cleanContent);
             }
-            if (currentSettings.enable_tu_ddi === false) {
+            if (currentSettings.enable_tu_ddi === false || isDdiQuery) {
               cleanContent = sanitizeTuReferences(cleanContent);
             }
             category = parsed.category;

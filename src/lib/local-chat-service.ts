@@ -3,7 +3,13 @@ import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, DEFAULT_KNOWLEDGE_SETTINGS, type KnowledgeSettings } from "./knowledge-settings";
 import { searchHerbs97ByName, searchHerbs97BySymptom, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
-import { searchHerbBooks, formatHerbBooksForAiContext, type HerbBookItem } from "./herb-books-service";
+import {
+  searchHerbBooks,
+  formatHerbBooksForAiContext,
+  isHerbDrugInteractionQuery,
+  searchCpgHerbDrugInteractions,
+  type HerbBookItem,
+} from "./herb-books-service";
 import tuDdiDataset from "@/data/tu-ddi-dataset.json";
 
 // พจนานุกรมอาการภาษาไทยเพื่อจับคู่สมุนไพร
@@ -778,6 +784,7 @@ export function validateAndPruneSources(
 
   const { herbs, drugs, isGeneralHerbsQuestion, isGeneralDrugsQuestion } =
     extractQuestionEntities(question);
+  const isDdiQuery = isHerbDrugInteractionQuery(question);
   const qLower = (question || "").toLowerCase();
   const aLower = (answer || "").toLowerCase();
   const nq = normalizeThaiName(question);
@@ -791,6 +798,22 @@ export function validateAndPruneSources(
   for (const k of rawKnowledge) {
     const title = (k.title || "").trim();
     if (!title || seenKnowledgeTitles.has(title)) continue;
+
+    // ถ้าเป็นคำถามอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions) และเปิดใช้งานหนังสือความรู้ด้านยา
+    // ใช้อ้างอิงจากคู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568) เท่านั้น
+    // ตัดเอกสาร DDI ของ ม.มหิดล และ ม.ธรรมศาสตร์ ออกทั้งหมด 100%
+    if (enableHerbBooks && isDdiQuery) {
+      if (
+        k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" ||
+        k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)" ||
+        title.includes("มหิดล") ||
+        title.includes("ม.ธรรมศาสตร์") ||
+        (k.source && (k.source.includes("มหิดล") || k.source.includes("ธรรมศาสตร์") || k.source.includes("อรุณพร"))) ||
+        (k.source_url && k.source_url.includes("mahidol"))
+      ) {
+        continue;
+      }
+    }
 
     // ถ้าปิดการใช้งานหนังสือข้อมูลความรู้ด้านยา ให้ตัดเอกสารในกลุ่มหนังสือทิ้งทั้งหมด
     if (!enableHerbBooks) {
@@ -957,7 +980,15 @@ export function validateAndPruneSources(
       const symptomsMatch = SYMPTOM_MAP.some((s) => s.match.test(qLower) && (s.match.test(combinedText) || s.terms.some((t) => combinedText.includes(t.toLowerCase()))));
       const qWordsMatch = qLower.split(/\s+/).some((w: string) => w.length >= 3 && combinedText.includes(w));
 
-      if (!herbMatch && !drugMatch && !symptomsMatch && !qWordsMatch && !isSourceInquiry && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion) {
+      if (isDdiQuery) {
+        // สำหรับคำถาม DDI ให้คงเอกสาร CPG กรมการแพทย์ 2568 ที่เกี่ยวข้อง
+        const isCpgDdi =
+          (k.bookCategory === "cpg_medical_services_2568" || (k.source && k.source.includes("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ"))) &&
+          (herbMatch || drugMatch || qWordsMatch || combinedText.includes("อันตรกิริยา"));
+        if (!isCpgDdi && !herbMatch && !drugMatch && !isSourceInquiry) {
+          continue;
+        }
+      } else if (!herbMatch && !drugMatch && !symptomsMatch && !qWordsMatch && !isSourceInquiry && !isGeneralHerbsQuestion && !isGeneralDrugsQuestion) {
         continue;
       }
     }
@@ -1018,12 +1049,12 @@ export function validateAndPruneSources(
     }
   }
 
-  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย)
+  // 3. ตรวจสอบและกรอง ThaiJO Sources (งานวิจัยไทย - ข้ามกรณีเป็นคำถาม DDI เพราะใช้ CPG กรมการแพทย์ 2568 เท่านั้น)
   const rawThaiJo = sources.thaijo || [];
   const validThaiJo: any[] = [];
   const seenThaiJoUrls = new Set<string>();
 
-  if (enableExternal && rawThaiJo.length > 0) {
+  if (enableExternal && !(enableHerbBooks && isDdiQuery) && rawThaiJo.length > 0) {
     for (const t of rawThaiJo) {
       const url = t.url || "";
       if (seenThaiJoUrls.has(url)) continue;
@@ -1053,12 +1084,12 @@ export function validateAndPruneSources(
     }
   }
 
-  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล)
+  // 4. ตรวจสอบและกรอง PubMed Sources (งานวิจัยระดับสากล - ข้ามกรณีเป็นคำถาม DDI เพราะใช้ CPG กรมการแพทย์ 2568 เท่านั้น)
   const rawPubMed = sources.pubmed || [];
   const validPubMed: any[] = [];
   const seenPmids = new Set<string>();
 
-  if (enableExternal && rawPubMed.length > 0) {
+  if (enableExternal && !(enableHerbBooks && isDdiQuery) && rawPubMed.length > 0) {
     for (const p of rawPubMed) {
       if (seenPmids.has(p.pmid)) continue;
       const titleLower = (p.title || "").toLowerCase();
@@ -1378,9 +1409,15 @@ drugs:
    - **กฎเหล็กเด็ดขาดเรื่องระดับความรุนแรง (ห้ามกำหนดเองเด็ดขาด):**
      - **ห้ามกำหนดระดับความรุนแรงของอันตรกิริยาเองเด็ดขาด** หากแหล่งอ้างอิงหรือเอกสารในฐานข้อมูลไม่ได้ระบุระดับความรุนแรง (เช่น 🔴 รุนแรงมาก / 🟡 ปานกลาง / 🟢 เล็กน้อย) ไว้อย่างชัดเจน
      - ในกรณีที่แหล่งอ้างอิงไม่ได้ระบุระดับความรุนแรงไว้ **ห้ามคิดหรือใส่ 🔴/🟡/🟢 เองโดยพลการ** ให้ใช้คำระบุตามระดับหลักฐานแทน ได้แก่:
-       - **“มีข้อควรระวัง”** (เมื่อเอกสารระบุเป็นข้อควรระวัง แนะนำให้ระมัดระวังหรือหลีกเลี่ยงการใช้ร่วมกัน)
-       - **“มีรายงาน”** (เมื่อมีรายงานการเกิดอันตรกิริยา หรือมีรายงานเคสทางคลินิกในมนุษย์)
-       - **“มีความเป็นไปได้”** (เมื่อเป็นข้อมูลจากกลไกทางทฤษฎี การทดลองในหลอดทดลอง หรือสัตว์ทดลอง ที่ยังไม่มีรายงานยืนยันในมนุษย์)
+        - **“มีข้อควรระวัง”** (เมื่อเอกสารระบุเป็นข้อควรระวัง แนะนำให้ระมัดระวังหรือหลีกเลี่ยงการใช้ร่วมกัน)
+        - **“มีรายงาน”** (เมื่อมีรายงานการเกิดอันตรกิริยา หรือมีรายงานเคสทางคลินิกในมนุษย์)
+        - **“มีความเป็นไปได้”** (เมื่อเป็นข้อมูลจากกลไกทางทฤษฎี การทดลองในหลอดทดลอง หรือสัตว์ทดลอง ที่ยังไม่มีรายงานยืนยันในมนุษย์)
+    - **กฎสำคัญสูงสุดเรื่องแหล่งข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions Exclusive Source Rule):**
+      - เมื่อผู้ใช้ถามเกี่ยวกับอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions / ยาตีกัน / การกินร่วมกับยาแผนปัจจุบัน) **ต้องใช้แหล่งข้อมูลจาก "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568)" เป็นแหล่งข้อมูลในการตอบคำถามเท่านั้น**
+      - **ห้ามใช้หรืออ้างอิงแหล่งข้อมูล DDI อื่นเด็ดขาด** (ห้ามเอ่ยถึง อ้างอิง หรือใช้ข้อมูลจาก มหาวิทยาลัยมหิดล, ศูนย์ข้อมูลสมุนไพร ม.มหิดล, มหาวิทยาลัยธรรมศาสตร์, ศ. ดร.ภญ.อรุณพร อิฐรัตน์ หรือ PubMed/ThaiJO ในการตอบเรื่องอันตรกิริยาเด็ดขาด)
+      - ในหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" ให้ระบุรายการอ้างอิงเฉพาะ:
+        กรมการแพทย์. (2568). *คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ*. กระทรวงสาธารณสุข.
+        (ห้ามใส่รายการอ้างอิงของ ม.มหิดล, ม.ธรรมศาสตร์ หรือแหล่ง DDI อื่นเด็ดขาด)
 
 4. **ความกระชับและการจัดรูปแบบ (Formatting & Brevity):**
    - ใช้ bullet points หรือตัวหนาเน้นคำสำคัญ เพื่อให้อ่านเข้าใจง่าย
@@ -1400,6 +1437,8 @@ drugs:
 ${mahidolApaRule}
 ${tuApaRule}
 ${herbBooksApaRule}
+    - กรณีคำถามเรื่องอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions):
+      กรมการแพทย์. (2568). *คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ*. กระทรวงสาธารณสุข.
     - กรณีอ้างอิงงานวิจัยสากล PubMed (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
       Author, A. A. (Year). Title. *Journal*. https://pubmed.ncbi.nlm.nih.gov/PMID/
     - กรณีอ้างอิงงานวิจัยไทย ThaiJO (เฉพาะที่ตรงกับคำถามและใช้ตอบจริง):
@@ -1528,7 +1567,7 @@ export async function processLocalChat(
           .eq("category", "อันตรกิริยาระหว่างยาและสมุนไพร (DDI - ม.ธรรมศาสตร์)")
           .limit(200)
       : Promise.resolve({ data: [] }),
-    enableExternal && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
+    enableExternal && !isHerbDrugInteractionQuery(question) && pubmedQuery ? fetchPubMedClient(pubmedQuery) : Promise.resolve([] as PubMedItem[]),
   ]);
 
   const allHerbs = (herbsRes.data || []) as any[];
@@ -1632,13 +1671,23 @@ export async function processLocalChat(
     }).slice(0, 4);
   }
 
-  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก)
-  const thaijoResults = enableExternal
+  const isDdi = isHerbDrugInteractionQuery(question);
+
+  // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก และไม่ใช่คำถาม DDI)
+  const thaijoResults = (enableExternal && !isDdi)
     ? findRelevantThaiJo(question, matchedHerbs, matchedFormulas)
     : [];
 
   // ค้นหาข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (CPG กรมการแพทย์, ยาทดแทน 32 รายการ, แผนภูมิปฐมภูมิ, บัญชียาหลัก 2568)
   const matchedHerbBooks = enableHerbBooks ? searchHerbBooks(question, 4) : [];
+  if (enableHerbBooks && isDdi) {
+    const cpgDdiMatches = searchCpgHerbDrugInteractions(question, 3);
+    for (const cpgItem of cpgDdiMatches) {
+      if (!matchedHerbBooks.some((b) => b.id === cpgItem.id)) {
+        matchedHerbBooks.unshift(cpgItem);
+      }
+    }
+  }
 
   // 3. สร้าง Context ที่รวบรวมทั้งข้อมูลภายในและงานวิจัยภายนอก (ตามการตั้งค่าเปิด-ปิด)
   let contextText = "";
@@ -1690,12 +1739,12 @@ export async function processLocalChat(
   }
 
   // 3.3 แทรกข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ศูนย์ข้อมูลสมุนไพร คณะเภสัชศาสตร์ ม.มหิดล)
-  // ดึง DDI เฉพาะเมื่อผู้ใช้ระบุสมุนไพรชัดเจนในคำถาม หรือมีเจตนาถามเรื่อง DDI/ยาตีกันโดยตรง
+  // หากเป็นคำถามเรื่องอันตรกิริยาระหว่างสมุนไพรกับยา (DDI) ระบบกำหนดให้ใช้ข้อมูลจาก CPG กรมการแพทย์ 2568 เท่านั้น
   const { isDdiIntent: qDdiIntent } = extractQuestionEntities(question);
   const herbsForDdi = exactMatchedHerbs.length > 0 ? exactMatchedHerbs : (qDdiIntent ? matchedHerbs : []);
 
   let matchedMahidol: any[] = [];
-  if (enableMahidol && allMahidolDdi.length > 0) {
+  if (!isDdi && enableMahidol && allMahidolDdi.length > 0) {
     matchedMahidol = findRelevantMahidolDdi(
       question,
       allMahidolDdi,
@@ -1712,7 +1761,7 @@ export async function processLocalChat(
 
   // 3.4 แทรกข้อมูลข้อควรระวังอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (ม.ธรรมศาสตร์ ศ. ดร.ภญ.อรุณพร อิฐรัตน์)
   let matchedTu: any[] = [];
-  if (enableTu && allTuDdi.length > 0) {
+  if (!isDdi && enableTu && allTuDdi.length > 0) {
     matchedTu = findRelevantTuDdi(
       question,
       allTuDdi,
@@ -1727,7 +1776,7 @@ export async function processLocalChat(
     }
   }
 
-  if (enableExternal) {
+  if (enableExternal && !isDdi) {
     // ใส่งานวิจัยสากลจาก PubMed เข้า Context
     if (pubmedResults.length > 0) {
       contextText += "\n[งานวิจัยระดับสากลจาก PubMed ที่เกี่ยวข้อง]\n";
@@ -1853,6 +1902,13 @@ export async function processLocalChat(
   }
   if (!enableTu) {
     dynamicInstructions += "\n\n⚠️ ข้อห้ามเด็ดขาด: ขณะนี้ระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ (ศ. ดร.ภญ.อรุณพร อิฐรัตน์) ห้ามนำข้อมูล DDI ม.ธรรมศาสตร์มาใช้ และห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ 'มหาวิทยาลัยธรรมศาสตร์', 'ม.ธรรมศาสตร์', 'อรุณพร อิฐรัตน์' หรือ 'สถานการแพทย์แผนไทยประยุกต์ คณะแพทยศาสตร์ มหาวิทยาลัยธรรมศาสตร์' ในเนื้อหาคำตอบและในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' โดยเด็ดขาด!";
+  }
+  if (isDdi) {
+    contextText =
+      `\n[แหล่งข้อมูลเฉพาะสำหรับอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions Exclusive Source)]:\n` +
+      `ตามนโยบายมาตรฐานการรักษาด้านสมุนไพร สำหรับคำถามเกี่ยวกับอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน (Herb-Drug Interactions / ยาตีกัน / การกินร่วมกับยาแผนปัจจุบัน) **ต้องใช้แหล่งข้อมูลจาก "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568)" เป็นแหล่งข้อมูลในการตอบคำถามเท่านั้น** ห้ามใช้หรืออ้างอิงแหล่งข้อมูล DDI อื่นเด็ดขาด และเขียนรายการอ้างอิง (APA 7th Edition) คือ "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข."\n\n` +
+      contextText;
+    dynamicInstructions += "\n\n⚠️ **กฎสำคัญสูงสุดเรื่องอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions):** คำถามนี้เป็นคำถามเกี่ยวกับอันตรกิริยาระหว่างสมุนไพรกับยา หรือการกินสมุนไพรร่วมกับยาแผนปัจจุบัน **ต้องใช้แหล่งข้อมูลจาก 'คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568)' ในการเป็นแหล่งข้อมูลในการตอบคำถามเท่านั้น** ห้ามเอ่ยถึง อ้างอิง หรือใช้ข้อมูลจาก มหาวิทยาลัยมหิดล, ศูนย์ข้อมูลสมุนไพร ม.มหิดล, มหาวิทยาลัยธรรมศาสตร์, ศ. ดร.ภญ.อรุณพร อิฐรัตน์ หรือ PubMed/ThaiJO โดยเด็ดขาด และในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ให้ระบุเฉพาะ 'กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.' เท่านั้น";
   }
   if (/กัญชา|cannabis|thc|cbd/i.test(question)) {
     dynamicInstructions += "\n\n⚠️ คำแนะนำพิเศษเรื่องกัญชา: หากผู้ใช้ถามถึงกัญชาหรือยาที่มีส่วนผสมของกัญชา ให้ตรวจสอบและตอบโดยอ้างอิงตำรับยาที่มีกัญชาในบัญชี 97 รายการ (เช่น ยาศุขไสยาศน์, ยาแก้ลมแก้เส้น, ยาทำลายพระสุเมรุ, ยาอัมฤตย์โอสถ, ยาประสะกัญชา, ยาทาขมิ้นชันและกัญชา และยาน้ำมันสารสกัดกัญชาสูตรต่างๆ) โดยเน้นย้ำว่าเป็นยาควบคุมทางการแพทย์ ข้อห้ามใช้ในสตรีมีครรภ์/ให้นมบุตร/เด็ก และข้อควรระวังปฏิกิริยากับยาแผนปัจจุบัน (DDI) อย่างเคร่งครัด";
@@ -2147,10 +2203,10 @@ export async function processLocalChat(
     : validateAndPruneSources(question, answer, rawSourcesPayload, currentSettings);
 
   let cleanAnswer = answer;
-  if (!enableMahidol) {
+  if (!enableMahidol || isDdi) {
     cleanAnswer = sanitizeMahidolReferences(cleanAnswer);
   }
-  if (!enableTu) {
+  if (!enableTu || isDdi) {
     cleanAnswer = sanitizeTuReferences(cleanAnswer);
   }
 

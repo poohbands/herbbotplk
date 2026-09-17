@@ -304,7 +304,7 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
       expect(results.length).toBe(0);
     });
 
-    it("validateAndPruneSources strips unrelated herbs from sourcesPayload", () => {
+    it("validateAndPruneSources strips unrelated herbs from sourcesPayload when falling back to Mahidol", () => {
       const question = "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?";
       const answer = "ขมิ้นชันอาจมีผลเพิ่มระดับยาวาร์ฟารินในเลือด ควรระมัดระวังในการใช้";
       const rawSources = {
@@ -314,7 +314,13 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
         knowledge: mockMahidolDocs, // contains all 8 docs
       };
 
-      const pruned = validateAndPruneSources(question, answer, rawSources);
+      const pruned = validateAndPruneSources(question, answer, rawSources, {
+        enable_mahidol_ddi: true,
+        enable_tu_ddi: true,
+        enable_internal_db: true,
+        enable_external_research: true,
+        enable_herb_books: false,
+      });
 
       // Must strictly contain ONLY the turmeric document
       expect(pruned.knowledge.length).toBe(1);
@@ -322,6 +328,44 @@ describe("Reference and Citation Accuracy (Strict Relevance)", () => {
       expect(pruned.knowledge.some((k) => k.title.includes("กระชายดำ"))).toBe(false);
       expect(pruned.knowledge.some((k) => k.title.includes("มะม่วง"))).toBe(false);
       expect(pruned.knowledge.some((k) => k.title.includes("กล้วย"))).toBe(false);
+    });
+
+    it("validateAndPruneSources enforces CPG 2568 exclusivity for DDI questions and removes all Mahidol and TU docs when enable_herb_books is true", () => {
+      const question = "ขมิ้นชันกินร่วมกับยา Warfarin ได้ไหม?";
+      const answer = "ขมิ้นชันอาจเพิ่มฤทธิ์ของยาวาร์ฟาริน ควรระมัดระวังและติดตามค่า INR";
+      const rawSources = {
+        internal: [{ type: "herb", id: "h1", name: "ขมิ้นชัน" }],
+        pubmed: [{ pmid: "12345", title: "Curcuma longa and warfarin interaction" }],
+        thaijo: [{ title: "การใช้วาร์ฟารินร่วมกับสมุนไพร", url: "https://thaijo.org/1" }],
+        knowledge: [
+          ...mockMahidolDocs,
+          {
+            id: "cpg-monograph-1",
+            title: "อันตรกิริยาระหว่างสมุนไพรกับยา: ขมิ้นชัน (Curcuma longa)",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            bookCategory: "cpg_medical_services_2568",
+            chapter: "บทที่ 7: ข้อมูลวิชาการและการใช้อย่างสมเหตุผล (Monograph) - อันตรกิริยาระหว่างสมุนไพรกับยา",
+            herbs: ["ขมิ้นชัน", "ขมิ้น"],
+            modernDrugs: ["Warfarin", "Aspirin"],
+            source: "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ พ.ศ. 2568",
+            apaCitation: "กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.",
+          },
+        ],
+      };
+
+      const pruned = validateAndPruneSources(question, answer, rawSources);
+
+      // Must contain CPG monograph
+      expect(pruned.knowledge.length).toBe(1);
+      expect(pruned.knowledge[0].id).toBe("cpg-monograph-1");
+      expect(pruned.knowledge[0].source).toContain("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+
+      // Must NOT contain any Mahidol DDI docs
+      expect(pruned.knowledge.some((k) => k.title.includes("มหิดล"))).toBe(false);
+
+      // Must NOT contain PubMed or ThaiJO for DDI query
+      expect(pruned.pubmed.length).toBe(0);
+      expect(pruned.thaijo.length).toBe(0);
     });
 
     it("validateAndPruneSources retains NLEM knowledge documents matching question and excludes unrelated ones", () => {
