@@ -93,11 +93,28 @@ const AiSettingsPage = () => {
           it.api_key = sourceKey;
           it.has_key = true;
         }
-        if (loc && items.length === 0) {
-          if (typeof loc.is_active === "boolean") it.is_active = loc.is_active;
+        // กำหนดสถานะเปิดใช้งาน (is_active):
+        // 1. ถ้า loc หรือ rem มีการบันทึกไว้ ให้ใช้ค่านั้นก่อน (local มีความสำคัญสูงสุดสำหรับเครื่องนี้)
+        // 2. ถ้า it.is_active เป็น true ให้เปิดใช้งาน
+        // 3. ถ้าผู้ให้บริการมีคีย์ API (has_key) และไม่ได้ถูกสั่งปิด ให้เปิดใช้งานอัตโนมัติ
+        if (loc && typeof loc.is_active === "boolean") {
+          it.is_active = loc.is_active;
+        } else if (rem && typeof rem.is_active === "boolean") {
+          it.is_active = rem.is_active;
+        } else if (it.is_active === true) {
+          it.is_active = true;
+        } else if (it.has_key && it.api_key) {
+          it.is_active = true;
+        }
+
+        if (loc) {
           if (typeof loc.priority === "number") it.priority = loc.priority;
           if (loc.model_name) it.model_name = loc.model_name;
           if (loc.base_url) it.base_url = loc.base_url;
+        } else if (rem) {
+          if (typeof rem.priority === "number") it.priority = rem.priority;
+          if (rem.model_name) it.model_name = rem.model_name;
+          if (rem.base_url) it.base_url = rem.base_url;
         }
       });
 
@@ -230,15 +247,26 @@ const AiSettingsPage = () => {
   const handleSaveAll = async () => {
     setSaving(true);
     try {
+      // ตรวจสอบความถูกต้องของ providers ก่อนบันทึก
+      const normalizedProviders = providers.map((p) => {
+        const hasKey = Boolean(p.api_key && p.api_key.trim() !== "" && p.api_key !== "__CLEAR__");
+        return {
+          ...p,
+          has_key: hasKey,
+          // หากมีกุญแจและผู้ใช้เปิดใช้งานไว้ ให้เปิดใช้งานเสมอ
+          is_active: Boolean(p.is_active),
+        };
+      });
+
       // 1. บันทึกลงในเครื่อง (localStorage) ทันที
-      saveLocalProviders(providers);
+      saveLocalProviders(normalizedProviders);
 
       // 2. ซิงค์ขึ้น Supabase knowledge_documents ทันที เพื่อให้อุปกรณ์และเครื่องอื่นรับคีย์ร่วมกัน
-      await syncAiProvidersToSupabase(providers);
+      await syncAiProvidersToSupabase(normalizedProviders);
 
       // 3. ซิงค์ขึ้น Supabase Edge Function ถ้าเซิร์ฟเวอร์เปิดอยู่
       try {
-        const payload = providers.map((p) => ({
+        const payload = normalizedProviders.map((p) => ({
           id: p.id,
           provider_key: p.provider_key,
           base_url: p.base_url,
@@ -254,8 +282,9 @@ const AiSettingsPage = () => {
         // edge function sync optional
       }
 
-      toast.success("บันทึกการตั้งค่าสำเร็จ! ซิงค์สู่ระบบกลางพร้อมใช้งานทุกเครื่องทุกอุปกรณ์");
-      await loadProviders();
+      // อัปเดต state ด้วยข้อมูลที่บันทึกแล้วโดยไม่ต้องโหลดซ้ำ เพื่อป้องกัน race condition
+      setProviders(normalizedProviders);
+      toast.success("บันทึกการตั้งค่าสำเร็จ! ผู้ให้บริการ AI ที่เปิดใช้งานพร้อมให้บริการทันที");
     } catch (e: any) {
       console.error("Failed to save providers:", e);
       toast.error(e.message || "บันทึกการตั้งค่าไม่สำเร็จ");
