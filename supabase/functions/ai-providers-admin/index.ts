@@ -46,6 +46,7 @@ serve(async (req) => {
         is_active: p.is_active,
         priority: p.priority,
         has_key: !!p.api_key,
+        api_key: p.api_key || undefined,
         updated_at: p.updated_at,
       }));
       return json({ providers });
@@ -80,6 +81,40 @@ serve(async (req) => {
         if (error) console.error("[ai-providers-admin] update row error:", error.message);
       }
       clearProviderCache();
+
+      // ซิงค์การตั้งค่ากลางไปยัง knowledge_documents เพื่อให้อุปกรณ์ทุกเครื่องได้รับคีย์ทันที
+      try {
+        const { data: allRows } = await supabase
+          .from("ai_providers")
+          .select("id,name,provider_key,base_url,model_name,is_active,priority,api_key,updated_at")
+          .order("priority", { ascending: true });
+
+        if (allRows && allRows.length > 0) {
+          const { data: existingDoc } = await supabase
+            .from("knowledge_documents")
+            .select("id")
+            .eq("title", "SYSTEM_AI_PROVIDERS_CONFIG")
+            .maybeSingle();
+
+          const docPayload = {
+            title: "SYSTEM_AI_PROVIDERS_CONFIG",
+            category: "system_setting",
+            content: JSON.stringify(allRows),
+            tags: ["system", "ai_providers"],
+            is_published: true,
+            source: "HerbBot System Admin",
+          };
+
+          if (existingDoc?.id) {
+            await supabase.from("knowledge_documents").update(docPayload).eq("id", existingDoc.id);
+          } else {
+            await supabase.from("knowledge_documents").insert(docPayload);
+          }
+        }
+      } catch (syncErr) {
+        console.error("[ai-providers-admin] sync to knowledge_documents error:", syncErr);
+      }
+
       return json({ success: true });
     }
 

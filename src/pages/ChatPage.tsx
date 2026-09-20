@@ -17,6 +17,8 @@ import {
 } from "@/lib/local-chat-service";
 import {
   getCurrentActiveProviderStatus,
+  fetchRemoteAiProviders,
+  AI_PROVIDERS_CHANGED_EVENT,
   type ActiveApiStatus,
 } from "@/lib/ai-providers-storage";
 import {
@@ -374,6 +376,10 @@ const ChatPage = () => {
   };
 
   useEffect(() => {
+    fetchRemoteAiProviders().then(() => {
+      setActiveApiStatus(getCurrentActiveProviderStatus());
+    }).catch(() => {});
+
     fetchRemoteKnowledgeSettings().then((remote) => {
       if (remote) setKnowledgeSettings(remote);
     }).catch(() => {});
@@ -392,10 +398,12 @@ const ChatPage = () => {
     };
 
     window.addEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
+    window.addEventListener(AI_PROVIDERS_CHANGED_EVENT, handleSettingsChange);
     window.addEventListener("storage", handleSettingsChange);
     return () => {
       clearInterval(interval);
       window.removeEventListener(KNOWLEDGE_SETTINGS_EVENT, handleSettingsChange);
+      window.removeEventListener(AI_PROVIDERS_CHANGED_EVENT, handleSettingsChange);
       window.removeEventListener("storage", handleSettingsChange);
     };
   }, []);

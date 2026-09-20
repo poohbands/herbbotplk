@@ -194,6 +194,84 @@ describe("AI Providers Storage & KOB AI Integration", () => {
       global.fetch = originalFetch;
     }
   });
+
+  it("dispatches AI_PROVIDERS_CHANGED_EVENT when saveLocalProviders is called", async () => {
+    const { AI_PROVIDERS_CHANGED_EVENT } = await import("../lib/ai-providers-storage");
+    let eventReceived = false;
+    const handler = (e: any) => {
+      eventReceived = true;
+      expect(e.detail).toBeDefined();
+    };
+
+    window.addEventListener(AI_PROVIDERS_CHANGED_EVENT, handler);
+    try {
+      saveLocalProviders(DEFAULT_PROVIDERS);
+      expect(eventReceived).toBe(true);
+    } finally {
+      window.removeEventListener(AI_PROVIDERS_CHANGED_EVENT, handler);
+    }
+  });
+
+  it("hydrates localStorage when fetchRemoteAiProviders retrieves remote settings", async () => {
+    const { fetchRemoteAiProviders, SUPABASE_AI_CONFIG_TITLE } = await import("../lib/ai-providers-storage");
+    const { supabase } = await import("@/integrations/supabase/client");
+
+    const mockRemoteData = [
+      {
+        id: "deepseek-default",
+        name: "DeepSeek",
+        provider_key: "deepseek",
+        base_url: "https://api.deepseek.com",
+        model_name: "deepseek-chat",
+        is_active: true,
+        priority: 1,
+        has_key: true,
+        api_key: "sk-remotedeepseekkey12345",
+      },
+    ];
+
+    const originalFrom = supabase.from;
+    (supabase as any).from = (table: string) => {
+      if (table === "knowledge_documents") {
+        return {
+          select: () => ({
+            eq: (col: string, val: string) => ({
+              maybeSingle: async () => ({
+                data: {
+                  title: SUPABASE_AI_CONFIG_TITLE,
+                  content: JSON.stringify(mockRemoteData),
+                  updated_at: new Date().toISOString(),
+                },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+      return originalFrom(table);
+    };
+
+    try {
+      // Clear local storage to simulate a fresh device / machine
+      localStorage.clear();
+
+      const result = await fetchRemoteAiProviders();
+      expect(result).toBeDefined();
+
+      const deepseek = result?.find((p) => p.provider_key === "deepseek");
+      expect(deepseek).toBeDefined();
+      expect(deepseek?.api_key).toBe("sk-remotedeepseekkey12345");
+      expect(deepseek?.is_active).toBe(true);
+
+      // Verify that localStorage on this new machine was hydrated!
+      const stored = getLocalProviders();
+      const storedDeepseek = stored.find((p) => p.provider_key === "deepseek");
+      expect(storedDeepseek?.api_key).toBe("sk-remotedeepseekkey12345");
+    } finally {
+      (supabase as any).from = originalFrom;
+    }
+  });
 });
+
 
 

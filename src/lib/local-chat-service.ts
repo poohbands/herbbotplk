@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getLocalProviders, type ProviderItem } from "./ai-providers-storage";
+import { getLocalProviders, fetchRemoteAiProviders, type ProviderItem } from "./ai-providers-storage";
 import { getKnowledgeSettings, DEFAULT_KNOWLEDGE_SETTINGS, type KnowledgeSettings } from "./knowledge-settings";
 import { searchHerbs97ByName, searchHerbs97BySymptom, formatHerb97ForAiContext, type Herb97Item } from "./herbs97-service";
 import { findVerifiedAnswer, addToLearningQueue } from "./learning-verification-service";
@@ -1703,7 +1703,15 @@ export async function processLocalChat(
     return refusalText;
   }
 
-  const availableProviders = getAvailableLocalProviders();
+  let availableProviders = getAvailableLocalProviders();
+  if (availableProviders.length === 0) {
+    // พยายามดึงคีย์จาก Supabase Cloud ก่อนตัดข้อผิดพลาด (กรณีเครื่องใหม่เปิดเว็บครั้งแรก)
+    try {
+      await fetchRemoteAiProviders();
+      availableProviders = getAvailableLocalProviders();
+    } catch {}
+  }
+
   if (availableProviders.length === 0) {
     throw new Error(
       "ยังไม่ได้ตั้งค่า API Key ในหน้าระบบ — กรุณาไปที่หน้า 'ตั้งค่า AI' (/admin/ai-settings) แล้วใส่ Google Gemini หรือ DeepSeek API Key ก่อนใช้งานครับ"

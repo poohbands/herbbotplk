@@ -19,6 +19,8 @@ import {
   getLocalProviders,
   saveLocalProviders,
   testProviderDirectly,
+  fetchRemoteAiProviders,
+  syncAiProvidersToSupabase,
   type ProviderItem,
 } from "@/lib/ai-providers-storage";
 
@@ -63,54 +65,61 @@ const AiSettingsPage = () => {
   const loadProviders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-providers-admin", {
-        body: { action: "list", password: ADMIN_PASS },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      // 1. ดึงข้อมูลจากคลาวด์ knowledge_documents ก่อนเพื่อรับคีย์กลางข้ามเครื่อง
+      const remoteDoc = await fetchRemoteAiProviders().catch(() => null);
 
-      const items = (data?.providers || []) as ProviderItem[];
+      let items: ProviderItem[] = [];
+      try {
+        const { data, error } = await supabase.functions.invoke("ai-providers-admin", {
+          body: { action: "list", password: ADMIN_PASS },
+        });
+        if (!error && !data?.error && Array.isArray(data?.providers)) {
+          items = data.providers as ProviderItem[];
+        }
+      } catch (invokeErr) {
+        console.warn("Backend Edge Function invoke skipped:", invokeErr);
+      }
 
-      // ผสานการตั้งค่าจาก local storage (เพื่อรักษา priority, is_active, api_key ที่ผู้ใช้ตั้งค่าไว้ล่าสุด)
+      // ผสานการตั้งค่าจาก local storage, remote doc และ edge function
       const local = getLocalProviders();
-      items.forEach((it) => {
+      const basePool = items.length > 0 ? items : (remoteDoc && remoteDoc.length > 0 ? remoteDoc : local);
+
+      // ถ้าดึงจาก edge function ได้ ให้ผสานคีย์จาก remoteDoc และ local
+      basePool.forEach((it) => {
         const loc = local.find((l) => l.provider_key === it.provider_key || l.id === it.id);
-        if (loc) {
-          if (loc.api_key) {
-            it.api_key = loc.api_key;
-            it.has_key = true;
-          }
-          if (typeof loc.is_active === "boolean") {
-            it.is_active = loc.is_active;
-          }
-          if (typeof loc.priority === "number") {
-            it.priority = loc.priority;
-          }
-          if (loc.model_name) {
-            it.model_name = loc.model_name;
-          }
-          if (loc.base_url) {
-            it.base_url = loc.base_url;
-          }
+        const rem = remoteDoc?.find((r) => r.provider_key === it.provider_key || r.id === it.id);
+        const sourceKey = it.api_key || rem?.api_key || loc?.api_key;
+        if (sourceKey && sourceKey !== "__CLEAR__") {
+          it.api_key = sourceKey;
+          it.has_key = true;
+        }
+        if (loc && items.length === 0) {
+          if (typeof loc.is_active === "boolean") it.is_active = loc.is_active;
+          if (typeof loc.priority === "number") it.priority = loc.priority;
+          if (loc.model_name) it.model_name = loc.model_name;
+          if (loc.base_url) it.base_url = loc.base_url;
         }
       });
-      // เพิ่มผู้ให้บริการที่มีใน local แต่ยังไม่มีในฐานข้อมูล Edge Function (เช่น kobai)
-      local.forEach((loc) => {
-        const exists = items.some((it) => it.provider_key === loc.provider_key || it.id === loc.id);
-        if (!exists) {
-          items.push(loc);
-        }
-      });
-      items.sort((a, b) => a.priority - b.priority);
 
-      setProviders(items);
-      setIsLocalMode(false);
+      // เพิ่มผู้ให้บริการที่มีใน local หรือ DEFAULT_PROVIDERS แต่ยังไม่มีใน pool (เช่น kobai)
+      local.forEach((loc) => {
+        const exists = basePool.some((it) => it.provider_key === loc.provider_key || it.id === loc.id);
+        if (!exists) {
+          basePool.push(loc);
+        }
+      });
+      basePool.sort((a, b) => a.priority - b.priority);
+
+      setProviders(basePool);
+      saveLocalProviders(basePool);
+      setIsLocalMode(items.length === 0);
     } catch (e: any) {
-      console.warn("Backend Edge Function ไม่พร้อมใช้งาน — สลับสู่โหมดเครื่องอิสระ (Local Mode):", e);
-      // โหลดข้อมูลจาก localStorage ในเครื่องทันที
-      const local = getLocalProviders();
+      console.warn("โหลดการตั้งค่าล้มเหลว — สลับสู่โหมดเครื่องอิสระ (Local Mode):", e);
+      const remoteDoc = await fetchRemoteAiProviders().catch(() => null);
+      const local = remoteDoc || getLocalProviders();
       local.sort((a, b) => a.priority - b.priority);
       setProviders(local);
+      saveLocalProviders(local);
       setIsLocalMode(true);
     } finally {
       setLoading(false);
@@ -197,7 +206,8 @@ const AiSettingsPage = () => {
         );
         setProviders(updated);
         saveLocalProviders(updated);
-        toast.success(`${item.name}: ${result.message} (บันทึกลงระบบพร้อมใช้งานทันที)`);
+        syncAiProvidersToSupabase(updated).catch(() => {});
+        toast.success(`${item.name}: ${result.message} (บันทึกและซิงค์คีย์สู่ระบบกลางเรียบร้อย)`);
       } else {
         setProviders((prev) =>
           prev.map((p) =>
@@ -223,7 +233,10 @@ const AiSettingsPage = () => {
       // 1. บันทึกลงในเครื่อง (localStorage) ทันที
       saveLocalProviders(providers);
 
-      // 2. พยายามซิงค์ขึ้น Supabase Edge Function ถ้าเซิร์ฟเวอร์เปิดอยู่
+      // 2. ซิงค์ขึ้น Supabase knowledge_documents ทันที เพื่อให้อุปกรณ์และเครื่องอื่นรับคีย์ร่วมกัน
+      await syncAiProvidersToSupabase(providers);
+
+      // 3. ซิงค์ขึ้น Supabase Edge Function ถ้าเซิร์ฟเวอร์เปิดอยู่
       try {
         const payload = providers.map((p) => ({
           id: p.id,
@@ -241,7 +254,7 @@ const AiSettingsPage = () => {
         // edge function sync optional
       }
 
-      toast.success("บันทึกการตั้งค่าผู้ให้บริการ AI สำเร็จเรียบร้อย (พร้อมใช้งานทันที!)");
+      toast.success("บันทึกการตั้งค่าสำเร็จ! ซิงค์สู่ระบบกลางพร้อมใช้งานทุกเครื่องทุกอุปกรณ์");
       await loadProviders();
     } catch (e: any) {
       console.error("Failed to save providers:", e);

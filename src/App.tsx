@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,28 +10,40 @@ import AdminPage from "./pages/AdminPage";
 import AiSettingsPage from "./pages/AiSettingsPage";
 import HerbsPage from "./pages/HerbsPage";
 import NotFound from "./pages/NotFound";
+import { fetchRemoteAiProviders } from "@/lib/ai-providers-storage";
+import { fetchRemoteKnowledgeSettings } from "@/lib/knowledge-settings";
+import { fetchRemoteMaintenanceState } from "@/lib/maintenance-service";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <RouteTracker />
-        <Routes>
-          <Route path="/" element={<ChatPage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/admin/ai-settings" element={<AiSettingsPage />} />
-          <Route path="/admin/knowledge" element={<Navigate to="/" replace />} />
-          <Route path="/knowledge" element={<Navigate to="/" replace />} />
-          <Route path="/herbs" element={<HerbsPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  useEffect(() => {
+    // ซิงค์การตั้งค่าส่วนกลางจาก Supabase เมื่อเปิดเว็บครั้งแรกบนทุกอุปกรณ์
+    fetchRemoteAiProviders().catch(() => {});
+    fetchRemoteKnowledgeSettings().catch(() => {});
+    fetchRemoteMaintenanceState().catch(() => {});
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <RouteTracker />
+          <Routes>
+            <Route path="/" element={<ChatPage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/ai-settings" element={<AiSettingsPage />} />
+            <Route path="/admin/knowledge" element={<Navigate to="/" replace />} />
+            <Route path="/knowledge" element={<Navigate to="/" replace />} />
+            <Route path="/herbs" element={<HerbsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;

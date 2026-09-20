@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 export type ProviderItem = {
   id: string;
   name: string;
@@ -90,6 +92,8 @@ export const DEFAULT_PROVIDERS: ProviderItem[] = [
 ];
 
 const STORAGE_KEY = "herbbot_ai_providers";
+export const AI_PROVIDERS_CHANGED_EVENT = "herbbot_ai_providers_changed";
+export const SUPABASE_AI_CONFIG_TITLE = "SYSTEM_AI_PROVIDERS_CONFIG";
 
 export function getLocalProviders(): ProviderItem[] {
   try {
@@ -144,8 +148,141 @@ export function getLocalProviders(): ProviderItem[] {
 export function saveLocalProviders(providers: ProviderItem[]): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(providers));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent(AI_PROVIDERS_CHANGED_EVENT, { detail: providers }));
+      window.dispatchEvent(new Event("storage"));
+    }
   } catch (e) {
     console.error("Failed to save local ai providers:", e);
+  }
+}
+
+/** ซิงค์ค่าผู้ให้บริการ AI ไปยัง Supabase knowledge_documents เพื่อให้อุปกรณ์ทุกเครื่องใช้งานร่วมกันได้ */
+export async function syncAiProvidersToSupabase(providers: ProviderItem[]): Promise<void> {
+  try {
+    if (!supabase) return;
+
+    // กรองและทำความสะอาดข้อมูลก่อนส่งขึ้นคลาวด์
+    const cleanPayload = providers.map((p) => ({
+      id: p.id,
+      name: p.name,
+      provider_key: p.provider_key,
+      base_url: p.base_url,
+      model_name: p.model_name,
+      is_active: p.is_active,
+      priority: p.priority,
+      has_key: Boolean(p.api_key && p.api_key.trim() !== "" && p.api_key !== "__CLEAR__"),
+      api_key: p.api_key && p.api_key !== "__CLEAR__" ? sanitizeKey(p.api_key) : undefined,
+      updated_at: new Date().toISOString(),
+    }));
+
+    const { data: existing } = await supabase
+      .from("knowledge_documents")
+      .select("id")
+      .eq("title", SUPABASE_AI_CONFIG_TITLE)
+      .maybeSingle();
+
+    const payload = {
+      title: SUPABASE_AI_CONFIG_TITLE,
+      category: "system_setting",
+      content: JSON.stringify(cleanPayload),
+      tags: ["system", "ai_providers"],
+      is_published: true,
+      source: "HerbBot System Admin",
+    };
+
+    if (existing?.id) {
+      await supabase.from("knowledge_documents").update(payload).eq("id", existing.id);
+    } else {
+      await supabase.from("knowledge_documents").insert(payload);
+    }
+  } catch (e) {
+    console.warn("Failed to sync AI providers to Supabase:", e);
+  }
+}
+
+/** ดึงค่าผู้ให้บริการ AI จาก Supabase Cloud เพื่อให้อุปกรณ์เครื่องใหม่มีคีย์และสลับโมเดลอัตโนมัติ */
+export async function fetchRemoteAiProviders(): Promise<ProviderItem[] | null> {
+  try {
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from("knowledge_documents")
+      .select("content, updated_at")
+      .eq("title", SUPABASE_AI_CONFIG_TITLE)
+      .maybeSingle();
+
+    if (error || !data?.content) return null;
+    const remoteList = JSON.parse(data.content);
+    if (!Array.isArray(remoteList) || remoteList.length === 0) return null;
+
+    // รวมข้อมูลจาก remote เข้ากับ local
+    const local = getLocalProviders();
+    const merged = [...local];
+
+    let hasChange = false;
+
+    remoteList.forEach((rem: any) => {
+      if (!rem || !rem.provider_key) return;
+      const matchIdx = merged.findIndex(
+        (m) => m.provider_key === rem.provider_key || m.id === rem.id
+      );
+
+      if (matchIdx >= 0) {
+        const cur = merged[matchIdx];
+        const remKey = rem.api_key && isValidAsciiKey(rem.api_key) ? sanitizeKey(rem.api_key) : undefined;
+        // ถ้าคลาวด์มี API key แต่ในเครื่องยังไม่มี ให้ใช้คีย์จากคลาวด์
+        if (remKey && (!cur.api_key || cur.api_key === "__CLEAR__" || cur.api_key !== remKey)) {
+          cur.api_key = remKey;
+          cur.has_key = true;
+          hasChange = true;
+        }
+        if (typeof rem.is_active === "boolean" && cur.is_active !== rem.is_active) {
+          cur.is_active = rem.is_active;
+          hasChange = true;
+        }
+        if (typeof rem.priority === "number" && cur.priority !== rem.priority) {
+          cur.priority = rem.priority;
+          hasChange = true;
+        }
+        if (rem.model_name && cur.model_name !== rem.model_name) {
+          cur.model_name = rem.model_name;
+          hasChange = true;
+        }
+        if (rem.base_url && cur.base_url !== rem.base_url) {
+          cur.base_url = rem.base_url;
+          hasChange = true;
+        }
+      } else {
+        // รายการที่ยังไม่มีในเครื่อง
+        merged.push({
+          id: rem.id || `${rem.provider_key}-custom`,
+          name: rem.name || rem.provider_key,
+          provider_key: rem.provider_key,
+          base_url: rem.base_url || "",
+          model_name: rem.model_name || "gemini-2.5-flash",
+          is_active: Boolean(rem.is_active),
+          priority: typeof rem.priority === "number" ? rem.priority : merged.length + 1,
+          has_key: Boolean(rem.api_key),
+          api_key: rem.api_key && isValidAsciiKey(rem.api_key) ? sanitizeKey(rem.api_key) : undefined,
+        });
+        hasChange = true;
+      }
+    });
+
+    merged.sort((a, b) => a.priority - b.priority);
+
+    if (hasChange && typeof window !== "undefined") {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        window.dispatchEvent(new CustomEvent(AI_PROVIDERS_CHANGED_EVENT, { detail: merged }));
+        window.dispatchEvent(new Event("storage"));
+      } catch {}
+    }
+
+    return merged;
+  } catch (e) {
+    console.warn("Failed to fetch remote AI providers:", e);
+    return null;
   }
 }
 
