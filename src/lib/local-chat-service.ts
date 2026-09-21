@@ -479,6 +479,22 @@ export function sanitizeTuReferences(content: string): string {
   return cleaned;
 }
 
+/**
+ * ซ่อนคำว่า "หมวดหนังสือความรู้ด้านยา(/knowledge)" หรือ "หมวดหนังสือความรู้ด้านยา (/knowledge)"
+ * โดยแปลงให้ชี้ไปที่ เมนู "เอกสารวิชาการ" ด้านบนของหน้าเว็บ (Google Drive) หรือตัดออก
+ */
+export function sanitizeKnowledgeText(content: string): string {
+  if (!content) return content;
+
+  return content
+    // ซ่อนคำว่า หมวดหนังสือความรู้ด้านยา (/knowledge) หรือ หมวดหนังสือความรู้ด้านยา(/knowledge)
+    .replace(/หมวดหนังสือความรู้ด้านยา\s*(?:\(\/knowledge\))?/gi, 'เมนู "เอกสารวิชาการ"')
+    .replace(/หนังสือความรู้ด้านยา\s*(?:\(\/knowledge\))?/gi, 'เอกสารวิชาการ')
+    .replace(/\(\/knowledge\)/gi, "")
+    .replace(/\/knowledge(?:\?[^\s)"]*)?/gi, "")
+    .replace(/  +/g, " ");
+}
+
 /** normalize ชื่อยาไทยเพื่อเทียบแบบยืดหยุ่น (ตัดคำนำหน้า/เว้นวรรค/ไม้ทัณฑฆาต/ศ-ษ→ส) */
 export function normalizeThaiName(s: string): string {
   return (s || "")
@@ -1076,8 +1092,8 @@ export function validateAndPruneSources(
       docUrl = drugName ? `/herbs?name=${encodeURIComponent(drugName)}` : "/herbs";
     }
 
-    if (k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" && !docUrl) {
-      docUrl = `/knowledge?tab=books&id=${encodeURIComponent(k.id || "")}`;
+    if (k.category === "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ" && (!docUrl || docUrl.startsWith("/knowledge"))) {
+      docUrl = "https://drive.google.com/drive/folders/1sz0qE0VMWiyp-4bqmp_0phJpwTfpf7Oi";
     }
 
     validKnowledge.push({
@@ -1513,7 +1529,7 @@ ${herbBooksApaRule}
    - อันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) และอันตรกิริยาระหว่างยา (Drug-Drug Interaction)
    - อาการเจ็บป่วย การดูแลสุขภาพเบื้องต้น (เช่น 10 กลุ่มอาการ สธ.) ขนาดยา วิธีใช้ ข้อห้าม ข้อควรระวัง
    - คำถามต่อเนื่องในบทสนทนาที่เกี่ยวกับสุขภาพ/ยา/สมุนไพร
-   - **แหล่งข้อมูล แหล่งอ้างอิง และฐานข้อมูลที่ระบบใช้ (System Knowledge Sources & Verification):** คำถามเกี่ยวกับที่มาของข้อมูล แหล่งอ้างอิง ฐานข้อมูลอันตรกิริยา หรือการตรวจสอบความถูกต้องย้อนกลับของระบบ (${scopeSourcesText}) **ถือเป็นคำถามในขอบเขตที่ต้องตอบอย่างละเอียด ชัดเจน โปร่งใส และสร้างความมั่นใจ โดยระบุชัดเจนว่าวิธีตรวจสอบย้อนกลับ สามารถตรวจสอบข้อมูลต้นทางฉบับเต็มได้ที่ เมนู "เอกสารวิชาการ" ด้านบนของหน้าเว็บ (Google Drive) ห้ามตอบปฏิเสธเด็ดขาด**
+    - **แหล่งข้อมูล แหล่งอ้างอิง และฐานข้อมูลที่ระบบใช้ (System Knowledge Sources & Verification):** คำถามเกี่ยวกับที่มาของข้อมูล แหล่งอ้างอิง ฐานข้อมูลอันตรกิริยา หรือการตรวจสอบความถูกต้องย้อนกลับของระบบ (${scopeSourcesText}) **ถือเป็นคำถามในขอบเขตที่ต้องตอบอย่างละเอียด ชัดเจน โปร่งใส และสร้างความมั่นใจ โดยระบุชัดเจนว่าวิธีตรวจสอบย้อนกลับ สามารถตรวจสอบข้อมูลต้นทางฉบับเต็มได้ที่ เมนู "เอกสารวิชาการ" ด้านบนของหน้าเว็บ (Google Drive) ห้ามตอบปฏิเสธเด็ดขาด และห้ามเอ่ยถึงคำว่า "หมวดหนังสือความรู้ด้านยา" หรือ "(/knowledge)" หรือ "/knowledge" ในคำตอบโดยเด็ดขาด**
 
 2. **อยู่นอกขอบเขต — ห้ามตอบคำถามเด็ดขาด:**
    - หากคำถามไม่เกี่ยวข้องกับการแพทย์แผนไทย การแพทย์แผนปัจจุบัน หรือการดูแลสุขภาพ (เช่น เขียนโปรแกรม/โค้ดดิ้ง, การเมือง, กีฬา, พยากรณ์อากาศ, ดูดวง/หวย, แปลภาษาทั่วไป, บันเทิง/เพลง, ช่าง/เทคนิคทั่วไปที่ไม่เกี่ยวกับการแพทย์, เรื่องส่วนตัวทั่วไปของ AI ที่ไม่เกี่ยวกับข้อมูลยา/สมุนไพร ฯลฯ — ยกเว้นคำถามเกี่ยวกับที่มาของข้อมูลความรู้ทางการแพทย์และสมุนไพรของระบบ ให้ตอบได้เต็มที่)
@@ -2112,7 +2128,6 @@ export async function processLocalChat(
     const verifyCheckItems = [
       'เมนู "เอกสารวิชาการ" ด้านบนของหน้าเว็บ (Google Drive)',
       'ปุ่มแหล่งอ้างอิง',
-      enableHerbBooks ? 'หมวดหนังสือความรู้ด้านยา (/knowledge)' : '',
       enableExternal ? 'รหัส PMID' : '',
       enableMahidol ? 'ลิงก์มหิดล' : '',
       enableTu ? 'เอกสารวิชาการ ม.ธรรมศาสตร์' : '',
@@ -2470,7 +2485,9 @@ export async function processLocalChat(
           chapter: b.chapter,
           content: b.content,
           source: b.bookTitle,
-          source_url: `/knowledge?tab=books&id=${encodeURIComponent(b.id)}`,
+          source_url: b.sourceUrl && !b.sourceUrl.startsWith("/knowledge")
+            ? b.sourceUrl
+            : "https://drive.google.com/drive/folders/1sz0qE0VMWiyp-4bqmp_0phJpwTfpf7Oi",
           apaCitation: b.apaCitation,
           herbs: b.herbs,
           modernDrugs: b.modernDrugs,
@@ -2500,6 +2517,7 @@ export async function processLocalChat(
   if (currentSettings.show_apa_citations === false) {
     cleanAnswer = stripAllApaReferences(cleanAnswer);
   }
+  cleanAnswer = sanitizeKnowledgeText(cleanAnswer);
 
   const finalResponse = `${cleanAnswer}\n\n[SOURCES]${JSON.stringify(sourcesPayload)}[/SOURCES]`;
 

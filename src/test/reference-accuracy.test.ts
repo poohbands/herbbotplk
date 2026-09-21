@@ -8,6 +8,7 @@ import {
   validateAndPruneSources,
   sanitizeMahidolReferences,
   sanitizeTuReferences,
+  sanitizeKnowledgeText,
   sanitizeUnrelatedApaReferences,
   extractAllowedEntitiesFromSources,
   buildSystemPrompt,
@@ -896,6 +897,30 @@ drugs:
       // External research must be pruned for DDI
       expect(pruned.thaijo.length).toBe(0);
       expect(pruned.pubmed.length).toBe(0);
+    });
+  });
+
+  describe("sanitizeKnowledgeText", () => {
+    it("hides 'หมวดหนังสือความรู้ด้านยา (/knowledge)' and replaces with 'เมนู \"เอกสารวิชาการ\"'", () => {
+      const input = "สามารถตรวจสอบได้จาก เมนู \"เอกสารวิชาการ\" ด้านบนของหน้าเว็บ (Google Drive), ปุ่มแหล่งอ้างอิง, หมวดหนังสือความรู้ด้านยา (/knowledge), รหัส PMID";
+      const result = sanitizeKnowledgeText(input);
+      expect(result).not.toContain("หมวดหนังสือความรู้ด้านยา");
+      expect(result).not.toContain("/knowledge");
+      expect(result).toContain('เมนู "เอกสารวิชาการ"');
+    });
+
+    it("hides 'หมวดหนังสือความรู้ด้านยา(/knowledge)' without spaces", () => {
+      const input = "ดูข้อมูลเพิ่มเติมได้ที่ หมวดหนังสือความรู้ด้านยา(/knowledge)";
+      const result = sanitizeKnowledgeText(input);
+      expect(result).not.toContain("หมวดหนังสือความรู้ด้านยา");
+      expect(result).not.toContain("/knowledge");
+      expect(result).toContain('เมนู "เอกสารวิชาการ"');
+    });
+
+    it("removes standalone (/knowledge) or /knowledge links", () => {
+      const input = "ตรวจสอบข้อมูลที่ /knowledge?tab=books&id=123 หรือ (/knowledge)";
+      const result = sanitizeKnowledgeText(input);
+      expect(result).not.toContain("/knowledge");
     });
   });
 });

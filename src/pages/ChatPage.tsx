@@ -14,6 +14,7 @@ import {
   extractAllowedEntitiesFromSources,
   sanitizeUnrelatedApaReferences,
   stripAllApaReferences,
+  sanitizeKnowledgeText,
 } from "@/lib/local-chat-service";
 import {
   getCurrentActiveProviderStatus,
@@ -140,6 +141,9 @@ function getKnowledgeLink(k: KnowledgeSource): string {
     return `${window.location.origin}/herbs`;
   }
   if (k.source_url && !k.source_url.includes("ratchakitcha.soc.go.th")) {
+    if (k.source_url.startsWith("/knowledge")) {
+      return "https://drive.google.com/drive/folders/1sz0qE0VMWiyp-4bqmp_0phJpwTfpf7Oi";
+    }
     return k.source_url.startsWith("/") ? `${window.location.origin}${k.source_url}` : k.source_url;
   }
   return "";
@@ -428,6 +432,10 @@ const ChatPage = () => {
     }
 
     // 3. ถ้าเป็นลิงก์ภายใน
+    if (k.source_url && k.source_url.startsWith("/knowledge")) {
+      openExternal("https://drive.google.com/drive/folders/1sz0qE0VMWiyp-4bqmp_0phJpwTfpf7Oi");
+      return;
+    }
     if (k.source_url && k.source_url.startsWith("/herbs")) {
       openExternal(`${window.location.origin}${k.source_url}`);
       return;
@@ -1038,13 +1046,19 @@ const ChatPage = () => {
                             ),
                           }}
                         >
-                          {msg.role === "assistant" && knowledgeSettings.show_apa_citations === false
-                            ? stripAllApaReferences(msg.content)
+                          {msg.role === "assistant"
+                            ? sanitizeKnowledgeText(
+                                knowledgeSettings.show_apa_citations === false
+                                  ? stripAllApaReferences(msg.content)
+                                  : msg.content
+                              )
                             : msg.content}
                         </ReactMarkdown>
                       </div>
                     ) : (
-                      <p className="text-sm">{msg.content}</p>
+                      <p className="text-sm">
+                        {msg.role === "assistant" ? sanitizeKnowledgeText(msg.content) : msg.content}
+                      </p>
                     )}
                     {msg.role === "assistant" && (msg.category || msg.severity) && (
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
@@ -1462,7 +1476,7 @@ const ChatPage = () => {
                         <div className="flex items-center gap-1 shrink-0 ml-auto">
                           <button
                             type="button"
-                            onClick={() => handleCopyMessage(msg.content, msg.id)}
+                            onClick={() => handleCopyMessage(sanitizeKnowledgeText(msg.content), msg.id)}
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md transition-colors cursor-pointer text-[10px] border border-border/50 ${
                               copiedMessageId === msg.id
                                 ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-medium"
