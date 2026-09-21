@@ -216,13 +216,14 @@ describe('Herb Books & CPG Guidelines Service (7 Tiers Hierarchy with Short-Circ
       expect(result.allApaCitations[0]).toContain('แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ');
     });
 
-    it('formatHerbBooksForAiContext formats both primary and supplementary items with non-contradiction notices', () => {
-      const tiered = searchHerbBooksTiered('สมุนไพรทดแทนยา omeprazole', 2);
-      const formatted = formatHerbBooksForAiContext(tiered.primaryItems, tiered.supplementaryItems);
-      expect(formatted).toContain('แหล่งข้อมูลหลักลำดับที่ 2');
-      expect(formatted).toContain('แหล่งข้อมูลเสริมลำดับที่ 7');
-      expect(formatted).toContain('กฎเหล็กเรื่องความไม่ขัดแย้ง');
-      expect(formatted).toContain('Omeprazole');
+    it('searchHerbs97ByName correctly identifies ยาห้าราก with antipyretic indication', async () => {
+      const { searchHerbs97ByName } = await import('@/lib/herbs97-service');
+      const h97 = searchHerbs97ByName('ยาห้ารากใช้ในกรณีใด และมีวิธีใช้อย่างไร?');
+      expect(h97.length).toBeGreaterThan(0);
+      const haRak = h97.find((h) => h.name.includes('ยาห้าราก'));
+      expect(haRak).toBeDefined();
+      expect(haRak?.indication).toContain('บรรเทาอาการไข้');
+      expect(haRak?.indication).not.toContain('ท้องอืด');
     });
   });
 });

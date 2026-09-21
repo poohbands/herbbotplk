@@ -104,4 +104,37 @@ describe("AI Learning & Knowledge Verification Service", () => {
     expect(match.verifiedAnswer).not.toContain("ยาทิพโอสถ");
     expect(match.verifiedAnswer).not.toContain("ผ่านการตรวจทานความถูกต้องโดยกลุ่มงานการแพทย์แผนไทยแล้ว");
   });
+
+  it("returns builtin verified ยาห้าราก answer with antipyretic indication and without gastrointestinal hallucination or CPG 2568 citation", () => {
+    // 1. Direct match
+    const match = findVerifiedAnswer("ยาห้ารากใช้ในกรณีใด และมีวิธีใช้อย่างไร?");
+    expect(match.found).toBe(true);
+    expect(match.verifiedAnswer).toBeDefined();
+
+    // Clinical indication: Antipyretic (บรรเทาอาการไข้ กระทุ้งพิษไข้)
+    expect(match.verifiedAnswer).toContain("บรรเทาอาการไข้");
+    expect(match.verifiedAnswer).toContain("กระทุ้งพิษไข้");
+
+    // Zero-hallucination: Must NOT claim gastrointestinal / bloating
+    expect(match.verifiedAnswer).not.toContain("ท้องอืด");
+    expect(match.verifiedAnswer).not.toContain("ท้องเฟ้อ");
+    expect(match.verifiedAnswer).not.toContain("แน่นจุกเสียด");
+    expect(match.verifiedAnswer).not.toContain("บำรุงธาตุ");
+
+    // Formula ingredients
+    expect(match.verifiedAnswer).toContain("รากย่านาง");
+    expect(match.verifiedAnswer).toContain("รากคนทา");
+    expect(match.verifiedAnswer).toContain("รากมะเดื่อชุมพร");
+    expect(match.verifiedAnswer).toContain("รากชิงชี่");
+    expect(match.verifiedAnswer).toContain("รากไม้เท้ายายม่อม");
+
+    // Citations: Must cite NLEM 2568, NOT CPG 2568
+    expect(match.verifiedAnswer).toContain("คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568)");
+    expect(match.verifiedAnswer).not.toContain("กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+
+    // 2. Word bullet point character normalization (\uF0B7)
+    const bulletMatch = findVerifiedAnswer("  ยาห้ารากใช้ในกรณีใด และมีวิธีใช้อย่างไร?");
+    expect(bulletMatch.found).toBe(true);
+    expect(bulletMatch.verifiedAnswer).toBe(match.verifiedAnswer);
+  });
 });

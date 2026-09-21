@@ -12,6 +12,7 @@ import {
   extractAllowedEntitiesFromSources,
   buildSystemPrompt,
   stripAllApaReferences,
+  processLocalChat,
 } from "../lib/local-chat-service";
 
 describe("Reference and Citation Accuracy (Strict Relevance)", () => {
@@ -1047,6 +1048,48 @@ category: herbal_info
       expect(cleaned).toContain("1. กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.");
       expect(cleaned).toContain("2. คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568. ราชกิจจานุเบกษา.");
       expect(cleaned).toContain("3. กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ. กระทรวงสาธารณสุข.");
+    });
+
+    it("sanitizeUnrelatedApaReferences strips hallucinated CPG 2568 citation when herb is not in CPG (such as ยาห้าราก)", () => {
+      const answerWithHallucinatedCpg = `ยาห้ารากเป็นตำรับยาในบัญชียาหลักแห่งชาติ มีสรรพคุณแก้ไข้ [1]
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+1. กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข.
+2. คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568. ราชกิจจานุเบกษา.
+
+[METADATA]
+category: herbal_info
+[/METADATA]`;
+
+      // Allowed entity is only ยาห้าราก
+      const cleaned = sanitizeUnrelatedApaReferences(answerWithHallucinatedCpg, ["ยาห้าราก", "ห้าราก"]);
+
+      // Must strip CPG 2568 because ยาห้าราก has no record in CPG 2568
+      expect(cleaned).not.toContain("กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+      // Must retain NLEM 2568 with sequential number 1.
+      expect(cleaned).toContain("1. คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568. ราชกิจจานุเบกษา.");
+    });
+
+    it("processLocalChat delivers verified answer for ยาห้าราก with antipyretic indication and zero hallucination", async () => {
+      const response = await processLocalChat("ยาห้ารากใช้ในกรณีใด และมีวิธีใช้อย่างไร?", []);
+
+      // Indication must be fever / antipyretic
+      expect(response).toContain("บรรเทาอาการไข้");
+      expect(response).toContain("กระทุ้งพิษไข้");
+
+      // Strictly no dyspepsia / flatulence hallucination
+      expect(response).not.toContain("ท้องอืด");
+      expect(response).not.toContain("ท้องเฟ้อ");
+      expect(response).not.toContain("แน่นจุกเสียด");
+      expect(response).not.toContain("บำรุงธาตุ");
+
+      // Citations
+      expect(response).toContain("คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568)");
+      expect(response).not.toContain("กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+
+      // Sources payload
+      expect(response).toContain("[SOURCES]");
+      expect(response).toContain("ยาห้าราก");
     });
   });
 });
