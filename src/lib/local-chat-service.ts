@@ -651,6 +651,8 @@ export function extractAllowedEntitiesFromSources(sources: {
     if (k.title) allowed.add(k.title);
     if (k.herb_name) allowed.add(k.herb_name);
     if (k.drug_name) allowed.add(k.drug_name);
+    if (k.source) allowed.add(k.source);
+    if (k.sourceFile) allowed.add(k.sourceFile);
     if (Array.isArray(k.herbs)) {
       k.herbs.forEach((h: string) => allowed.add(h));
     }
@@ -737,7 +739,12 @@ export function sanitizeUnrelatedApaReferences(
         /(?:คณะกรรมการพัฒนาระบบยาแห่งชาติ|กรมการแพทย์แผนไทยและการแพทย์ทางเลือก|กรมการแพทย์|กระทรวงสาธารณสุข|บัญชียาหลักแห่งชาติ)/i.test(line) ||
         /คู่มือการใช้ยาสมุนไพร/i.test(line) ||
         /แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน/i.test(line) ||
-        /แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร/i.test(line);
+        /แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพร/i.test(line) ||
+        /กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก/i.test(line) ||
+        /สำนักงานสาธารณสุขจังหวัด/i.test(line) ||
+        /ยาทดแทน 19 รายการ/i.test(line) ||
+        /กลุ่มอาการของโรคที่พบบ่อย/i.test(line) ||
+        /ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรค/i.test(line);
 
       if (isAllowed || isGeneralOfficialDoc) {
         filteredLines.push(line);
@@ -825,10 +832,14 @@ export function validateAndPruneSources(
     .filter((t): t is number => t !== null);
 
   let effectiveTier: number | null = null;
+  const allowedDocTiers = new Set<number>();
   if (enableHerbBooks && isDdiQuery) {
     effectiveTier = 1;
+    allowedDocTiers.add(1);
   } else if (docTiers.length > 0) {
     effectiveTier = Math.min(...docTiers);
+    // อนุญาตทั้ง Tier หลัก และ Tier เสริมที่ผ่านการจับคู่เข้ามา
+    docTiers.forEach((t) => allowedDocTiers.add(t));
   }
 
   // 1. ตรวจสอบและกรอง Knowledge Documents (โดยเฉพาะ DDI มหิดล และ ม.ธรรมศาสตร์)
@@ -839,7 +850,7 @@ export function validateAndPruneSources(
     const title = (k.title || "").trim();
     if (!title || seenKnowledgeTitles.has(title)) continue;
 
-    // กฎ Short-Circuit: หากพบข้อมูลในลำดับที่ effectiveTier (1-7) ให้หยุดและตัดแหล่งข้อมูลอื่นๆ ออกทั้งหมด
+    // กฎ Short-Circuit & Non-Contradiction: หากพบข้อมูลในลำดับที่ effectiveTier (1-7) ให้ระงับ DDI ภายนอก และตัด Tier ที่ไม่อนุญาต
     if (effectiveTier !== null) {
       if (
         k.category === "อันตรกิริยาระหว่างยาและสมุนไพร (DDI)" ||
@@ -854,8 +865,8 @@ export function validateAndPruneSources(
 
       const itemTier = detectDocTier(k);
 
-      // ถ้าเป็นเอกสารหนังสือแต่คนละ tier กับที่พบคำตอบ ให้ตัดทิ้ง
-      if (itemTier !== null && itemTier !== effectiveTier) {
+      // ถ้าเป็นเอกสารหนังสือแต่ไม่ได้อยู่ในกลุ่ม Tier ที่อนุญาต (ทั้งหลักและเสริม) ให้ตัดทิ้ง
+      if (itemTier !== null && !allowedDocTiers.has(itemTier)) {
         continue;
       }
 
@@ -1470,12 +1481,14 @@ export function buildSystemPrompt(settings?: KnowledgeSettings): string {
     : `    - ⚠️ **ข้อห้ามเด็ดขาดเรื่อง ม.ธรรมศาสตร์:** ปัจจุบันระบบปิดการใช้ฐานข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันของ ม.ธรรมศาสตร์ ห้ามเอ่ยถึง อ้างอิง หรือระบุชื่อ "มหาวิทยาลัยธรรมศาสตร์", "ม.ธรรมศาสตร์", "อรุณพร อิฐรัตน์" หรือ "สถานการแพทย์แผนไทยประยุกต์ มหาวิทยาลัยธรรมศาสตร์" ในคำตอบและในหัวข้อเอกสารอ้างอิง (APA 7th Edition) โดยเด็ดขาด!`;
 
   const herbBooksApaRule = enableHerbBooks
-    ? `    - กรณีอ้างอิงหนังสือและแนวทางเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาสมุนไพรทดแทนยาแผนปัจจุบัน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, บัญชียาหลัก 2568 - อ้างอิงเฉพาะเล่มที่ตรงกับเรื่องที่ตอบ):
+    ? `    - กรณีอ้างอิงหนังสือและแนวทางเวชปฏิบัติ (CPG กรมการแพทย์ 2568, ยาสมุนไพรทดแทนยาแผนปัจจุบัน 32 รายการ สธ., แผนภูมิปฐมภูมิ ICD-10, บัญชียาหลัก 2568, CD 10 กลุ่มโรค, แผ่นภาพสรุป 10 กลุ่มอาการ/19 ยาทดแทน สสจ.บุรีรัมย์ - ให้อ้างอิงทุกเล่มที่นำมาใช้ตอบจริง):
       * กรมการแพทย์. (2568). *คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ*. กระทรวงสาธารณสุข.
       * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ*. กระทรวงสาธารณสุข.
-      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ*. กระทรวงสาธารณสุข.
+      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการรักษาอาการเจป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ*. กระทรวงสาธารณสุข.
       * คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
-      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย*. กระทรวงสาธารณสุข.`
+      * กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *ชุดข้อมูลความรู้การใช้ยาสมุนไพรใน 10 กลุ่มโรคและกลุ่มอาการพบบ่อย*. กระทรวงสาธารณสุข.
+      * กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก สำนักงานสาธารณสุขจังหวัดบุรีรัมย์. (2567). *กลุ่มอาการของโรคที่พบบ่อยกับการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติ* [แผ่นภาพความรู้ A5]. กระทรวงสาธารณสุข.
+      * กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก สำนักงานสาธารณสุขจังหวัดบุรีรัมย์. (2567). *ยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทน 19 รายการ* [แผ่นภาพความรู้ A5]. กระทรวงสาธารณสุข.`
     : `    - ⚠️ **ข้อห้ามเรื่องหนังสือความรู้ด้านยา:** ปัจจุบันระบบปิดการใช้หนังสือข้อมูลความรู้ด้านยา ห้ามเอ่ยถึง อ้างอิง หรือระบุเอกสารของ "กรมการแพทย์ (2568)", "คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ", หรือ "แนวทางการใช้ยาสมุนไพรทดแทนยาแผนปัจจุบัน" ในคำตอบและเอกสารอ้างอิงเด็ดขาด!`;
 
   const showApa = currentSettings.show_apa_citations !== false;
@@ -1483,6 +1496,7 @@ export function buildSystemPrompt(settings?: KnowledgeSettings): string {
   const apaSectionBlock = showApa
     ? `5. **การแสดงเอกสารอ้างอิงตามแบบ APA 7th Edition (สำคัญที่สุด):**
    ก่อนจบคำตอบ ให้เขียนหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" แล้วระบุรายการอ้างอิงตามรูปแบบมาตรฐาน APA 7 เฉพาะรายการเอกสารต้นทางหรือวิจัยที่เกี่ยวข้องโดยตรงกับคำถามและนำมาใช้ตอบจริง:
+    - **กฎสำคัญที่สุดเรื่องการอ้างอิงทุกแหล่งข้อมูลที่นำมาใช้ตอบ (All-Source APA Citations):** ในหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" ต้องเขียนรายการเอกสารอ้างอิงของ**ทุกแหล่งข้อมูลที่ระบบนำมาใช้ตอบจริงให้ครบถ้วน** โดยระบุแหล่งข้อมูลหลัก (Primary Source) เป็นอันดับแรกเสมอ และตามด้วยแหล่งข้อมูลเสริม (Supplementary Sources) ทั้งหมดที่นำมาใช้ตอบจริง
     - **ข้อกำหนดเรื่องฐานข้อมูลภายใน (สำคัญมาก):** ให้ยังคงใช้ข้อมูลสรรพคุณ ขนาด วิธีใช้ และข้อควรระวังจากฐานข้อมูลยาภายในตามปกติ แต่ **ไม่ต้องแสดงรายการอ้างอิง "สำนักงานสาธารณสุขจังหวัดพิษณุโลก" ในหัวข้อเอกสารอ้างอิง** (ให้ซ่อนรายการอ้างอิงของ สสจ.พิษณุโลก ไว้)
     - กรณีอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร (ให้อ้างอิงปี พ.ศ. ตามรายการยาที่ระบุใน CONTEXT หรือเอกสารกำกับยา):
       - **ข้อกำหนดเรื่องการอ้างอิงบัญชียาหลักแห่งชาติด้านสมุนไพร (สำคัญมาก):** ห้ามใส่ลิงก์หรือ URL ไปยัง https://ratchakitcha.soc.go.th/ โดยเด็ดขาด หากจะระบุลิงก์หรือเมื่อผู้ใช้เปิดดูข้อมูลยา ให้ชี้ไปที่ข้อมูลตัวยาภายในระบบ (/herbs?name=ชื่อยา) หรืออ้างอิงเฉพาะชื่อประกาศและปี พ.ศ. เท่านั้น
@@ -1586,7 +1600,12 @@ ${apaSectionBlock}
    - **กฎเหล็กเด็ดขาด:** ห้ามนำสมุนไพรหรือยาอื่นที่ผู้ใช้ไม่ได้ถามมาเขียนลงในคำตอบหรือในรายการอ้างอิงเด็ดขาด! ตัวอย่างเช่น หากผู้ใช้ถามเรื่อง "ขมิ้นชัน กับ Warfarin" ให้ตอบและอ้างอิงเฉพาะข้อมูลของ "ขมิ้น/ขมิ้นชัน กับ Warfarin" เท่านั้น ห้ามนำสมุนไพรอื่น (เช่น กระชายดำ กระเทียม กล้วย โกจิเบอร์รี ขิง มะม่วง ฯลฯ) มากล่าวถึงหรือใส่ในรายการอ้างอิงเป็นอันขาด
    - **กรณีถามตามกลุ่มอาการ (Symptom-based Question):** เช่น น้ำเหลืองเสีย, แผลตามผิวหนัง, ผื่นคัน, ไอ, ท้องอืด ฯลฯ หากใน <CONTEXT> มีข้อมูลตัวยาหลายรายการ แต่ในคำตอบท่านเลือกแนะนำเฉพาะตัวยาใด (เช่น แนะนำเฉพาะ "ยาหญ้าปักกิ่ง") ในหัวข้อ "📚 เอกสารอ้างอิง (APA 7th Edition)" **จะต้องระบุเฉพาะเอกสารอ้างอิงของตัวยาที่ท่านแนะนำจริงเท่านั้น (เช่น ยาหญ้าปักกิ่ง)** ห้ามใส่เอกสารอ้างอิง งานวิจัย หรือชื่อสมุนไพรอื่นที่ไม่ถูกเลือกนำมาแนะนำ (เช่น ห้ามใส่บัวบก, กล้วย, ว่านหางจระเข้, ทองพันชั่ง ฯลฯ หากไม่ได้ถูกกล่าวถึงและแนะนำในคำตอบ) โดยเด็ดขาด
    - ให้อ้างอิงเฉพาะข้อมูลที่ตรงกับสิ่งที่ถามและใช้ตอบจริงเท่านั้น ข้อมูลใดใน CONTEXT ที่ไม่ตรงกับสิ่งที่ผู้ใช้ระบุในคำถาม ห้ามนำมาเขียนในคำตอบหรือหัวข้อเอกสารอ้างอิงเด็ดขาด
-8. ท้ายคำตอบ ต้องลงท้ายด้วยแท็กโครงสร้างข้อมูล:
+8. **กฎการระงับข้อขัดแย้งระหว่างแหล่งข้อมูล (4 Conflict-Resolution Rules — สำคัญสูงสุด):**
+   - **กฎลำดับชั้นทางคลินิก (Clinical Hierarchy Rule):** ข้อมูลความปลอดภัยและอันตรกิริยาระหว่างยากับสมุนไพร (DDI) จาก CPG กรมการแพทย์ พ.ศ. 2568 (Tier 1) มีอำนาจสูงสุดเหนือแหล่งข้อมูลอื่นทั้งหมด หากมีข้อมูลใดระบุขัดแย้งกัน ให้ยึด Tier 1 เป็นข้อยุติ
+   - **กฎความทันสมัยของกฎหมาย/ระเบียบล่าสุด (Latest Regulation Rule):** ประกาศบัญชียาหลักแห่งชาติด้านสมุนไพร พ.ศ. 2568 ฉบับที่ 2 (Tier 4) มีอำนาจเหนือกว่าฉบับเดิม (พ.ศ. 2566) ในรายการยา 29 รายการที่ปรับปรุงใหม่ ทั้งด้านข้อบ่งใช้ ขนาดยา และเงื่อนไขการสั่งใช้
+   - **กฎความละเอียดจำเพาะเหนือแผ่นสรุป (Specific Beats Summary Rule):** เอกสารแนวทางฉบับเต็มและตำรับยามาตรฐาน (Tier 1-3) มีผลบังคับใช้เหนือกว่าแผ่นภาพโปสเตอร์สรุปย่อ (Tier 6-7) ในกรณีที่มีรายละเอียดด้านความปลอดภัย ขนาดใช้ หรือข้อห้ามที่เฉพาะเจาะจง
+   - **กฎความไม่ขัดแย้งระหว่างข้อมูลหลักกับข้อมูลเสริม (Strict Core vs Supplementary Non-Contradiction Rule):** ข้อมูลจากแหล่งเสริม (เช่น แผ่นภาพสรุป, งานวิจัยสนับสนุน, หรือข้อมูลพฤกษศาสตร์) นำมาใช้เสริมประเด็นเพิ่มเติมเพื่อความสมบูรณ์ได้ **แต่ต้องห้ามขัดแย้ง คัดง้าง หรือทำให้สับสนกับคำตอบที่ตอบในประเด็นคำถามหลักจากแหล่งข้อมูลหลักโดยเด็ดขาด** หากพบข้อมูลเสริมที่ขัดแย้ง ให้ยึดแหล่งข้อมูลหลักเป็นข้อยุติเท่านั้น
+9. ท้ายคำตอบ ต้องลงท้ายด้วยแท็กโครงสร้างข้อมูล:
 [METADATA]
 category: <herbal_info | drug_interaction | dosage | side_effects | general>
 severity: <major | moderate | minor | none>
@@ -1898,21 +1917,39 @@ export async function processLocalChat(
   // กฎ: ถ้าเจอข้อมูลในการตอบคำถามแล้วจากลำดับใดที่น้อยกว่า ให้หยุดค้นหาแหล่งข้อมูลจากแหล่งอื่นๆ ทันทีในประเด็นที่ถาม
   const tieredResult = enableHerbBooks
     ? searchHerbBooksTiered(question, 4)
-    : { items: [], matchedTier: null, sourceFile: null, apaCitation: null };
+    : {
+        items: [],
+        primaryItems: [],
+        supplementaryItems: [],
+        matchedTier: null,
+        allMatchedTiers: [],
+        sourceFile: null,
+        apaCitation: null,
+        allApaCitations: [],
+        intent: "general" as const,
+      };
 
   let matchedHerbBooks = tieredResult.items;
+  let primaryHerbBooks = tieredResult.primaryItems || tieredResult.items;
+  let supplementaryHerbBooks = tieredResult.supplementaryItems || [];
+  let allApaCitations = tieredResult.allApaCitations || (tieredResult.apaCitation ? [tieredResult.apaCitation] : []);
   let matchedTier = tieredResult.matchedTier;
+  let allMatchedTiers = tieredResult.allMatchedTiers || (matchedTier ? [matchedTier] : []);
 
   // สำหรับคำถาม DDI ถ้ายังไม่ได้จับคู่ Monograph ให้ดึงจาก CPG 2568 (Tier 1) โดยเฉพาะ
   if (enableHerbBooks && isDdi) {
     const cpgDdiMatches = searchCpgHerbDrugInteractions(question, 3);
     if (cpgDdiMatches.length > 0) {
       matchedHerbBooks = cpgDdiMatches;
+      primaryHerbBooks = cpgDdiMatches;
+      supplementaryHerbBooks = [];
       matchedTier = 1;
+      allMatchedTiers = [1];
+      allApaCitations = ["กรมการแพทย์. (2568). คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ. กระทรวงสาธารณสุข."];
     }
   }
 
-  const isTierMatched = matchedTier !== null && matchedHerbBooks.length > 0;
+  const isTierMatched = matchedTier !== null && (primaryHerbBooks.length > 0 || matchedHerbBooks.length > 0);
 
   // ค้นหางานวิจัยไทย ThaiJO ที่ตรงกับคำถามอย่างแม่นยำ (เฉพาะเมื่อเปิดใช้งานแหล่งวิจัยภายนอก และไม่ใช่คำถาม DDI)
   const thaijoResults = (enableExternal && !isDdi)
@@ -1971,9 +2008,9 @@ export async function processLocalChat(
     }
   }
 
-  // 3.2 แทรกข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (ลำดับที่พบ: Tier 1-7)
-  if (enableHerbBooks && matchedHerbBooks.length > 0) {
-    contextText += "\n" + formatHerbBooksForAiContext(matchedHerbBooks) + "\n";
+  // 3.2 แทรกข้อมูลจากหนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ (ลำดับหลัก และ ลำดับเสริม)
+  if (enableHerbBooks && (primaryHerbBooks.length > 0 || supplementaryHerbBooks.length > 0)) {
+    contextText += "\n" + formatHerbBooksForAiContext(primaryHerbBooks, supplementaryHerbBooks) + "\n";
   }
 
   // 3.2.1 แทรกงานวิจัยไทย ThaiJO และ PubMed เพื่อเป็นข้อมูลเสริม (ถ้ามีและไม่ใช่คำถาม DDI)
@@ -2147,22 +2184,35 @@ export async function processLocalChat(
   }
   if (isTierMatched) {
     const activeTierMeta = HERB_BOOK_CATEGORIES.find((c) => c.tier === matchedTier);
-    const sourceFileName = activeTierMeta?.sourceFile || matchedHerbBooks[0]?.sourceFile;
-    const apaCite = activeTierMeta?.apa || matchedHerbBooks[0]?.apaCitation;
+    const sourceFileName = activeTierMeta?.sourceFile || primaryHerbBooks[0]?.sourceFile;
+    const apaCite = activeTierMeta?.apa || primaryHerbBooks[0]?.apaCitation;
+
+    const suppTiers = allMatchedTiers.filter((t) => t !== matchedTier);
+    const suppSourcesText = suppTiers.length > 0
+      ? suppTiers.map((st) => {
+          const m = HERB_BOOK_CATEGORIES.find((c) => c.tier === st);
+          return `Tier ${st} (${m?.shortTitle || m?.sourceFile})`;
+        }).join(", ")
+      : "";
+
+    const apaListText = allApaCitations.length > 0
+      ? allApaCitations.map((cite, i) => `      ${i + 1}. ${cite}`).join("\n")
+      : `      1. ${apaCite}`;
 
     contextText =
-      `\n[แหล่งข้อมูลหลักตามลำดับความสำคัญ (Tier ${matchedTier} Primary Authority Source)]:\n` +
-      `คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลหลักลำดับที่ ${matchedTier}: "${sourceFileName}"\n` +
+      `\n[แหล่งข้อมูลหลักและข้อมูลเสริมตามลำดับความสำคัญ (Tiered Knowledge & Non-Contradiction Context)]:\n` +
+      `• แหล่งข้อมูลหลัก (Primary Core Authority): ลำดับที่ ${matchedTier} "${sourceFileName}"\n` +
+      (suppSourcesText ? `• แหล่งข้อมูลเสริมที่ใช้ร่วมกัน (Supplementary Sources): ${suppSourcesText}\n` : "") +
       `ตามระเบียบของระบบ ให้ใช้ข้อมูลจากลำดับที่ ${matchedTier} นี้เป็น **แกนหลักในการตอบประเด็นคำถามหลัก (Primary Core Answer)** อย่างเคร่งครัด\n` +
-      `หากมีประเด็นอื่นๆ ในคำตอบที่เสริมกับคำตอบ (เช่น ข้อมูลทางพฤกษศาสตร์, กลไกการออกฤทธิ์, ขนาดยาตามประกาศกระทรวง, คำแนะนำการดูแลสุขภาพ, หรืองานวิจัยสนับสนุน) สามารถค้นหาและดึงข้อมูลจากแหล่งอื่นในระบบมาตอบเสริมได้ **แต่คำตอบและข้อมูลเสริมต้องห้ามขัดแย้ง คัดง้าง หรือทำให้สับสนกับคำตอบที่ตอบในประเด็นคำถามหลักจาก Tier ${matchedTier} โดยเด็ดขาด**\n` +
-      `ในหัวข้อเอกสารอ้างอิง (APA 7th Edition) ให้อ้างอิงแหล่งข้อมูลหลักลำดับที่ ${matchedTier} คือ "${apaCite}" เป็นรายการแรกเสมอ และสามารถระบุเอกสารอ้างอิงเสริมที่นำมาใช้ตอบจริงต่อท้ายได้\n\n` +
+      `หากมีประเด็นอื่นๆ ในคำตอบที่เสริมกับคำตอบ สามารถนำข้อมูลจากแหล่งข้อมูลเสริมมาตอบได้ **แต่คำตอบและข้อมูลเสริมต้องห้ามขัดแย้ง คัดง้าง หรือทำให้สับสนกับคำตอบหลักจาก Tier ${matchedTier} โดยเด็ดขาด**\n` +
+      `ในหัวข้อ "### 📚 เอกสารอ้างอิง (APA 7th Edition)" **ต้องเขียนระบุรายการเอกสารอ้างอิงของทุกแหล่งข้อมูลที่ระบบนำมาใช้ตอบจริงให้ครบถ้วน** (แหล่งหลักอันดับแรก ตามด้วยแหล่งเสริม):\n${apaListText}\n\n` +
       contextText;
 
     dynamicInstructions += `\n\n⚠️ **กฎลำดับความสำคัญของแหล่งข้อมูลและการตอบประเด็นเสริม (Tiered Authority & Supplementary Rules):**\n` +
-      `1. **ประเด็นคำถามหลัก:** คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลหลักลำดับที่ ${matchedTier}: "${sourceFileName}" ให้ใช้ข้อมูลจากแหล่งนี้เป็น **แกนหลักในการตอบประเด็นคำถามหลัก** อย่างเคร่งครัด\n` +
-      `2. **การเสริมข้อมูลจากแหล่งอื่น:** หากมีประเด็นอื่นๆ ในคำตอบที่เสริมกับคำตอบ สามารถค้นหาและดึงข้อมูลจากแหล่งอื่นในระบบ (เช่น คลังยาสมุนไพร 97 รายการ, บัญชียาหลักแห่งชาติ, หรืองานวิจัย) มาตอบเสริมเพื่อความสมบูรณ์ได้\n` +
+      `1. **ประเด็นคำถามหลัก (Primary Core):** คำถามนี้พบข้อมูลตอบคำถามจากแหล่งข้อมูลหลักลำดับที่ ${matchedTier}: "${sourceFileName}" ให้ใช้ข้อมูลจากแหล่งนี้เป็น **แกนหลักในการตอบประเด็นคำถามหลัก** อย่างเคร่งครัด\n` +
+      `2. **การเสริมข้อมูลจากแหล่งอื่น (Supplementary):** หากมีประเด็นอื่นๆ ในคำตอบที่เสริมกับคำตอบ สามารถนำข้อมูลจากแหล่งเสริม (${suppSourcesText || "ข้อมูลเสริมในระบบ"}) มาตอบเสริมเพื่อความสมบูรณ์ได้\n` +
       `3. **กฎเหล็กเรื่องความไม่ขัดแย้ง (Strict Non-Contradiction Rule):** ข้อมูลที่นำมาตอบเสริม **ต้องไม่ขัดแย้ง คัดง้าง หรือทำให้สับสนกับคำตอบที่ตอบในประเด็นคำถามหลักจาก Tier ${matchedTier} โดยเด็ดขาด** หากพบข้อมูลเสริมที่ขัดแย้งกับ Tier ${matchedTier} ให้ยึดข้อมูลของ Tier ${matchedTier} เป็นข้อยุติเท่านั้น และห้ามนำข้อมูลที่ขัดแย้งมาตอบเด็ดขาด\n` +
-      `4. **การอ้างอิง APA 7th Edition:** ในหัวข้อ '📚 เอกสารอ้างอิง (APA 7th Edition)' ให้ระบุเอกสารหลัก "${apaCite}" เป็นอันดับแรกเสมอ หากมีการนำข้อมูลเสริมจากแหล่งอื่นมาใช้ตอบจริง สามารถระบุเอกสารอ้างอิงเสริมต่อท้ายได้`;
+      `4. **กฎการระบุเอกสารอ้างอิงทุกแหล่งที่ใช้ตอบ (All-Source APA Citations):** ในหัวข้อ '### 📚 เอกสารอ้างอิง (APA 7th Edition)' ต้องเขียนรายการเอกสารอ้างอิงของ**ทุกแหล่งข้อมูลที่นำมาใช้ตอบจริงให้ครบถ้วน** โดยระบุแหล่งหลัก "${apaCite}" เป็นอันดับแรกเสมอ และระบุเอกสารอ้างอิงเสริมทั้งหมดที่นำมาใช้ตอบจริงต่อท้าย`;
   } else if (isDdi) {
     contextText =
       `\n[แหล่งข้อมูลเฉพาะสำหรับอันตรกิริยาระหว่างสมุนไพรกับยา (Herb-Drug Interactions Exclusive Source)]:\n` +
@@ -2458,9 +2508,10 @@ export async function processLocalChat(
         }
       }
     }
-    if (enableHerbBooks && matchedHerbBooks.length > 0) {
+    if (enableHerbBooks && (primaryHerbBooks.length > 0 || supplementaryHerbBooks.length > 0)) {
+      const allBooks = [...primaryHerbBooks, ...supplementaryHerbBooks];
       knowledgeItems.push(
-        ...matchedHerbBooks.map((b) => ({
+        ...allBooks.map((b) => ({
           id: b.id,
           tier: b.tier,
           sourceFile: b.sourceFile,

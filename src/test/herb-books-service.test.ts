@@ -7,6 +7,7 @@ import {
   formatHerbBooksForAiContext,
   isHerbDrugInteractionQuery,
   searchCpgHerbDrugInteractions,
+  classifyQueryIntent,
 } from '../lib/herb-books-service';
 
 describe('Herb Books & CPG Guidelines Service (7 Tiers Hierarchy with Short-Circuit Retrieval)', () => {
@@ -165,6 +166,64 @@ describe('Herb Books & CPG Guidelines Service (7 Tiers Hierarchy with Short-Circ
     expect(results[0].bookCategory).toBe('cpg_medical_services_2568');
     expect(results[0].herbs).toContain('ขมิ้นชัน');
     expect(results[0].title).toContain('อันตรกิริยา');
+  });
+
+  describe('Intent-Driven Query Routing & All-Source APA Citations', () => {
+    it('classifyQueryIntent correctly categorizes queries by clinical intent', () => {
+      expect(classifyQueryIntent('ขมิ้นชันกินร่วมกับ warfarin ได้ไหม')).toBe('ddi');
+      expect(classifyQueryIntent('สมุนไพรทดแทนยา omeprazole')).toBe('substitution');
+      expect(classifyQueryIntent('แผนภูมิปฐมภูมิ รหัสโรค icd-10')).toBe('clinical_flowchart');
+      expect(classifyQueryIntent('ประกาศบัญชียาหลักแห่งชาติด้านสมุนไพร 2568 ฉบับที่ 2 ปรับปรุงใหม่ 29 รายการ')).toBe('nlem_update');
+      expect(classifyQueryIntent('ชุดความรู้ cd 10 บัตรความรู้โรคท้องผูก')).toBe('disease_education');
+      expect(classifyQueryIntent('แผ่นภาพ A5 cd 10 กลุ่มอาการ บุรีรัมย์')).toBe('poster_symptoms');
+      expect(classifyQueryIntent('แผ่นภาพโปสเตอร์ ยาทดแทน 19 รายการ a5 บุรีรัมย์')).toBe('poster_substitution');
+      expect(classifyQueryIntent('สรรพคุณของขมิ้นชัน')).toBe('general');
+    });
+
+    it('searchHerbBooksTiered: for substitution intent, returns Tier 2 primary + Tier 7 supplementary with both APA citations', () => {
+      const result = searchHerbBooksTiered('สมุนไพรทดแทนยา omeprazole', 3);
+      expect(result.intent).toBe('substitution');
+      expect(result.matchedTier).toBe(2);
+      expect(result.primaryItems.length).toBeGreaterThan(0);
+      expect(result.primaryItems.every((i) => i.tier === 2)).toBe(true);
+      expect(result.allMatchedTiers).toContain(2);
+      expect(result.allMatchedTiers).toContain(7);
+      expect(result.supplementaryItems.length).toBeGreaterThan(0);
+      expect(result.supplementaryItems.every((i) => i.tier === 7)).toBe(true);
+
+      // ตรวจสอบการอ้างอิงทุกแหล่งข้อมูล (แหล่งหลักอยู่อันดับแรก ตามด้วยแหล่งเสริม)
+      expect(result.allApaCitations.length).toBe(2);
+      expect(result.allApaCitations[0]).toContain('แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน');
+      expect(result.allApaCitations[1]).toContain('ยาทดแทน 19 รายการ');
+    });
+
+    it('searchHerbBooksTiered: for DDI intent, strictly returns ONLY Tier 1 with no supplementary book items', () => {
+      const result = searchHerbBooksTiered('ขมิ้นชันกินร่วมกับ warfarin ได้ไหม', 3);
+      expect(result.intent).toBe('ddi');
+      expect(result.matchedTier).toBe(1);
+      expect(result.primaryItems.every((i) => i.tier === 1)).toBe(true);
+      expect(result.supplementaryItems.length).toBe(0);
+      expect(result.allMatchedTiers).toEqual([1]);
+      expect(result.allApaCitations.length).toBe(1);
+      expect(result.allApaCitations[0]).toContain('กรมการแพทย์. (2568)');
+    });
+
+    it('searchHerbBooksTiered: for clinical flowchart intent, returns Tier 3 primary and supplementary items with all citations', () => {
+      const result = searchHerbBooksTiered('แผนภูมิปฐมภูมิ รหัสโรค icd-10 และเกณฑ์ส่งต่อ', 3);
+      expect(result.intent).toBe('clinical_flowchart');
+      expect(result.matchedTier).toBe(3);
+      expect(result.primaryItems.every((i) => i.tier === 3)).toBe(true);
+      expect(result.allApaCitations[0]).toContain('แนวทางการรักษาอาการเจ็บป่วยด้วยยาสมุนไพรในระบบบริการปฐมภูมิ');
+    });
+
+    it('formatHerbBooksForAiContext formats both primary and supplementary items with non-contradiction notices', () => {
+      const tiered = searchHerbBooksTiered('สมุนไพรทดแทนยา omeprazole', 2);
+      const formatted = formatHerbBooksForAiContext(tiered.primaryItems, tiered.supplementaryItems);
+      expect(formatted).toContain('แหล่งข้อมูลหลักลำดับที่ 2');
+      expect(formatted).toContain('แหล่งข้อมูลเสริมลำดับที่ 7');
+      expect(formatted).toContain('กฎเหล็กเรื่องความไม่ขัดแย้ง');
+      expect(formatted).toContain('Omeprazole');
+    });
   });
 });
 

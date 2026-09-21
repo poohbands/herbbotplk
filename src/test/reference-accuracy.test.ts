@@ -897,6 +897,64 @@ drugs:
       expect(pruned.thaijo.length).toBe(0);
       expect(pruned.pubmed.length).toBe(0);
     });
+
+    it("validateAndPruneSources and sanitizeUnrelatedApaReferences retain all matched primary and supplementary sources and citations", () => {
+      const q = "สมุนไพรทดแทนยา omeprazole มีอะไรบ้าง";
+      const answer = `สมุนไพรในบัญชียาหลักแห่งชาติที่ใช้ทดแทนยา Omeprazole ได้แก่ **ขมิ้นชัน**
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+1. กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ*. กระทรวงสาธารณสุข.
+2. กลุ่มงานการแพทย์แผนไทยและการแพทย์ทางเลือก สำนักงานสาธารณสุขจังหวัดบุรีรัมย์. (2567). *ยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทน 19 รายการ* [แผ่นภาพความรู้ A5]. กระทรวงสาธารณสุข.
+
+[METADATA]
+category: herbal_info
+severity: none
+herbs: ขมิ้นชัน
+drugs: Omeprazole
+[/METADATA]`;
+
+      const rawSources = {
+        internal: [{ name: "ยาขมิ้นชัน" }],
+        knowledge: [
+          {
+            id: "sub-curcuma",
+            tier: 2,
+            bookCategory: "substitution_modern_drugs_2567",
+            title: "ขมิ้นชัน ทดแทน Omeprazole",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            source: "แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ",
+            herbs: ["ขมิ้นชัน"],
+            modernDrugs: ["Omeprazole"],
+          },
+          {
+            id: "substitution-19-poster-a5",
+            tier: 7,
+            bookCategory: "substitution_19_poster",
+            title: "ยาสมุนไพรทดแทนยาแผนปัจจุบัน 19 รายการ สสจ.บุรีรัมย์",
+            category: "หนังสือข้อมูลความรู้ด้านยาและเวชปฏิบัติ",
+            source: "ยาสมุนไพรในกลุ่มอาการที่พบบ่อย ยาทดแทน 19 รายการ",
+            herbs: ["ขมิ้นชัน"],
+            modernDrugs: ["Omeprazole"],
+          },
+        ],
+        thaijo: [],
+        pubmed: [],
+      };
+
+      const pruned = validateAndPruneSources(q, answer, rawSources);
+      // Both Tier 2 and Tier 7 must be preserved
+      expect(pruned.knowledge.length).toBe(2);
+      expect(pruned.knowledge.some((k) => k.tier === 2)).toBe(true);
+      expect(pruned.knowledge.some((k) => k.tier === 7)).toBe(true);
+
+      const allowed = extractAllowedEntitiesFromSources(pruned);
+      const cleanedAnswer = sanitizeUnrelatedApaReferences(answer, allowed);
+
+      // Both APA citations must remain in cleaned answer
+      expect(cleanedAnswer).toContain("แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน");
+      expect(cleanedAnswer).toContain("ยาทดแทน 19 รายการ");
+      expect(cleanedAnswer).toContain("สำนักงานสาธารณสุขจังหวัดบุรีรัมย์");
+    });
   });
 });
 

@@ -119,6 +119,42 @@ function normalizeQuery(text: string): string {
     .replace(/\s+/g, "");
 }
 
+export type QueryIntent =
+  | "ddi" // อันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบัน -> Tier 1 (CPG 2568) เท่านั้น
+  | "substitution" // การใช้สมุนไพรทดแทนยาแผนปัจจุบัน -> Tier 2 (32 รายการ) หลัก + Tier 7 (19 รายการ) เสริม
+  | "clinical_flowchart" // แผนภูมิการตัดสินใจ, เกณฑ์ส่งต่อ, ICD-10 -> Tier 3 หลัก + Tier 1 (Monographs) & Tier 6 (10 อาการ) เสริม
+  | "nlem_update" // บัญชียาหลักแห่งชาติ 2568 ฉบับที่ 2 -> Tier 4 หลัก + Tier 1 เสริม
+  | "disease_education" // ชุดความรู้ 10 กลุ่มโรคพบบ่อย -> Tier 5 หลัก + Tier 6 เสริม
+  | "poster_symptoms" // เจาะจงแผ่นภาพ 10 กลุ่มอาการ A5 บุรีรัมย์ -> Tier 6 หลัก + Tier 3 เสริม
+  | "poster_substitution" // เจาะจงแผ่นภาพ 19 ยาทดแทน A5 บุรีรัมย์ -> Tier 7 หลัก + Tier 2 เสริม
+  | "general"; // คำถามทั่วไป -> ค้นหาตามลำดับ 1 ถึง 7
+
+export function classifyQueryIntent(query: string): QueryIntent {
+  const qLower = (query || "").trim().toLowerCase();
+  if (isHerbDrugInteractionQuery(qLower)) {
+    return "ddi";
+  }
+  if (/(?:cd\s*10.*a5|10\s*กลุ่มอาการ.*a5|แผ่นภาพ.*10\s*กลุ่มอาการ|โปสเตอร์.*10\s*กลุ่มอาการ)/i.test(qLower)) {
+    return "poster_symptoms";
+  }
+  if (/(?:ยาทดแทน.*19|19\s*รายการ.*a5|แผ่นภาพ.*19|โปสเตอร์.*19)/i.test(qLower)) {
+    return "poster_substitution";
+  }
+  if (/(?:ฉบับที่\s*2|2568_2|ปรับปรุงใหม่\s*29|29\s*รายการ)/i.test(qLower)) {
+    return "nlem_update";
+  }
+  if (/(?:ทดแทน|แทน(?:ยา)?|ใช้แทน|เปลี่ยนจากยา|กินแทน|กินแทนยา|มียาอะไรแทน|แทน\s*[a-zA-Z]+)/i.test(qLower)) {
+    return "substitution";
+  }
+  if (/(?:icd[- ]?10|icd[- ]?10[- ]?tm|รหัสโรค|ปฐมภูมิ|แผนภูมิการตัดสินใจ|เกณฑ์ส่งต่อ)/i.test(qLower)) {
+    return "clinical_flowchart";
+  }
+  if (/(?:cd\s*10\s*กลุ่มโรค|common\s*diseases|การ์ด\s*10\s*กลุ่มโรค|บัตรความรู้)/i.test(qLower)) {
+    return "disease_education";
+  }
+  return "general";
+}
+
 /** ตรวจสอบว่าคำถามเป็นคำถามเกี่ยวกับอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันหรือไม่ */
 export function isHerbDrugInteractionQuery(query: string): boolean {
   const qLower = (query || "").toLowerCase();
@@ -128,10 +164,15 @@ export function isHerbDrugInteractionQuery(query: string): boolean {
 }
 
 export interface TieredSearchResult {
-  items: HerbBookItem[];
+  items: HerbBookItem[]; // รายการจาก Tier หลัก (คงความเข้ากันได้เดิม)
+  primaryItems: HerbBookItem[]; // รายการจาก Tier หลัก
+  supplementaryItems: HerbBookItem[]; // รายการจาก Tier เสริมที่ไม่ขัดแย้ง
   matchedTier: 1 | 2 | 3 | 4 | 5 | 6 | 7 | null;
+  allMatchedTiers: (1 | 2 | 3 | 4 | 5 | 6 | 7)[];
   sourceFile: string | null;
   apaCitation: string | null;
+  allApaCitations: string[]; // รายการอ้างอิง APA 7th Edition ของทุกแหล่งที่นำมาใช้ตอบ (แหล่งหลักอันดับแรก ตามด้วยแหล่งเสริม)
+  intent: QueryIntent;
 }
 
 const STOP_WORDS = new Set([
@@ -162,11 +203,11 @@ export function scoreHerbBookItem(
 
   // กฎ Exclusivity ตามความประสงค์ที่เฉพาะเจาะจง
   if (isDdiIntent && item.tier !== 1) return 0;
-  if (isNlemEdition2 && item.tier !== 4) return 0;
-  if (isPosterA5Symptoms && item.tier !== 6) return 0;
-  if (isPosterA5Substitution && item.tier !== 7) return 0;
-  if (isCd10Cards && item.tier !== 5) return 0;
-  if (isPrimaryCareIcd && item.tier !== 3) return 0;
+  if (isNlemEdition2 && item.tier !== 4 && item.tier !== 1) return 0;
+  if (isPosterA5Symptoms && item.tier !== 6 && item.tier !== 3) return 0;
+  if (isPosterA5Substitution && item.tier !== 7 && item.tier !== 2) return 0;
+  if (isCd10Cards && item.tier !== 5 && item.tier !== 6) return 0;
+  if (isPrimaryCareIcd && item.tier !== 3 && item.tier !== 1 && item.tier !== 6) return 0;
   if (isSubstitutionIntent && !isDdiIntent && item.tier === 1) return 0;
 
   let score = 0;
@@ -243,48 +284,172 @@ export function scoreHerbBookItem(
 }
 
 /**
- * ค้นหาข้อมูลจากหนังสือความรู้ตามลำดับความสำคัญ 1 ถึง 7 อย่างเคร่งครัด
- * หากพบข้อมูลที่เกี่ยวข้องในลำดับใดแล้ว ให้หยุดการค้นหาทันที (Short-Circuit)
+ * ค้นหาข้อมูลจากคลังหนังสือความรู้ 7 แหล่งตาม Intent-Driven Hierarchy
+ * - จัดลำดับ Tier หลัก (Primary Authority Source) สำหรับประเด็นคำถามหลัก
+ * - ดึงข้อมูลจาก Tier เสริมที่เกี่ยวข้อง (Supplementary Sources) เพื่อเสริมประเด็น โดยคำตอบห้ามขัดแย้งกัน
+ * - รวบรวมรายการอ้างอิง APA 7th Edition ของทุกแหล่งที่นำมาใช้ตอบจริง (แหล่งหลักอยู่อันดับแรก)
  */
 export function searchHerbBooksTiered(
   query: string,
   maxResults = 3
 ): TieredSearchResult {
   const qLower = (query || "").trim().toLowerCase();
-  if (!qLower) {
-    return { items: [], matchedTier: null, sourceFile: null, apaCitation: null };
-  }
+  const emptyResult: TieredSearchResult = {
+    items: [],
+    primaryItems: [],
+    supplementaryItems: [],
+    matchedTier: null,
+    allMatchedTiers: [],
+    sourceFile: null,
+    apaCitation: null,
+    allApaCitations: [],
+    intent: "general",
+  };
+
+  if (!qLower) return emptyResult;
 
   const qNorm = normalizeQuery(qLower);
-  const isDdiIntent = isHerbDrugInteractionQuery(qLower);
+  const intent = classifyQueryIntent(qLower);
+  const isDdiIntent = intent === "ddi";
 
-  // วนลูปตรวจสอบทีละลำดับความสำคัญ 1 ถึง 7 อย่างเคร่งครัด
-  for (let t = 1; t <= 7; t++) {
+  // กำหนดคู่ลำดับ Primary และ Allowed Supplementary ตาม Intent
+  let primaryTierOrder: number[] = [1, 2, 3, 4, 5, 6, 7];
+  let allowedSupplementaryTiers: number[] = [];
+
+  switch (intent) {
+    case "ddi":
+      // คำถามยาตีกัน / DDI -> ใช้เฉพาะ Tier 1 (CPG 2568) เท่านั้นอย่างเคร่งครัด ไม่มี Tier เสริม
+      primaryTierOrder = [1];
+      allowedSupplementaryTiers = [];
+      break;
+    case "substitution":
+      // ยาสมุนไพรทดแทนยาแผนปัจจุบัน -> Tier 2 เป็นหลัก, Tier 7 (แผ่นภาพ 19 รายการ) เป็นเสริม
+      primaryTierOrder = [2, 7];
+      allowedSupplementaryTiers = [7];
+      break;
+    case "clinical_flowchart":
+      // แผนภูมิการตัดสินใจและ ICD-10 -> Tier 3 เป็นหลัก, Tier 1 (Monographs) และ Tier 6 (10 กลุ่มอาการ) เป็นเสริม
+      primaryTierOrder = [3];
+      allowedSupplementaryTiers = [1, 6];
+      break;
+    case "nlem_update":
+      // ปรับปรุงบัญชียาหลัก 2568 ฉบับที่ 2 -> Tier 4 เป็นหลัก, Tier 1 เป็นเสริม
+      primaryTierOrder = [4];
+      allowedSupplementaryTiers = [1];
+      break;
+    case "disease_education":
+      // ชุดความรู้ 10 กลุ่มโรค -> Tier 5 เป็นหลัก, Tier 6 เป็นเสริม
+      primaryTierOrder = [5];
+      allowedSupplementaryTiers = [6];
+      break;
+    case "poster_symptoms":
+      // แผ่นภาพ 10 กลุ่มอาการ สสจ.บุรีรัมย์ -> Tier 6 เป็นหลัก, Tier 3 เป็นเสริม
+      primaryTierOrder = [6];
+      allowedSupplementaryTiers = [3];
+      break;
+    case "poster_substitution":
+      // แผ่นภาพ 19 ยาทดแทน สสจ.บุรีรัมย์ -> Tier 7 เป็นหลัก, Tier 2 เป็นเสริม
+      primaryTierOrder = [7];
+      allowedSupplementaryTiers = [2];
+      break;
+    case "general":
+    default:
+      primaryTierOrder = [1, 2, 3, 4, 5, 6, 7];
+      allowedSupplementaryTiers = [1, 2, 3, 4, 5, 6, 7];
+      break;
+  }
+
+  // 1. ค้นหา Primary Tier ตามลำดับ priority
+  let matchedPrimaryTier: (1 | 2 | 3 | 4 | 5 | 6 | 7) | null = null;
+  let primaryItems: HerbBookItem[] = [];
+
+  for (const t of primaryTierOrder) {
     const tierItems = HERB_BOOKS_DATA.filter((i) => i.tier === t);
     const scoredTierItems: { item: HerbBookItem; score: number }[] = [];
 
     for (const item of tierItems) {
       const score = scoreHerbBookItem(item, qLower, qNorm, isDdiIntent);
-      // เกณฑ์คะแนนที่ถือว่าพบข้อมูลที่เกี่ยวข้อง
       if (score >= 25) {
         scoredTierItems.push({ item, score });
       }
     }
 
-    // หากพบข้อมูลในลำดับ t ให้หยุดการค้นหาลำดับถัดไปทันที (Short-Circuit Rule)
     if (scoredTierItems.length > 0) {
       scoredTierItems.sort((a, b) => b.score - a.score);
-      const topItems = scoredTierItems.slice(0, maxResults).map((s) => s.item);
-      return {
-        items: topItems,
-        matchedTier: t as 1 | 2 | 3 | 4 | 5 | 6 | 7,
-        sourceFile: topItems[0].sourceFile,
-        apaCitation: topItems[0].apaCitation,
-      };
+      primaryItems = scoredTierItems.slice(0, maxResults).map((s) => s.item);
+      matchedPrimaryTier = t as (1 | 2 | 3 | 4 | 5 | 6 | 7);
+      break;
     }
   }
 
-  return { items: [], matchedTier: null, sourceFile: null, apaCitation: null };
+  if (!matchedPrimaryTier || primaryItems.length === 0) {
+    return emptyResult;
+  }
+
+  // 2. ค้นหา Supplementary Tier ที่อนุญาต (ถ้าไม่ใช่ DDI) เพื่อนำมาเสริมประเด็น
+  const supplementaryItems: HerbBookItem[] = [];
+  const supplementaryTiersMatched: (1 | 2 | 3 | 4 | 5 | 6 | 7)[] = [];
+
+  if (!isDdiIntent && allowedSupplementaryTiers.length > 0) {
+    for (const st of allowedSupplementaryTiers) {
+      if (st === matchedPrimaryTier) continue;
+      const tierItems = HERB_BOOKS_DATA.filter((i) => i.tier === st);
+      const scored: { item: HerbBookItem; score: number }[] = [];
+
+      for (const item of tierItems) {
+        const score = scoreHerbBookItem(item, qLower, qNorm, false);
+        if (score >= 25) {
+          scored.push({ item, score });
+        }
+      }
+
+      if (scored.length > 0) {
+        scored.sort((a, b) => b.score - a.score);
+        // เลือกไม่เกิน 2 รายการต่อ Tier เสริมเพื่อไม่ให้ล้น context
+        supplementaryItems.push(...scored.slice(0, 2).map((s) => s.item));
+        supplementaryTiersMatched.push(st as (1 | 2 | 3 | 4 | 5 | 6 | 7));
+      }
+    }
+  }
+
+  // รวบรวมทุก Tier ที่นำมาใช้
+  const allMatchedTiers: (1 | 2 | 3 | 4 | 5 | 6 | 7)[] = [
+    matchedPrimaryTier,
+    ...supplementaryTiersMatched,
+  ];
+
+  // รวบรวมและเรียงลำดับรายการอ้างอิง APA 7th Edition:
+  // แหล่งข้อมูลหลักอยู่อันดับแรก ตามด้วยแหล่งข้อมูลเสริมทั้งหมด
+  const allApaCitations: string[] = [];
+  const seenApa = new Set<string>();
+
+  const primaryMeta = HERB_BOOK_CATEGORIES.find((c) => c.tier === matchedPrimaryTier);
+  const primaryApa = primaryMeta?.apa || primaryItems[0]?.apaCitation;
+  if (primaryApa) {
+    allApaCitations.push(primaryApa);
+    seenApa.add(primaryApa);
+  }
+
+  for (const item of supplementaryItems) {
+    const sMeta = HERB_BOOK_CATEGORIES.find((c) => c.tier === item.tier);
+    const sApa = sMeta?.apa || item.apaCitation;
+    if (sApa && !seenApa.has(sApa)) {
+      allApaCitations.push(sApa);
+      seenApa.add(sApa);
+    }
+  }
+
+  return {
+    items: primaryItems,
+    primaryItems,
+    supplementaryItems,
+    matchedTier: matchedPrimaryTier,
+    allMatchedTiers,
+    sourceFile: primaryItems[0].sourceFile,
+    apaCitation: primaryApa || primaryItems[0].apaCitation,
+    allApaCitations,
+    intent,
+  };
 }
 
 /** ค้นหาหนังสือข้อมูลความรู้ (เรียกใช้ searchHerbBooksTiered ภายใต้กฎ Short-Circuit) */
@@ -293,29 +458,57 @@ export function searchHerbBooks(query: string, maxResults = 3): HerbBookItem[] {
   return result.items;
 }
 
-export function formatHerbBooksForAiContext(items: HerbBookItem[]): string {
-  if (!items || items.length === 0) return "";
+export function formatHerbBooksForAiContext(
+  items: HerbBookItem[],
+  supplementaryItems: HerbBookItem[] = []
+): string {
+  if ((!items || items.length === 0) && (!supplementaryItems || supplementaryItems.length === 0)) {
+    return "";
+  }
 
-  const tier = items[0]?.tier;
-  const sourceFile = items[0]?.sourceFile;
-  let out = `\n[หนังสือและเอกสารข้อมูลความรู้ด้านยาและเวชปฏิบัติ — ลำดับความสำคัญที่ ${tier}: ${sourceFile}]\n`;
-  out += `*หมายเหตุตามระเบียบระบบ: พบข้อมูลจากแหล่งข้อมูลลำดับที่ ${tier} ระบบหยุดค้นหาจากแหล่งอื่น และใช้อ้างอิงจากแหล่งนี้เท่านั้น*\n`;
+  let out = "";
 
-  items.forEach((item, idx) => {
-    out += `\n--- รายการที่ ${idx + 1}: ${item.title} (ลำดับที่ ${item.tier}: ${item.sourceFile}) ---\n`;
-    out += `• แหล่งอ้างอิง: ${item.bookTitle} (${item.chapter})\n`;
-    if (item.evidenceLevel) {
-      out += `• ระดับหลักฐานเชิงประจักษ์: ${item.evidenceLevel}\n`;
-    }
-    if (item.modernDrugs && item.modernDrugs.length > 0) {
-      out += `• ยาแผนปัจจุบันที่เกี่ยวข้อง/ใช้ทดแทน: ${item.modernDrugs.join(", ")}\n`;
-    }
-    if (item.icdCodes && item.icdCodes.length > 0) {
-      out += `• รหัสโรคที่เกี่ยวข้อง (ICD-10 / ICD-10-TM): ${item.icdCodes.join(", ")}\n`;
-    }
-    out += `• รายละเอียดทางวิชาการ: ${item.content}\n`;
-    out += `• เอกสารอ้างอิง (APA 7th Edition): ${item.apaCitation}\n`;
-  });
+  if (items && items.length > 0) {
+    const tier = items[0]?.tier;
+    const sourceFile = items[0]?.sourceFile;
+    out += `\n[หนังสือและเอกสารข้อมูลความรู้ด้านยาและเวชปฏิบัติ — แหล่งข้อมูลหลักลำดับที่ ${tier}: ${sourceFile}]\n`;
+    out += `*คำสั่งสำคัญ: ให้ใช้ข้อมูลจากลำดับที่ ${tier} นี้เป็นแกนหลักในการตอบประเด็นคำถามหลักอย่างเคร่งครัด*\n`;
+
+    items.forEach((item, idx) => {
+      out += `\n--- รายการหลักที่ ${idx + 1}: ${item.title} (ลำดับที่ ${item.tier}: ${item.sourceFile}) ---\n`;
+      out += `• แหล่งอ้างอิง: ${item.bookTitle} (${item.chapter})\n`;
+      if (item.evidenceLevel) {
+        out += `• ระดับหลักฐานเชิงประจักษ์: ${item.evidenceLevel}\n`;
+      }
+      if (item.modernDrugs && item.modernDrugs.length > 0) {
+        out += `• ยาแผนปัจจุบันที่เกี่ยวข้อง/ใช้ทดแทน: ${item.modernDrugs.join(", ")}\n`;
+      }
+      if (item.icdCodes && item.icdCodes.length > 0) {
+        out += `• รหัสโรคที่เกี่ยวข้อง (ICD-10 / ICD-10-TM): ${item.icdCodes.join(", ")}\n`;
+      }
+      out += `• รายละเอียดทางวิชาการ: ${item.content}\n`;
+      out += `• เอกสารอ้างอิง (APA 7th Edition): ${item.apaCitation}\n`;
+    });
+  }
+
+  if (supplementaryItems && supplementaryItems.length > 0) {
+    const suppTiers = Array.from(new Set(supplementaryItems.map((s) => s.tier))).join(", ");
+    out += `\n[หนังสือและเอกสารข้อมูลความรู้ด้านยาและเวชปฏิบัติ — แหล่งข้อมูลเสริมลำดับที่ ${suppTiers}]\n`;
+    out += `*กฎเหล็กเรื่องความไม่ขัดแย้ง: ข้อมูลเสริมนี้ใช้เสริมประเด็นเพิ่มเติมได้ แต่ห้ามขัดแย้ง คัดง้าง หรือทำให้สับสนกับข้อมูลหลักข้างต้นโดยเด็ดขาด หากมีจุดใดต่างกันให้ยึดข้อมูลหลักเป็นข้อยุติ*\n`;
+
+    supplementaryItems.forEach((item, idx) => {
+      out += `\n--- รายการเสริมที่ ${idx + 1}: ${item.title} (ลำดับที่ ${item.tier}: ${item.sourceFile}) ---\n`;
+      out += `• แหล่งอ้างอิง: ${item.bookTitle} (${item.chapter})\n`;
+      if (item.modernDrugs && item.modernDrugs.length > 0) {
+        out += `• ยาแผนปัจจุบันที่เกี่ยวข้อง/ใช้ทดแทน: ${item.modernDrugs.join(", ")}\n`;
+      }
+      if (item.icdCodes && item.icdCodes.length > 0) {
+        out += `• รหัสโรคที่เกี่ยวข้อง (ICD-10 / ICD-10-TM): ${item.icdCodes.join(", ")}\n`;
+      }
+      out += `• รายละเอียดข้อมูลเสริม: ${item.content}\n`;
+      out += `• เอกสารอ้างอิง (APA 7th Edition): ${item.apaCitation}\n`;
+    });
+  }
 
   return out;
 }
