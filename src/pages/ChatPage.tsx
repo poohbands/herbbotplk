@@ -886,8 +886,12 @@ const ChatPage = () => {
             >
               📚 เอกสารวิชาการ
             </a>
-            <a href="/herbs" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
-              📖 สารานุกรม
+            <a
+              href="/herbs"
+              className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted flex items-center gap-1"
+              title="เปิดคลังยาสมุนไพร"
+            >
+              🌿 คลังยาสมุนไพร
             </a>
             <a href="/admin" className="text-sm text-muted-foreground hover:text-primary transition-colors px-3 py-1.5 rounded-md hover:bg-muted">
               Admin
@@ -1311,9 +1315,9 @@ const ChatPage = () => {
                                 return (
                                   <div
                                     key={`apa-pubmed-${p.pmid}`}
-                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                    className="p-2 rounded-md bg-background/70 border border-border/50"
                                   >
-                                    <p className="leading-relaxed flex-1">
+                                    <p className="leading-relaxed">
                                       {p.authors}. ({p.year || "n.d."}). {p.title}. <em>{p.journal}</em>.{" "}
                                       <a
                                         href={url}
@@ -1326,26 +1330,26 @@ const ChatPage = () => {
                                         className="text-primary hover:underline break-all"
                                       >
                                         {url}
-                                      </a>
+                                      </a>{" "}
+                                      <button
+                                        type="button"
+                                        onClick={() => openExternal(url)}
+                                        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20 transition-all ml-1.5 align-middle cursor-pointer shadow-xs"
+                                        title="เปิดแหล่งอ้างอิงงานวิจัย PubMed"
+                                      >
+                                        <span>แหล่งอ้างอิง</span>
+                                        <ExternalLink className="w-2.5 h-2.5" />
+                                      </button>
                                     </p>
-                                    <button
-                                      type="button"
-                                      onClick={() => openExternal(url)}
-                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
-                                      title="เปิดเอกสารงานวิจัย PubMed"
-                                    >
-                                      <span>เปิดเอกสาร</span>
-                                      <ExternalLink className="w-2.5 h-2.5" />
-                                    </button>
                                   </div>
                                 );
                               })}
                               {(msg.sources?.thaijo || []).map((t, idx) => (
                                 <div
                                   key={`apa-thaijo-${idx}`}
-                                  className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                  className="p-2 rounded-md bg-background/70 border border-border/50"
                                 >
-                                  <p className="leading-relaxed flex-1">
+                                  <p className="leading-relaxed">
                                     {t.authors ? `${t.authors}. ` : ""}({t.year || "ม.ป.ป."}). {t.title}. <em>{t.journal}</em>.{" "}
                                     <a
                                       href={t.url}
@@ -1358,17 +1362,17 @@ const ChatPage = () => {
                                       className="text-primary hover:underline break-all"
                                     >
                                       {t.url}
-                                    </a>
+                                    </a>{" "}
+                                    <button
+                                      type="button"
+                                      onClick={() => openExternal(t.url)}
+                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-herb-gold/15 text-herb-gold hover:bg-herb-gold/25 border border-herb-gold/30 transition-all ml-1.5 align-middle cursor-pointer shadow-xs"
+                                      title="เปิดแหล่งอ้างอิงงานวิจัย ThaiJO"
+                                    >
+                                      <span>แหล่งอ้างอิง</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </button>
                                   </p>
-                                  <button
-                                    type="button"
-                                    onClick={() => openExternal(t.url)}
-                                    className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-herb-gold/15 text-herb-gold hover:bg-herb-gold/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
-                                    title="เปิดเอกสารงานวิจัย ThaiJO"
-                                  >
-                                    <span>เปิดเอกสาร</span>
-                                    <ExternalLink className="w-2.5 h-2.5" />
-                                  </button>
                                 </div>
                               ))}
                               {(msg.sources?.knowledge || [])
@@ -1379,9 +1383,9 @@ const ChatPage = () => {
                                 return (
                                   <div
                                     key={`apa-knowledge-${k.id}`}
-                                    className="p-2 rounded-md bg-background/70 border border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                                    className="p-2 rounded-md bg-background/70 border border-border/50"
                                   >
-                                    <p className="leading-relaxed flex-1">
+                                    <p className="leading-relaxed">
                                       {formatKnowledgeApa(k)}
                                       {docUrl && (
                                         <>
@@ -1400,17 +1404,17 @@ const ChatPage = () => {
                                             {docUrl}
                                           </a>
                                         </>
-                                      )}
+                                      )}{" "}
+                                      <button
+                                        type="button"
+                                        onClick={() => handleOpenKnowledge(k)}
+                                        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 border border-emerald-500/30 transition-all ml-1.5 align-middle cursor-pointer shadow-xs"
+                                        title={isNlem ? "เปิดข้อมูลตัวยาที่ค้นหา" : "เปิดอ่านเอกสารแหล่งอ้างอิง"}
+                                      >
+                                        <span>แหล่งอ้างอิง</span>
+                                        <ExternalLink className="w-2.5 h-2.5" />
+                                      </button>
                                     </p>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleOpenKnowledge(k)}
-                                      className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600/25 transition-colors shrink-0 self-end sm:self-auto cursor-pointer"
-                                      title={isNlem ? "เปิดข้อมูลตัวยาที่ค้นหา" : "เปิดอ่านเอกสารองค์ความรู้"}
-                                    >
-                                      <span>เปิดเอกสาร</span>
-                                      <ExternalLink className="w-2.5 h-2.5" />
-                                    </button>
                                   </div>
                                 );
                               })}

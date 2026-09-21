@@ -461,8 +461,8 @@ const HerbsPage = () => {
               <BookOpen className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-lg font-bold font-thai text-foreground">สารานุกรมสมุนไพรไทย</h1>
-              <p className="text-xs text-muted-foreground">ฐานข้อมูลสมุนไพรและตำรับยาแผนไทย</p>
+              <h1 className="text-lg font-bold font-thai text-foreground">คลังยาสมุนไพรไทย</h1>
+              <p className="text-xs text-muted-foreground">ฐานข้อมูลสมุนไพรเดี่ยวและตำรับยาแผนไทย</p>
             </div>
           </div>
           <a href="/" className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 px-3 py-1.5 rounded-md hover:bg-muted">
