@@ -145,11 +145,11 @@ describe("AI Learning & Knowledge Verification Service", () => {
     expect(matchQ19.item?.id).toBe("verified-qa-19-system-sources-andrographis");
     expect(matchQ19.verifiedAnswer).toBeDefined();
 
-    // Must focus on the 3 primary data sources, NOT clinical contraindications list
-    expect(matchQ19.verifiedAnswer).toContain("แหล่งข้อมูลมาตรฐานทางวิชาการและการแพทย์ 3 แหล่งหลัก");
+    // Must focus on the 2 primary academic data sources, NOT clinical contraindications list, and NOT local database
+    expect(matchQ19.verifiedAnswer).toContain("แหล่งข้อมูลมาตรฐานทางวิชาการและการแพทย์ 2 แหล่งหลัก");
     expect(matchQ19.verifiedAnswer).toContain("ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร");
     expect(matchQ19.verifiedAnswer).toContain("คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ");
-    expect(matchQ19.verifiedAnswer).toContain("ฐานข้อมูลสมุนไพรและตำรับยาไทย สสจ.พิษณุโลก");
+    expect(matchQ19.verifiedAnswer).not.toContain("ฐานข้อมูลสมุนไพรและตำรับยาไทย สสจ.พิษณุโลก");
     expect(matchQ19.verifiedAnswer).toContain("การตรวจสอบย้อนกลับ");
     expect(matchQ19.verifiedAnswer).toContain("เอกสารวิชาการ");
 
