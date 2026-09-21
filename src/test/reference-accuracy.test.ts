@@ -11,6 +11,7 @@ import {
   sanitizeUnrelatedApaReferences,
   extractAllowedEntitiesFromSources,
   buildSystemPrompt,
+  stripAllApaReferences,
 } from "../lib/local-chat-service";
 
 describe("Reference and Citation Accuracy (Strict Relevance)", () => {
@@ -954,6 +955,79 @@ drugs: Omeprazole
       expect(cleanedAnswer).toContain("แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน");
       expect(cleanedAnswer).toContain("ยาทดแทน 19 รายการ");
       expect(cleanedAnswer).toContain("สำนักงานสาธารณสุขจังหวัดบุรีรัมย์");
+    });
+  });
+
+  describe("In-Text Numbered Citations [1], [2] and APA Stripping", () => {
+    it("buildSystemPrompt includes instructions for in-text numbered citations [1], [2] when APA is enabled", () => {
+      const prompt = buildSystemPrompt({
+        enable_herb_books: true,
+        show_apa_citations: true,
+      } as any);
+
+      expect(prompt).toContain("In-Text Numbered Citations [1], [2]");
+      expect(prompt).toContain("[1] = มาจากแหล่งข้อมูลหลัก");
+      expect(prompt).toContain("[2], [3] = มาจากแหล่งข้อมูลเสริม");
+    });
+
+    it("buildSystemPrompt instructs AI not to output in-text citations or APA block when APA is disabled", () => {
+      const prompt = buildSystemPrompt({
+        enable_herb_books: true,
+        show_apa_citations: false,
+      } as any);
+
+      expect(prompt).toContain("ขณะนี้ระบบปิดการแสดงผลหัวข้อเอกสารอ้างอิง APA 7th Edition");
+      expect(prompt).toContain("ห้ามใส่หมายเลขกำกับอ้างอิง [1], [2] ในเนื้อหาคำตอบ");
+    });
+
+    it("sanitizeUnrelatedApaReferences preserves in-text numbered citations [1], [2] in answer body", () => {
+      const answer = `ขมิ้นชันมีสรรพคุณบรรเทาอาการท้องอืด แน่นจุกเสียด [1] และสามารถใช้ทดแทนยา Omeprazole ได้ [2]
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+1. กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ*. กระทรวงสาธารณสุข.
+2. คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.`;
+
+      const allowed = ["ขมิ้นชัน", "omeprazole"];
+      const cleaned = sanitizeUnrelatedApaReferences(answer, allowed);
+
+      expect(cleaned).toContain("ขมิ้นชันมีสรรพคุณบรรเทาอาการท้องอืด แน่นจุกเสียด [1]");
+      expect(cleaned).toContain("และสามารถใช้ทดแทนยา Omeprazole ได้ [2]");
+      expect(cleaned).toContain("### 📚 เอกสารอ้างอิง (APA 7th Edition)");
+    });
+
+    it("stripAllApaReferences removes both APA block and in-text numbered citations [1], [2] cleanly", () => {
+      const answer = `ขมิ้นชันมีสรรพคุณบรรเทาอาการท้องอืด [1] ขับลมในทางเดินอาหาร [1], [2] และใช้ทดแทนยา Omeprazole ได้ [2]
+สามารถรับประทานครั้งละ 2 แคปซูล [1][2] หรือ [1, 2, 3]
+
+สำหรับข้อมูลเพิ่มเติม โปรดดู [คู่มือการใช้ยา](https://example.com/guide)
+
+### 📚 เอกสารอ้างอิง (APA 7th Edition)
+1. กรมการแพทย์แผนไทยและการแพทย์ทางเลือก. (2567). *แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ*. กระทรวงสาธารณสุข.
+2. คณะกรรมการพัฒนาระบบยาแห่งชาติ. (2568). *ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร (ฉบับที่ 2) พ.ศ. 2568*. ราชกิจจานุเบกษา.
+
+[METADATA]
+category: herbal_info
+[/METADATA]`;
+
+      const stripped = stripAllApaReferences(answer);
+
+      // APA block must be stripped
+      expect(stripped).not.toContain("### 📚 เอกสารอ้างอิง");
+      expect(stripped).not.toContain("แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติ");
+
+      // In-text bracket citations must be cleanly stripped
+      expect(stripped).not.toContain("[1]");
+      expect(stripped).not.toContain("[2]");
+      expect(stripped).not.toContain("[1, 2, 3]");
+
+      // Sentences must read cleanly
+      expect(stripped).toContain("ขมิ้นชันมีสรรพคุณบรรเทาอาการท้องอืด ขับลมในทางเดินอาหาร และใช้ทดแทนยา Omeprazole ได้");
+
+      // Markdown links must NOT be stripped
+      expect(stripped).toContain("[คู่มือการใช้ยา](https://example.com/guide)");
+
+      // Metadata must remain
+      expect(stripped).toContain("[METADATA]");
     });
   });
 });
