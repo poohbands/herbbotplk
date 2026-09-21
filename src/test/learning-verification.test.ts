@@ -137,4 +137,59 @@ describe("AI Learning & Knowledge Verification Service", () => {
     expect(bulletMatch.found).toBe(true);
     expect(bulletMatch.verifiedAnswer).toBe(match.verifiedAnswer);
   });
+
+  it("accurately returns Question 19 source inquiry for ฟ้าทะลายโจร without falling into Question 10 clinical contraindications", () => {
+    // 1. Direct benchmark question 19
+    const matchQ19 = findVerifiedAnswer("ข้อมูลเรื่องข้อห้ามใช้และข้อควรระวังของฟ้าทะลายโจรที่ระบบตอบ อ้างอิงมาจากแหล่งข้อมูลใด?");
+    expect(matchQ19.found).toBe(true);
+    expect(matchQ19.item?.id).toBe("verified-qa-19-system-sources-andrographis");
+    expect(matchQ19.verifiedAnswer).toBeDefined();
+
+    // Must focus on the 3 primary data sources, NOT clinical contraindications list
+    expect(matchQ19.verifiedAnswer).toContain("แหล่งข้อมูลมาตรฐานทางวิชาการและการแพทย์ 3 แหล่งหลัก");
+    expect(matchQ19.verifiedAnswer).toContain("ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร");
+    expect(matchQ19.verifiedAnswer).toContain("คู่มือการใช้ยาสมุนไพรในการดูแลสุขภาพเบื้องต้น 10 กลุ่มอาการ");
+    expect(matchQ19.verifiedAnswer).toContain("ฐานข้อมูลสมุนไพรและตำรับยาไทย สสจ.พิษณุโลก");
+    expect(matchQ19.verifiedAnswer).toContain("การตรวจสอบย้อนกลับ");
+    expect(matchQ19.verifiedAnswer).toContain("เอกสารวิชาการ");
+
+    // Must NOT start with Question 10's clinical header
+    expect(matchQ19.verifiedAnswer).not.toContain("ขอสรุปประเด็นความปลอดภัยที่สำคัญสูงสุดดังนี้ครับ");
+    expect(matchQ19.verifiedAnswer).not.toContain("## 🚫 ข้อห้ามใช้เด็ดขาด (Contraindications)\n1. **ห้ามใช้ในผู้ที่เคยแพ้ฟ้าทะลายโจร**");
+
+    // 2. Conversational prefix variation: "ถามคำถามว่า  ข้อมูลเรื่องข้อห้ามใช้..."
+    const matchPrefix = findVerifiedAnswer("ถามคำถามว่า  ข้อมูลเรื่องข้อห้ามใช้และข้อควรระวังของฟ้าทะลายโจรที่ระบบตอบ อ้างอิงมาจากแหล่งข้อมูลใด?");
+    expect(matchPrefix.found).toBe(true);
+    expect(matchPrefix.item?.id).toBe("verified-qa-19-system-sources-andrographis");
+    expect(matchPrefix.verifiedAnswer).toBe(matchQ19.verifiedAnswer);
+
+    // 3. Variant asking about sources of precautions
+    const matchVariant = findVerifiedAnswer("ข้อห้ามใช้และข้อควรระวังของฟ้าทะลายโจร อ้างอิงมาจากแหล่งข้อมูลใด");
+    expect(matchVariant.found).toBe(true);
+    expect(matchVariant.item?.id).toBe("verified-qa-19-system-sources-andrographis");
+
+    // 4. In contrast, Question 10 asking about clinical cautions MUST return Question 10
+    const matchQ10 = findVerifiedAnswer("ฟ้าทะลายโจรมีข้อห้ามใช้หรือข้อควรระวังที่สำคัญอะไรบ้าง?");
+    expect(matchQ10.found).toBe(true);
+    expect(matchQ10.item?.id).toBe("verified-qa-10-andrographis-cautions");
+    expect(matchQ10.verifiedAnswer).toContain("ข้อห้ามใช้เด็ดขาด (Contraindications)");
+    expect(matchQ10.verifiedAnswer).not.toContain("แหล่งข้อมูลมาตรฐานทางวิชาการและการแพทย์ 3 แหล่งหลัก");
+  });
+
+  it("accurately returns Question 20 source inquiry for DDI without intercepting clinical DDI items", () => {
+    // 1. Direct benchmark question 20
+    const matchQ20 = findVerifiedAnswer("ข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันที่ระบบใช้ตอบ สามารถตรวจสอบจากแหล่งอ้างอิงใดได้บ้าง?");
+    expect(matchQ20.found).toBe(true);
+    expect(matchQ20.item?.id).toBe("verified-qa-20-system-sources-ddi");
+    expect(matchQ20.verifiedAnswer).toContain("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ กรมการแพทย์ (พ.ศ. 2568)");
+    expect(matchQ20.verifiedAnswer).toContain("ประกาศคณะกรรมการพัฒนาระบบยาแห่งชาติ เรื่อง บัญชียาหลักแห่งชาติด้านสมุนไพร");
+    expect(matchQ20.verifiedAnswer).toContain("แนวทางการใช้ยาสมุนไพรในบัญชียาหลักแห่งชาติทดแทนยาแผนปัจจุบัน 32 รายการ");
+    expect(matchQ20.verifiedAnswer).toContain("PubMed / MEDLINE");
+
+    // 2. Conversational prefix
+    const matchQ20Prefix = findVerifiedAnswer("ขอถามว่า ข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันที่ระบบใช้ตอบ สามารถตรวจสอบจากแหล่งอ้างอิงใดได้บ้าง?");
+    expect(matchQ20Prefix.found).toBe(true);
+    expect(matchQ20Prefix.item?.id).toBe("verified-qa-20-system-sources-ddi");
+  });
 });
+

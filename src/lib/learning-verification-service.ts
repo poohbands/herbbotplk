@@ -303,6 +303,16 @@ export const BUILTIN_VERIFIED_ITEMS: VerificationItem[] = [
   ...BUILTIN_VERIFIED_DATASET,
 ];
 
+function cleanQuestionText(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/^[\s\uF0B7•\-\*\d.)]+/, "")
+    .replace(/[\s\-_,()/:.?؟!\uF0B7•\*\u2022\uFEFF]+/g, "");
+}
+
+const CONVERSATIONAL_PREFIX_REGEX = /^(?:ถามคำถามว่า|อยากทราบว่า|ขอถามว่า|ช่วยบอกหน่อยว่า|รบกวนถามว่า|ขอสอบถามหน่อยว่า|ขอสอบถามว่า|สอบถามหน่อยว่า|สอบถามว่า|ถามว่า|ช่วยตอบหน่อยว่า|อยากรู้ว่า|รบกวนสอบถามว่า)/;
+
 /**
  * ค้นหาคำตอบที่ผ่านการตรวจทานและรับรองความถูกต้องแล้ว (Verified Golden Knowledge)
  * เมื่อผู้ใช้ถามคำถาม หากมี Q&A ที่แอดมินหรือผู้เชี่ยวชาญเคยรับรองไว้และตรงกับคำถาม จะดึงมาใช้ตอบทันที
@@ -318,9 +328,8 @@ export function findVerifiedAnswer(question: string): {
 
   const rawQ = question.trim().toLowerCase();
   // ตัด bullet points (เช่น Word bullet \uF0B7 หรือ • หรือ - หรือตัวเลขข้อ) และเครื่องหมายวรรคตอน
-  const cleanQ = rawQ
-    .replace(/^[\s\uF0B7•\-\*\d.)]+/, "")
-    .replace(/[\s\-_,()/:.?؟!\uF0B7•\*\u2022\uFEFF]+/g, "");
+  const cleanQ = cleanQuestionText(rawQ);
+  const strippedCleanQ = cleanQ.replace(CONVERSATIONAL_PREFIX_REGEX, "");
 
   const queue = getLearningQueue();
   const queueVerified = queue.filter((q) => q.status === "verified");
@@ -329,67 +338,133 @@ export function findVerifiedAnswer(question: string): {
     ...BUILTIN_VERIFIED_ITEMS.filter((b) => !queue.some((q) => q.id === b.id && q.status === "rejected")),
   ];
 
+  const buildResult = (item: VerificationItem) => ({
+    found: true,
+    verifiedAnswer: item.verifiedAnswer,
+    source: item.verifiedBy || "คลังข้อมูลสมุนไพรและประกาศบัญชียาหลักแห่งชาติ",
+    docTitle: item.question.replace(/^[\s\uF0B7•\-\*\d.)]+/, "").trim(),
+    item,
+  });
+
+  // --- PASS 1: Global Exact Matching (raw, cleaned, or prefix-stripped) ---
   for (const item of verifiedItems) {
     const itemQ = item.question.trim().toLowerCase();
-    const cleanItemQ = itemQ
-      .replace(/^[\s\uF0B7•\-\*\d.)]+/, "")
-      .replace(/[\s\-_,()/:.?؟!\uF0B7•\*\u2022\uFEFF]+/g, "");
+    const cleanItemQ = cleanQuestionText(itemQ);
+    const strippedItemQ = cleanItemQ.replace(CONVERSATIONAL_PREFIX_REGEX, "");
 
-    // 1. ตรงกันเป๊ะ หรือตรงกันหลังตัดวรรคตอน/bullet
-    if (rawQ === itemQ || cleanQ === cleanItemQ) {
-      return {
-        found: true,
-        verifiedAnswer: item.verifiedAnswer,
-        source: item.verifiedBy || "คลังข้อมูลสมุนไพรและประกาศบัญชียาหลักแห่งชาติ",
-        docTitle: item.question.replace(/^[\s\uF0B7•\-\*\d.)]+/, "").trim(),
-        item,
-      };
+    if (
+      rawQ === itemQ ||
+      cleanQ === cleanItemQ ||
+      strippedCleanQ === cleanItemQ ||
+      cleanQ === strippedItemQ ||
+      strippedCleanQ === strippedItemQ
+    ) {
+      return buildResult(item);
+    }
+  }
+
+  // Detect if question is a Source / Reference Meta-Inquiry
+  const isSourceInquiry =
+    cleanQ.includes("อ้างอิงมาจาก") ||
+    cleanQ.includes("แหล่งข้อมูล") ||
+    cleanQ.includes("แหล่งอ้างอิง") ||
+    cleanQ.includes("ตรวจสอบจากแหล่ง") ||
+    cleanQ.includes("ที่มาของข้อมูล") ||
+    cleanQ.includes("มาจากแหล่ง") ||
+    cleanQ.includes("สืบค้นจาก") ||
+    cleanQ.includes("เอกสารอ้างอิงใด") ||
+    cleanQ.includes("นำมาจากที่ใด") ||
+    cleanQ.includes("นำมาจากไหน") ||
+    cleanQ.includes("อ้างอิงจากที่ใด") ||
+    cleanQ.includes("อ้างอิงจากไหน") ||
+    ((cleanQ.includes("อ้างอิง") || cleanQ.includes("ที่มา")) &&
+      (cleanQ.includes("แหล่ง") || cleanQ.includes("ใด") || cleanQ.includes("ไหน") || cleanQ.includes("ตรวจสอบ")));
+
+  const isSourceItem = (item: VerificationItem) => {
+    return (
+      item.id === "verified-qa-19-system-sources-andrographis" ||
+      item.id === "verified-qa-20-system-sources-ddi" ||
+      (item.tags && (item.tags.includes("อ้างอิงมาจาก") || item.tags.includes("แหล่งอ้างอิง") || item.tags.includes("ที่มา")))
+    );
+  };
+
+  // --- PASS 2: Intent-Specific Handlers ---
+  if (isSourceInquiry) {
+    // 2.1 ถามแหล่งข้อมูลเรื่องข้อห้ามใช้/ข้อควรระวัง/ฟ้าทะลายโจร (Question 19)
+    if (
+      cleanQ.includes("ฟ้าทะลายโจร") ||
+      (cleanQ.includes("ข้อห้ามใช้") && cleanQ.includes("ข้อควรระวัง"))
+    ) {
+      const q19 = verifiedItems.find((it) => it.id === "verified-qa-19-system-sources-andrographis");
+      if (q19) return buildResult(q19);
     }
 
-    // 2. คำถามมีความยาวและครอบคลุม Substring
+    // 2.2 ถามแหล่งข้อมูลอันตรกิริยา/ยาแผนปัจจุบัน/DDI (Question 20)
+    if (
+      cleanQ.includes("อันตรกิริยา") ||
+      cleanQ.includes("ยาแผนปัจจุบัน") ||
+      cleanQ.includes("ddi") ||
+      cleanQ.includes("ตีกัน")
+    ) {
+      const q20 = verifiedItems.find((it) => it.id === "verified-qa-20-system-sources-ddi");
+      if (q20) return buildResult(q20);
+    }
+  }
+
+  // 2.3 ตรวจสอบกรณีคำถามอาการไอ + สมุนไพร/ตำรับยา (Question 18)
+  if (!isSourceInquiry) {
+    const isCoughRemedyQuery =
+      (cleanQ.includes("อาการไอ") || cleanQ.includes("แก้ไอ") || cleanQ.includes("มีอาการไอ")) &&
+      (cleanQ.includes("สมุนไพร") || cleanQ.includes("ตำรับยา") || cleanQ.includes("ยาอะไร"));
+    if (isCoughRemedyQuery) {
+      const q18 = verifiedItems.find((it) => it.id === "verified-qa-18-cough");
+      if (q18) return buildResult(q18);
+    }
+  }
+
+  // --- PASS 3: High-Confidence Substring Matching (Intent-Isolated & Ratio Protected) ---
+  for (const item of verifiedItems) {
+    // Intent isolation: Source query must NOT match clinical items, and vice versa
+    if (isSourceInquiry !== !!isSourceItem(item)) continue;
+
+    const cleanItemQ = cleanQuestionText(item.question);
     if (cleanQ.length >= 6 && cleanItemQ.length >= 6) {
-      if (cleanQ.includes(cleanItemQ) || cleanItemQ.includes(cleanQ)) {
-        return {
-          found: true,
-          verifiedAnswer: item.verifiedAnswer,
-          source: item.verifiedBy || "คลังข้อมูลสมุนไพรและประกาศบัญชียาหลักแห่งชาติ",
-          docTitle: item.question.replace(/^[\s\uF0B7•\-\*\d.)]+/, "").trim(),
-          item,
-        };
+      if (cleanQ.includes(cleanItemQ) || cleanItemQ.includes(cleanQ) || strippedCleanQ.includes(cleanItemQ)) {
+        const lenRatio = Math.min(cleanQ.length, cleanItemQ.length) / Math.max(cleanQ.length, cleanItemQ.length);
+        if (lenRatio >= 0.60) {
+          return buildResult(item);
+        }
       }
     }
+  }
 
-    // 3. ตรวจสอบเงื่อนไขคีย์เวิร์ดเฉพาะกรณีคำถามอาการไอ + สมุนไพร/ตำรับยา (Question 18)
-    if (item.id === "verified-qa-18-cough") {
-      const isCoughRemedyQuery =
-        (cleanQ.includes("อาการไอ") || cleanQ.includes("แก้ไอ") || cleanQ.includes("มีอาการไอ")) &&
-        (cleanQ.includes("สมุนไพร") || cleanQ.includes("ตำรับยา") || cleanQ.includes("ยาอะไร"));
-      if (isCoughRemedyQuery) {
-        return {
-          found: true,
-          verifiedAnswer: item.verifiedAnswer,
-          source: item.verifiedBy || "คลังข้อมูลสมุนไพรและประกาศบัญชียาหลักแห่งชาติ",
-          docTitle: item.question.replace(/^[\s\uF0B7•\-\*\d.)]+/, "").trim(),
-          item,
-        };
-      }
-    }
+  // --- PASS 4: Global Scored Best-Match Keywords ---
+  let bestItem: VerificationItem | null = null;
+  let bestScore = 0;
 
-    // 4. ตรวจสอบ Keywords ของรายการอื่นๆ
+  for (const item of verifiedItems) {
+    // Intent isolation: Source query must NOT match clinical items, and vice versa
+    if (isSourceInquiry !== !!isSourceItem(item)) continue;
+
     const keywords = (item as any).keywords as string[] | undefined;
     if (keywords && keywords.length > 0) {
-      const cleanKw = keywords.map((k) => k.toLowerCase().replace(/[\s\-_,()/:.?]+/g, ""));
-      const matchCount = cleanKw.filter((kw) => cleanQ.includes(kw)).length;
-      if (matchCount >= 2 && matchCount >= Math.ceil(cleanKw.length * 0.4)) {
-        return {
-          found: true,
-          verifiedAnswer: item.verifiedAnswer,
-          source: item.verifiedBy || "คลังข้อมูลสมุนไพรและประกาศบัญชียาหลักแห่งชาติ",
-          docTitle: item.question.replace(/^[\s\uF0B7•\-\*\d.)]+/, "").trim(),
-          item,
-        };
+      const cleanKw = keywords.map((k) => cleanQuestionText(k));
+      const matchCount = cleanKw.filter((kw) => cleanQ.includes(kw) || strippedCleanQ.includes(kw)).length;
+      const ratio = matchCount / cleanKw.length;
+
+      // Score based on ratio and absolute match count
+      if (matchCount >= 2 && ratio >= 0.60) {
+        const score = ratio * 10 + matchCount;
+        if (score > bestScore) {
+          bestScore = score;
+          bestItem = item;
+        }
       }
     }
+  }
+
+  if (bestItem) {
+    return buildResult(bestItem);
   }
 
   return { found: false };
