@@ -1000,6 +1000,21 @@ const ChatPage = () => {
                                 </a>
                               );
                             },
+                            ol: ({ children, start }) => (
+                              <ol className="my-2.5 list-decimal pl-6 space-y-1.5 text-sm text-foreground/90" start={start}>
+                                {children}
+                              </ol>
+                            ),
+                            ul: ({ children }) => (
+                              <ul className="my-2.5 list-disc pl-6 space-y-1.5 text-sm text-foreground/90">
+                                {children}
+                              </ul>
+                            ),
+                            li: ({ children }) => (
+                              <li className="leading-relaxed pl-1 text-sm text-foreground/90">
+                                {children}
+                              </li>
+                            ),
                             table: ({ children }) => (
                               <div className="my-3 overflow-x-auto rounded-lg border border-primary/20 shadow-xs">
                                 <table className="w-full text-left text-xs border-collapse">
