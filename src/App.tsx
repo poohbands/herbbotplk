@@ -16,6 +16,33 @@ import { fetchRemoteMaintenanceState } from "@/lib/maintenance-service";
 
 const queryClient = new QueryClient();
 
+const GOOGLE_DRIVE_ACADEMIC_URL = "https://drive.google.com/drive/folders/1sz0qE0VMWiyp-4bqmp_0phJpwTfpf7Oi";
+
+const KnowledgeRedirect = () => {
+  useEffect(() => {
+    window.location.replace(GOOGLE_DRIVE_ACADEMIC_URL);
+  }, []);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center p-4 font-thai text-center bg-background">
+      <div className="space-y-4">
+        <p className="text-lg font-medium text-foreground">กำลังนำท่านไปยังคลังเอกสารวิชาการ...</p>
+        <p className="text-sm text-muted-foreground">
+          หากระบบไม่เปลี่ยนหน้าอัตโนมัติ{" "}
+          <a
+            href={GOOGLE_DRIVE_ACADEMIC_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline font-medium hover:text-primary/80"
+          >
+            คลิกที่นี่เพื่อเปิด Google Drive เอกสารวิชาการ
+          </a>
+        </p>
+      </div>
+    </div>
+  );
+};
+
 const App = () => {
   useEffect(() => {
     // ซิงค์การตั้งค่าส่วนกลางจาก Supabase เมื่อเปิดเว็บครั้งแรกบนทุกอุปกรณ์
@@ -35,8 +62,8 @@ const App = () => {
             <Route path="/" element={<ChatPage />} />
             <Route path="/admin" element={<AdminPage />} />
             <Route path="/admin/ai-settings" element={<AiSettingsPage />} />
-            <Route path="/admin/knowledge" element={<Navigate to="/" replace />} />
-            <Route path="/knowledge" element={<Navigate to="/" replace />} />
+            <Route path="/admin/knowledge" element={<KnowledgeRedirect />} />
+            <Route path="/knowledge" element={<KnowledgeRedirect />} />
             <Route path="/herbs" element={<HerbsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
