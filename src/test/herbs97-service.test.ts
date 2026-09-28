@@ -117,5 +117,19 @@ describe("97 Herbs Dataset & Search (Column A focus)", () => {
     expect(names).not.toContain("ยาหญ้าปักกิ่ง");
     expect(names).not.toContain("ยาทิงเจอร์ทองพันชั่ง");
   });
+
+  it("searchHerbs97BySymptom accurately finds ยาหอมเทพจิตร and ยาหอมนวโกฐ for dizziness queries", () => {
+    const query = "ถ้าเวียนหัวควรทานยาตัวใด";
+    const res = searchHerbs97BySymptom(query);
+    const names = res.map((r) => r.name);
+
+    expect(names.length).toBeGreaterThan(0);
+    expect(names).toContain("ยาหอมเทพจิตร");
+    expect(names).toContain("ยาหอมนวโกฐ");
+    expect(names[0] === "ยาหอมเทพจิตร" || names[0] === "ยาหอมนวโกฐ").toBe(true);
+
+    // General dizziness should not recommend cannabis items
+    expect(res.some((r) => r.has_cannabis)).toBe(false);
+  });
 });
 

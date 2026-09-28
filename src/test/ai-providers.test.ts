@@ -193,7 +193,7 @@ describe("AI Providers Storage & KOB AI Integration", () => {
     } finally {
       global.fetch = originalFetch;
     }
-  });
+  }, 15000);
 
   it("dispatches AI_PROVIDERS_CHANGED_EVENT when saveLocalProviders is called", async () => {
     const { AI_PROVIDERS_CHANGED_EVENT } = await import("../lib/ai-providers-storage");

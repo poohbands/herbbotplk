@@ -258,6 +258,13 @@ export function scoreHerbBookItem(
   }
 
   // 5. โบนัสเจตนา
+  const isVertigoQuery = /(?:เวียนหัว|เวียนศีรษะ|วิงเวียน|มึนหัว|มึนศีรษะ|หน้ามืด|ตาลาย|สวิงสวาย|บ้านหมุน)/i.test(qLower);
+  if (isVertigoQuery) {
+    if (chapterLow.includes("วิงเวียน") || titleLow.includes("วิงเวียน") || summaryLow.includes("วิงเวียน") || chapterLow.includes("vertigo") || summaryLow.includes("หน้ามืด")) {
+      score += 45;
+    }
+  }
+
   if (isDdiIntent && item.tier === 1) {
     score += 80;
   }

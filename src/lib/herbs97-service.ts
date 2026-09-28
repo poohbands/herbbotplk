@@ -373,6 +373,11 @@ export function searchHerbs97BySymptom(query: string, maxResults = 6): Herb97Ite
       pattern: /ปวดเมื่อย|กล้ามเนื้อ|เคล็ด|ขัดยอก|ข้อเข่า|ปวดข้อ|ข้ออักเสบ/,
       keywords: ["ปวดเมื่อย", "กล้ามเนื้อ", "เคล็ด", "ขัดยอก", "ปวดข้อ", "ข้อเข่า"],
     },
+    {
+      pattern: /เวียนหัว|เวียนศีรษะ|วิงเวียน|มึนหัว|มึนศีรษะ|หน้ามืด|ตาลาย|สวิงสวาย|ใจหวิว|บ้านหมุน|คลื่นไส้|อาเจียน|เมารถ|เมาเรือ|พะอืดพะอม|เป็นลม|ลมกองละเอียด/,
+      keywords: ["วิงเวียน", "หน้ามืด", "ตาลาย", "สวิงสวาย", "ใจสั่น", "คลื่นเหียน", "อาเจียน", "เป็นลม", "ลมกองละเอียด", "คลื่นไส้", "เมารถ", "ลมจุกแน่น"],
+      primaryKeywords: ["วิงเวียน", "หน้ามืด", "ตาลาย", "สวิงสวาย", "ลมกองละเอียด", "คลื่นเหียน"],
+    },
   ];
 
   const matchedTargetKeywords: string[] = [];
@@ -421,6 +426,12 @@ export function searchHerbs97BySymptom(query: string, maxResults = 6): Herb97Ite
     const isFeverOrMeaslesOnly = /ไข้|ตัวร้อน|พิษหัด/i.test(ind) && !/น้ำเหลือง|ผื่น|คัน|ผิวหนัง|แผล/i.test(ind);
 
     if (isSkinOrLymphQuery && (isDigestiveOnly || isFeverOrMeaslesOnly)) {
+      score = 0;
+    }
+
+    const isDizzinessQuery = /เวียนหัว|เวียนศีรษะ|วิงเวียน|มึนหัว|มึนศีรษะ|หน้ามืด|ตาลาย|สวิงสวาย|บ้านหมุน/i.test(q);
+    const mentionsCannabis = /กัญชา|cannabis|thc|cbd|เคมีบำบัด/i.test(q);
+    if (isDizzinessQuery && !mentionsCannabis && item.has_cannabis) {
       score = 0;
     }
 

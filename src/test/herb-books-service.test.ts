@@ -225,6 +225,16 @@ describe('Herb Books & CPG Guidelines Service (7 Tiers Hierarchy with Short-Circ
       expect(haRak?.indication).toContain('บรรเทาอาการไข้');
       expect(haRak?.indication).not.toContain('ท้องอืด');
     });
+
+    it('searchHerbBooksTiered: for dizziness queries, correctly finds vertigo books in Tier 2 and Tier 5', () => {
+      const result = searchHerbBooksTiered('ถ้าเวียนหัวควรทานยาตัวใด', 3);
+      expect(result.primaryItems.length).toBeGreaterThan(0);
+      expect(result.matchedTier).toBe(2);
+      expect(result.primaryItems[0].title).toContain('ยาขิงและยาหอมนวโกฐ');
+      expect(result.allMatchedTiers).toContain(2);
+      expect(result.allMatchedTiers).toContain(5);
+      expect(result.allApaCitations.some((c) => c.includes('ทดแทนยาแผนปัจจุบันใน 10 กลุ่มโรคสำคัญ'))).toBe(true);
+    });
   });
 });
 
