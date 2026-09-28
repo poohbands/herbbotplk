@@ -969,6 +969,8 @@ drugs: Omeprazole
       expect(prompt).toContain("In-Text Numbered Citations [1], [2]");
       expect(prompt).toContain("[1] = มาจากแหล่งข้อมูลหลัก");
       expect(prompt).toContain("[2], [3] = มาจากแหล่งข้อมูลเสริม");
+      expect(prompt).toContain("หนังสือแนวทางเวชปฏิบัติและคู่มือทางการแพทย์ (Herb Books & Clinical Practice Guidelines ทั้ง 7 หัวข้อย่อย)");
+      expect(prompt).toContain("ให้อ้างอิงจากข้อมูลใน 7 หัวข้อย่อยนี้เป็นหลักก่อนเสมอ");
     });
 
     it("buildSystemPrompt instructs AI not to output in-text citations or APA block when APA is disabled", () => {
