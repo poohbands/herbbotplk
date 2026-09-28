@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   OUT_OF_SCOPE_REFUSAL_MESSAGE,
   isBlatantlyOutOfScope,
+  detectPureModernDrugQuery,
+  formatPureModernDrugNotice,
   processLocalChat,
 } from "../lib/local-chat-service";
 
@@ -68,6 +70,84 @@ describe("Out-of-scope refusal policy (หมอยาพิษณุโลก)"
       expect(OUT_OF_SCOPE_REFUSAL_MESSAGE).toContain("สมุนไพรและตำรับยาแผนไทย");
       expect(OUT_OF_SCOPE_REFUSAL_MESSAGE).toContain("ยาแผนปัจจุบันและอันตรกิริยา");
       expect(OUT_OF_SCOPE_REFUSAL_MESSAGE).toContain("การดูแลสุขภาพเบื้องต้น");
+    });
+  });
+
+  describe("Pure Modern Drug Query Redirection (Option A)", () => {
+    describe("detectPureModernDrugQuery helper", () => {
+      it("detects pure modern drug inquiries without herbs or substitution", () => {
+        expect(detectPureModernDrugQuery("Abilify").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("abilify คือยาอะไร").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("ยาอะบิลิฟาย").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("omeprazole ควรกินตอนไหน").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("ยา omeprazole มีผลข้างเคียงอะไร").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("gabapentin มีผลข้างเคียงอะไร").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("ยากาบาเพนติน").isPureModernDrug).toBe(true);
+        expect(detectPureModernDrugQuery("pregabalin กินอย่างไร").isPureModernDrug).toBe(true);
+      });
+
+      it("does NOT classify queries containing herbs or herbal substitution as pure modern drug", () => {
+        // DDI with herbs
+        expect(detectPureModernDrugQuery("ขมิ้นชันกินร่วมกับ omeprazole ได้ไหม").isPureModernDrug).toBe(false);
+        expect(detectPureModernDrugQuery("กินยา omeprazole ร่วมกับสมุนไพรได้ไหม").isPureModernDrug).toBe(false);
+        expect(detectPureModernDrugQuery("abilify กินคู่กับฟ้าทะลายโจรได้ไหม").isPureModernDrug).toBe(false);
+        expect(detectPureModernDrugQuery("gabapentin ตีกับกัญชาไหม").isPureModernDrug).toBe(false);
+
+        // Substitution inquiries
+        expect(detectPureModernDrugQuery("มียาสมุนไพรตัวไหนใช้แทน omeprazole ได้บ้าง").isPureModernDrug).toBe(false);
+        expect(detectPureModernDrugQuery("สมุนไพรกินแทน omeprazole").isPureModernDrug).toBe(false);
+        expect(detectPureModernDrugQuery("ยาอะไรแทน gabapentin").isPureModernDrug).toBe(false);
+
+        // System/reference inquiries
+        expect(
+          detectPureModernDrugQuery(
+            "ข้อมูลอันตรกิริยาระหว่างสมุนไพรกับยาแผนปัจจุบันที่ระบบใช้ตอบ สามารถตรวจสอบจากแหล่งอ้างอิงใดได้บ้าง?"
+          ).isPureModernDrug
+        ).toBe(false);
+      });
+    });
+
+    describe("formatPureModernDrugNotice content", () => {
+      it("formats polite medical redirection without citing herbal CPG 2568", () => {
+        const notice = formatPureModernDrugNotice("Abilify");
+        expect(notice).toContain("หมอยาพิษณุโลก");
+        expect(notice).toContain("Abilify");
+        expect(notice).toContain("ปรึกษาแพทย์ผู้ให้การรักษา หรือเภสัชกร");
+        expect(notice).toContain("อันตรกิริยาระหว่างยากับสมุนไพร");
+        expect(notice).not.toContain("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+      });
+    });
+
+    describe("processLocalChat Option A execution", () => {
+      it("short-circuits Abilify query, returns Option A notice with 0 herbal citations", async () => {
+        const result = await processLocalChat("Abilify");
+        expect(result).toContain("หมอยาพิษณุโลก");
+        expect(result).toContain("Abilify");
+        expect(result).toContain("ปรึกษาแพทย์ผู้ให้การรักษา หรือเภสัชกร");
+        expect(result).toContain('[SOURCES]{"internal":[],"pubmed":[],"thaijo":[],"knowledge":[]}[/SOURCES]');
+        expect(result).not.toContain("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+        expect(result).not.toContain("กรมการแพทย์. (2568)");
+      });
+
+      it("short-circuits omeprazole query, returns Option A notice without CPG 2568 citation", async () => {
+        const result = await processLocalChat("omeprazole ควรกินตอนไหน");
+        expect(result).toContain("หมอยาพิษณุโลก");
+        expect(result).toContain("Omeprazole");
+        expect(result).toContain("ปรึกษาแพทย์ผู้ให้การรักษา หรือเภสัชกร");
+        expect(result).toContain('[SOURCES]{"internal":[],"pubmed":[],"thaijo":[],"knowledge":[]}[/SOURCES]');
+        expect(result).not.toContain("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+        expect(result).not.toContain("กรมการแพทย์. (2568)");
+      });
+
+      it("short-circuits gabapentin query, returns Option A notice without CPG 2568 citation", async () => {
+        const result = await processLocalChat("gabapentin มีผลข้างเคียงอะไร");
+        expect(result).toContain("หมอยาพิษณุโลก");
+        expect(result).toContain("Gabapentin");
+        expect(result).toContain("ปรึกษาแพทย์ผู้ให้การรักษา หรือเภสัชกร");
+        expect(result).toContain('[SOURCES]{"internal":[],"pubmed":[],"thaijo":[],"knowledge":[]}[/SOURCES]');
+        expect(result).not.toContain("คู่มือการใช้ยาสมุนไพรในเวชปฏิบัติ");
+        expect(result).not.toContain("กรมการแพทย์. (2568)");
+      });
     });
   });
 

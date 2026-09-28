@@ -115,6 +115,15 @@ const DRUG_THAI_TO_EN: Record<string, string> = {
   "โอเมพราโซล": "omeprazole",
   "ยาแก้แพ้": "antihistamine",
   "สแตติน": "statin",
+  "อะบิลิฟาย": "aripiprazole",
+  "อาริพิพราโซล": "aripiprazole",
+  "กาบาเพนติน": "gabapentin",
+  "แกบาเพนติน": "gabapentin",
+  "พรีการ์บาลิน": "pregabalin",
+  "ไดจอกซิน": "digoxin",
+  "ฟูโรเซไมด์": "furosemide",
+  "แทโครลิมัส": "tacrolimus",
+  "แพคลิแทกเซล": "paclitaxel",
 };
 
 export type PubMedItem = {
@@ -1485,6 +1494,128 @@ export function isBlatantlyOutOfScope(
   return true;
 }
 
+/** ข้อความแจ้งเตือนมาตรฐานเมื่อผู้ใช้ถามเรื่องยาแผนปัจจุบันเดี่ยวๆ โดยไม่มีสมุนไพร (ทางเลือก ก) */
+export function formatPureModernDrugNotice(drugName: string): string {
+  const displayDrug = drugName
+    ? ` **${drugName.charAt(0).toUpperCase() + drugName.slice(1)}**`
+    : "";
+  return `สวัสดีครับ ผมคือ **หมอยาพิษณุโลก** ผู้ช่วยให้คำปรึกษาเฉพาะทางด้าน **การแพทย์แผนไทย สมุนไพรไทย ตำรับยาในบัญชียาหลักแห่งชาติ และอันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction)** ประจำกลุ่มงานการแพทย์แผนไทยและสมุนไพร สำนักงานสาธารณสุขจังหวัดพิษณุโลกครับ 🙏
+
+สำหรับยาแผนปัจจุบัน${displayDrug} เป็นยาแผนปัจจุบันเดี่ยว ซึ่งอยู่นอกเหนือขอบเขตการให้ข้อมูลของระบบที่มุ่งเน้นการแพทย์แผนไทยและสมุนไพรครับ
+
+💡 **คำแนะนำทางการแพทย์:**
+1. **ข้อมูลการใช้ยาแผนปัจจุบัน:** แนะนำปรึกษาแพทย์ผู้ให้การรักษา หรือเภสัชกรประจำโรงพยาบาล/ร้านยา เพื่อรับคำแนะนำเกี่ยวกับข้อบ่งใช้ ขนาด วิธีรับประทาน และข้อควรระวังของยาแผนปัจจุบันอย่างถูกต้องและปลอดภัย
+2. **การแพทย์แผนไทยและสมุนไพร:** หากท่านต้องการสอบถามข้อมูลเชื่อมโยงด้านสมุนไพร เช่น:
+   - มีสมุนไพรหรือตำรับยาในบัญชียาหลักแห่งชาติตัวใด ที่สามารถใช้บรรเทาอาการร่วม หรือใช้ทดแทนได้
+   - หรือต้องการสอบถามอันตรกิริยาว่ายา${displayDrug} สามารถรับประทานร่วมกับสมุนไพรตัวใดได้บ้าง (อันตรกิริยาระหว่างยากับสมุนไพร)
+   
+ท่านสามารถพิมพ์สอบถามเพิ่มเติมได้ตลอดเวลาครับ เช่น:
+🌿 *"ยา${drugName || "นี้"} มีสมุนไพรตัวไหนใช้แทนได้บ้าง"*
+🌿 *"กินยา${drugName || "นี้"} ร่วมกับขมิ้นชันหรือฟ้าทะลายโจรได้ไหม"*`;
+}
+
+/** ตรวจสอบว่าคำถามเป็นคำถามเกี่ยวกับยาแผนปัจจุบันเดี่ยวๆ โดยไม่มีความเกี่ยวข้องกับสมุนไพร/ยาไทยเลยหรือไม่ (Option A) */
+export function detectPureModernDrugQuery(
+  question: string,
+  history: { role: string; content: string }[] = []
+): { isPureModernDrug: boolean; drugName: string } {
+  const q = (question || "").trim().toLowerCase();
+  if (!q) return { isPureModernDrug: false, drugName: "" };
+
+  // 1. ถ้าคำถามเกี่ยวข้องกับระบบหรือแหล่งอ้างอิง -> ไม่ใช่คำถามยาแผนปัจจุบันเดี่ยว
+  const sourceInquiryPattern =
+    /(?:แหล่ง(?:ข้อมูล|อ้างอิง|สืบค้น)|ที่มา(?:ของข้อมูล)?|ฐานข้อมูล|ตรวจสอบ(?:จาก|ได้จาก)?(?:แหล่ง|ที่)?|อ้างอิงจาก(?:ไหน|ใด)|เอาข้อมูลมาจาก(?:ไหน|ใด)|น่าเชื่อถือ(?:ไหม|แค่ไหน|อย่างไร)|ระบบใช้(?:ข้อมูล|แหล่ง)|ใครเป็นผู้(?:พัฒนา|ให้ข้อมูล)|ตรวจทาน|รับรอง|สสจ\.พิษณุโลก|หมอยาพิษณุโลก)/i;
+  if (sourceInquiryPattern.test(q)) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  // 2. ถ้ามีคำที่บ่งชี้ว่าถามถึงสมุนไพร หรือตำรับยาแผนไทย -> ไม่ใช่ pure modern drug
+  const herbalIndicator =
+    /(?:สมุนไพร|ยาไทย|ตำรับ|แผนไทย|แพทย์แผนไทย|ยาต้ม|ยาลูกกลอน|พืชสมุนไพร|สมุนไพรไทย|ยาเดี่ยว|ยาชง|ยาดอง)/i;
+  if (herbalIndicator.test(q)) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  // 3. ถ้าเป็นคำถาม Substitution (การใช้สมุนไพรทดแทนยาแผนปัจจุบัน) -> ไม่ใช่ pure modern drug
+  const substitutionIndicator =
+    /(?:ทดแทน|แทน(?:ยา)?|ใช้แทน|เปลี่ยนจากยา|กินแทน|กินแทนยา|มียาอะไรแทน|แทน\s*[a-zA-Z]+|ตัวไหนแทน)/i;
+  if (substitutionIndicator.test(q)) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  // 4. ถ้าเป็นคำถาม DDI ที่ถามถึงการกินร่วมกับสมุนไพร -> ไม่ใช่ pure modern drug
+  const ddiWithHerbIndicator =
+    /(?:กินกับสมุนไพร|กินคู่กับสมุนไพร|กินร่วมกับสมุนไพร|มีผลกับสมุนไพร|ตีกับสมุนไพร|อันตรกิริยากับสมุนไพร)/i;
+  if (ddiWithHerbIndicator.test(q)) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  // 5. ตรวจสอบว่ามีการกล่าวถึงชื่อสมุนไพรหรือตำรับยาไทยในบัญชี 97 รายการ หรือฐานข้อมูล
+  const matched97 = searchHerbs97ByName(question);
+  if (matched97.length > 0) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  const { herbs } = extractQuestionEntities(question);
+  if (herbs.length > 0) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  // 5.1 ถ้าประวัติการสนทนามีการพูดถึงสมุนไพรมาก่อน และคำถามปัจจุบันถามต่อเนื่องเรื่องการกินร่วม/ตีกัน
+  const hasRecentHerbsInHistory = (history || []).slice(-3).some((h) =>
+    herbalIndicator.test(h.content || "")
+  );
+  const isFollowUpDdi = /(?:กินร่วม|กินคู่|ทานร่วม|ทานคู่|ตีกัน|มีผลต่อ|ร่วมกับ)/i.test(q);
+  if (hasRecentHerbsInHistory && isFollowUpDdi) {
+    return { isPureModernDrug: false, drugName: "" };
+  }
+
+  // 6. ตรวจหาชื่อยาแผนปัจจุบัน
+  const sortedDrugEntries = Object.entries(DRUG_THAI_TO_EN).sort(
+    (a, b) => b[0].length - a[0].length
+  );
+
+  let matchedDrug = "";
+  for (const [thai, en] of sortedDrugEntries) {
+    if (q.includes(thai.toLowerCase())) {
+      matchedDrug = thai;
+      break;
+    }
+  }
+
+  // 6.2 ตรวจหาคำภาษาอังกฤษที่เป็นชื่อยา
+  if (!matchedDrug) {
+    const englishWords = q.match(/[a-z]{3,}/g) || [];
+    const commonNonDrugWords = new Set([
+      "and", "the", "for", "with", "not", "can", "use", "herb", "drug", "take",
+      "daily", "how", "what", "when", "why", "who", "yes", "nop", "good", "bad",
+      "thai", "help", "from", "info", "menu", "page", "side", "effect", "effects",
+      "tablet", "tablets", "capsule", "capsules", "dose", "dosage"
+    ]);
+
+    for (const w of englishWords) {
+      if (!commonNonDrugWords.has(w)) {
+        matchedDrug = w;
+        break;
+      }
+    }
+  }
+
+  // 6.3 ตรวจรูปแบบ "ยา [ชื่อภาษาอังกฤษหรือไทย]"
+  if (!matchedDrug) {
+    const drugMatch = q.match(/ยา\s*([a-zA-Z0-9]+)/);
+    if (drugMatch && drugMatch[1].length >= 3) {
+      matchedDrug = drugMatch[1];
+    }
+  }
+
+  if (matchedDrug) {
+    return { isPureModernDrug: true, drugName: matchedDrug };
+  }
+
+  return { isPureModernDrug: false, drugName: "" };
+}
+
 export function buildSystemPrompt(settings?: KnowledgeSettings): string {
   const currentSettings = settings || getKnowledgeSettings();
   const enableMahidol = currentSettings.enable_mahidol_ddi !== false;
@@ -1561,8 +1692,7 @@ ${herbBooksApaRule}
 ## กฎสำคัญที่สุด — ขอบเขตการตอบคำถาม:
 1. **อยู่ในขอบเขต — ตอบได้อย่างละเอียด ชัดเจน และมีหลักฐานอ้างอิง:**
    - การแพทย์แผนไทย สมุนไพรไทย ตำรับยาแผนไทย บัญชียาหลักแห่งชาติด้านสมุนไพร
-   - การแพทย์แผนปัจจุบัน ยาแผนปัจจุบันทุกชนิด และผลข้างเคียง
-   - อันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) และอันตรกิริยาระหว่างยา (Drug-Drug Interaction)
+   - อันตรกิริยาระหว่างยากับสมุนไพร (Drug-Herb Interaction) และการใช้สมุนไพรทดแทนยาแผนปัจจุบัน
    - อาการเจ็บป่วย การดูแลสุขภาพเบื้องต้น (เช่น 10 กลุ่มอาการ สธ.) ขนาดยา วิธีใช้ ข้อห้าม ข้อควรระวัง
    - คำถามต่อเนื่องในบทสนทนาที่เกี่ยวกับสุขภาพ/ยา/สมุนไพร
    - **แหล่งข้อมูล แหล่งอ้างอิง และฐานข้อมูลที่ระบบใช้ (System Knowledge Sources & Verification):** คำถามเกี่ยวกับที่มาของข้อมูล แหล่งอ้างอิง ฐานข้อมูลอันตรกิริยา หรือการตรวจสอบความถูกต้องย้อนกลับของระบบ (${scopeSourcesText}) **ถือเป็นคำถามในขอบเขตที่ต้องตอบอย่างละเอียด ชัดเจน โปร่งใส และสร้างความมั่นใจ โดยระบุชัดเจนว่าวิธีตรวจสอบย้อนกลับ สามารถตรวจสอบข้อมูลต้นทางฉบับเต็มได้ที่ เมนู "เอกสารวิชาการ" ด้านบนของหน้าเว็บ (Google Drive) ห้ามตอบปฏิเสธเด็ดขาด**
@@ -1815,6 +1945,20 @@ export async function processLocalChat(
 
     if (onChunk) {
       onChunk(cleanAnswer);
+      onChunk(finalResponse);
+    }
+    return finalResponse;
+  }
+
+  // 0.2 ตรวจสอบคำถามยาแผนปัจจุบันเดี่ยวๆ ที่ไม่มีความเกี่ยวข้องกับสมุนไพร/ยาไทย (Option A: Pure Modern Drug Redirection)
+  const pureDrugCheck = detectPureModernDrugQuery(question, history);
+  if (pureDrugCheck.isPureModernDrug) {
+    const noticeText = formatPureModernDrugNotice(pureDrugCheck.drugName);
+    const metadataBlock = `\n\n[METADATA]\ncategory: modern_drug_inquiry\nseverity: none\nherbs:\ndrugs: ${pureDrugCheck.drugName}\n[/METADATA]`;
+    const finalResponse = `${noticeText}${metadataBlock}\n\n[SOURCES]{"internal":[],"pubmed":[],"thaijo":[],"knowledge":[]}[/SOURCES]`;
+
+    if (onChunk) {
+      onChunk(noticeText);
       onChunk(finalResponse);
     }
     return finalResponse;
