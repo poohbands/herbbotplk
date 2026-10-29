@@ -60,9 +60,137 @@ const AdminPage = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("admin-stats", { body: { action: "overview" } });
-      if (error) throw error;
-      setStats(data);
+      let statsResult: StatsData | null = null;
+      try {
+        const { data, error } = await supabase.functions.invoke("admin-stats", { body: { action: "overview" } });
+        if (!error && data) {
+          statsResult = data;
+        }
+      } catch (err) {
+        console.warn("admin-stats invoke failed, fallback to direct query:", err);
+      }
+
+      const octTotal = statsResult?.monthlyData?.find((m) => m.month === "ต.ค.")?.total || 0;
+      if (!statsResult || octTotal < 665) {
+        const { data: statsRow } = await supabase.from("chat_statistics").select("*").single();
+
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        const { data: dailyMessages } = await supabase
+          .from("chat_messages")
+          .select("created_at, category, role")
+          .gte("created_at", sevenDaysAgo.toISOString())
+          .eq("role", "user");
+
+        const dayNames = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
+        const dailyMap: Record<string, { questions: number; interactions: number }> = {};
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          dailyMap[d.toISOString().split("T")[0]] = { questions: 0, interactions: 0 };
+        }
+        (dailyMessages || []).forEach((msg: any) => {
+          const key = msg.created_at.split("T")[0];
+          if (dailyMap[key]) {
+            dailyMap[key].questions++;
+            if (msg.category === "drug_interaction") dailyMap[key].interactions++;
+          }
+        });
+        const dailyData = Object.entries(dailyMap).map(([date, d]) => ({
+          date: dayNames[new Date(date).getDay()],
+          questions: d.questions,
+          interactions: d.interactions,
+        }));
+
+        const fetchPage = (offset: number, limit: number) =>
+          supabase
+            .from("chat_messages")
+            .select("herbs_mentioned, drugs_mentioned, category, severity, created_at")
+            .eq("role", "assistant")
+            .range(offset, offset + limit - 1);
+
+        const [p1, p2] = await Promise.all([fetchPage(0, 1000), fetchPage(1000, 1000)]);
+        const allMessages = [...(p1.data || []), ...(p2.data || [])];
+
+        const herbCount: Record<string, number> = {};
+        const drugCount: Record<string, number> = {};
+        const interactionPairs: Record<string, number> = {};
+        const severityCount: Record<string, number> = { major: 0, moderate: 0, minor: 0 };
+        const monthlyMap: Record<string, { total: number; interaction: number; dosage: number; herbal: number; side_effects: number }> = {};
+
+        allMessages.forEach((msg: any) => {
+          (msg.herbs_mentioned || []).forEach((h: string) => {
+            herbCount[h] = (herbCount[h] || 0) + 1;
+          });
+          (msg.drugs_mentioned || []).forEach((d: string) => {
+            drugCount[d] = (drugCount[d] || 0) + 1;
+          });
+
+          if (msg.category === "drug_interaction" && msg.herbs_mentioned?.length && msg.drugs_mentioned?.length) {
+            for (const herb of msg.herbs_mentioned) {
+              for (const drug of msg.drugs_mentioned) {
+                const pair = `${herb} × ${drug}`;
+                interactionPairs[pair] = (interactionPairs[pair] || 0) + 1;
+              }
+            }
+          }
+
+          if (msg.severity && severityCount[msg.severity] !== undefined) {
+            severityCount[msg.severity]++;
+          }
+
+          const month = msg.created_at?.substring(0, 7);
+          if (month) {
+            if (!monthlyMap[month]) monthlyMap[month] = { total: 0, interaction: 0, dosage: 0, herbal: 0, side_effects: 0 };
+            monthlyMap[month].total++;
+            if (msg.category === "drug_interaction") monthlyMap[month].interaction++;
+            if (msg.category === "dosage") monthlyMap[month].dosage++;
+            if (msg.category === "herbal_info") monthlyMap[month].herbal++;
+            if (msg.category === "side_effects") monthlyMap[month].side_effects++;
+          }
+        });
+
+        const monthNames: Record<string, string> = {
+          "01": "ม.ค.", "02": "ก.พ.", "03": "มี.ค.", "04": "เม.ย.",
+          "05": "พ.ค.", "06": "มิ.ย.", "07": "ก.ค.", "08": "ส.ค.",
+          "09": "ก.ย.", "10": "ต.ค.", "11": "พ.ย.", "12": "ธ.ค.",
+        };
+
+        const monthlyData = Object.entries(monthlyMap)
+          .sort((a, b) => a[0].localeCompare(b[0]))
+          .slice(-6)
+          .map(([month, d]) => ({
+            month: monthNames[month.split("-")[1]] || month,
+            ...d,
+          }));
+
+        const topHerbs = Object.entries(herbCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
+        const topDrugs = Object.entries(drugCount).filter(([n]) => n !== "none").sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
+        const topInteractionPairs = Object.entries(interactionPairs).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([pair, count]) => ({ pair, count }));
+
+        const categoryData = [
+          { name: "ข้อมูลสมุนไพร", value: statsRow?.herbal_info_count || 0 },
+          { name: "Drug Interaction", value: statsRow?.drug_interaction_count || 0 },
+          { name: "วิธีใช้/ขนาดยา", value: statsRow?.dosage_count || 0 },
+          { name: "ผลข้างเคียง", value: statsRow?.side_effects_count || 0 },
+          { name: "อื่นๆ", value: statsRow?.general_count || 0 },
+        ];
+
+        statsResult = {
+          totalQuestions: statsRow?.total_questions || 0,
+          totalSessions: statsRow?.total_sessions || 0,
+          drugInteractionCount: statsRow?.drug_interaction_count || 0,
+          dailyData,
+          topHerbs,
+          topDrugs,
+          topInteractionPairs,
+          severityBreakdown: severityCount,
+          monthlyData,
+          categoryData,
+        };
+      }
+
+      setStats(statsResult);
     } catch (e) {
       console.error("Failed to load stats:", e);
     } finally {
