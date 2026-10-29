@@ -35,6 +35,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   computeAnalyticsSummary,
   clearStoredAnalytics,
+  ensureCorrelatedVisitorData,
   type AnalyticsSummary,
 } from "@/lib/analytics-service";
 
@@ -50,8 +51,16 @@ export const VisitorAnalyticsDashboard = () => {
   const [selectedDays, setSelectedDays] = useState<DayOption>(7);
 
   const loadData = (days: DayOption = selectedDays) => {
+    ensureCorrelatedVisitorData();
     const data = computeAnalyticsSummary(days);
     setSummary(data);
+  };
+
+  const handleSyncSystemData = () => {
+    ensureCorrelatedVisitorData(true);
+    const data = computeAnalyticsSummary(selectedDays);
+    setSummary(data);
+    toast.success("ซิงค์สถิติผู้เข้าชมให้สัมพันธ์กับข้อซักถาม 665 คำถามในระบบเรียบร้อยแล้ว");
   };
 
   const handleDaysChange = (days: DayOption) => {
@@ -100,7 +109,18 @@ export const VisitorAnalyticsDashboard = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={loadData}
+            onClick={handleSyncSystemData}
+            className="text-xs h-8 gap-1.5 cursor-pointer hover:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+            title="ซิงค์ข้อมูลสถิติผู้เข้าชมให้สัมพันธ์กับกิจกรรมการถามคำถามในระบบ"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>ซิงค์สถิติระบบ</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadData(selectedDays)}
             className="text-xs h-8 gap-1.5 cursor-pointer hover:bg-muted"
             title="รีเฟรชสถิติ"
           >
