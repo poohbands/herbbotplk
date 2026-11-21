@@ -319,7 +319,11 @@ const AdminPage = () => {
             </div>
 
             {/* Visitor & Technical Analytics Dashboard (PDPA Compliant) */}
-            <VisitorAnalyticsDashboard />
+            <VisitorAnalyticsDashboard
+              totalQuestions={stats.totalQuestions}
+              totalSessions={stats.totalSessions}
+              monthlyData={stats.monthlyData}
+            />
 
             {/* AI Learning & Verification Center */}
             <LearningVerificationCenter />

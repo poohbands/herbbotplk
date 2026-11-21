@@ -86,4 +86,44 @@ describe("Visitor & Technical Analytics Service (PDPA Compliant)", () => {
     clearStoredAnalytics();
     expect(getStoredAnalytics().length).toBe(0);
   });
+
+  it("correlates daily visitor analytics with 1692 questions, 829 sessions, and monthly trend", async () => {
+    const { ensureCorrelatedVisitorData } = await import("../lib/analytics-service");
+    localStorage.clear();
+
+    const monthlyData = [
+      { month: "พ.ค.", total: 11 },
+      { month: "มิ.ย.", total: 51 },
+      { month: "ก.ค.", total: 116 },
+      { month: "ส.ค.", total: 114 },
+      { month: "ก.ย.", total: 584 },
+      { month: "ต.ค.", total: 707 },
+    ];
+
+    ensureCorrelatedVisitorData(true, {
+      totalQuestions: 1692,
+      totalSessions: 829,
+      monthlyData,
+    });
+
+    const summary7 = computeAnalyticsSummary(7);
+    expect(summary7.totalSessions).toBe(829);
+    // Recent 7 days must show active visitor activity correlated with current traffic
+    const last7Pageviews = summary7.dailyVisitors.reduce((sum, d) => sum + d.pageviews, 0);
+    expect(last7Pageviews).toBeGreaterThan(0);
+
+    // Monthly trend correlation: October sessions > September sessions > July sessions > May sessions
+    const stored = getStoredAnalytics();
+    const countUniqueSessionsInMonth = (ym: string) =>
+      new Set(stored.filter((e) => e.timestamp.startsWith(ym)).map((e) => e.sessionId)).size;
+
+    const octSessions = countUniqueSessionsInMonth("2026-10");
+    const sepSessions = countUniqueSessionsInMonth("2026-09");
+    const julSessions = countUniqueSessionsInMonth("2026-07");
+    const maySessions = countUniqueSessionsInMonth("2026-05");
+
+    expect(octSessions).toBeGreaterThan(sepSessions);
+    expect(sepSessions).toBeGreaterThan(julSessions);
+    expect(julSessions).toBeGreaterThan(maySessions);
+  });
 });

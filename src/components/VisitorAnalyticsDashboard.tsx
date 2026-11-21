@@ -37,6 +37,7 @@ import {
   clearStoredAnalytics,
   ensureCorrelatedVisitorData,
   type AnalyticsSummary,
+  type MonthlyTrendPoint,
 } from "@/lib/analytics-service";
 
 const DEVICE_COLORS = ["#10b981", "#3b82f6", "#f59e0b"];
@@ -45,22 +46,36 @@ const BROWSER_COLORS = ["#10b981", "#06b6d4", "#f97316", "#8b5cf6", "#ec4899", "
 export type DayOption = 7 | 30 | 90 | 180 | 360;
 export const DAY_OPTIONS: DayOption[] = [7, 30, 90, 180, 360];
 
-export const VisitorAnalyticsDashboard = () => {
+type VisitorAnalyticsDashboardProps = {
+  totalQuestions?: number;
+  totalSessions?: number;
+  monthlyData?: MonthlyTrendPoint[];
+};
+
+export const VisitorAnalyticsDashboard = ({
+  totalQuestions = 1692,
+  totalSessions = 829,
+  monthlyData,
+}: VisitorAnalyticsDashboardProps = {}) => {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
   const [selectedDays, setSelectedDays] = useState<DayOption>(7);
 
-  const loadData = (days: DayOption = selectedDays) => {
-    ensureCorrelatedVisitorData();
+  const loadData = (days: DayOption = selectedDays, forceSync = false) => {
+    ensureCorrelatedVisitorData(forceSync, {
+      totalQuestions,
+      totalSessions,
+      monthlyData,
+    });
     const data = computeAnalyticsSummary(days);
     setSummary(data);
   };
 
   const handleSyncSystemData = () => {
-    ensureCorrelatedVisitorData(true);
-    const data = computeAnalyticsSummary(selectedDays);
-    setSummary(data);
-    toast.success("ซิงค์สถิติผู้เข้าชมให้สัมพันธ์กับข้อซักถาม 665 คำถามในระบบเรียบร้อยแล้ว");
+    loadData(selectedDays, true);
+    toast.success(
+      `ซิงค์สถิติผู้เข้าชมให้สัมพันธ์กับข้อซักถาม ${totalQuestions.toLocaleString()} คำถาม (${totalSessions.toLocaleString()} เซสชัน) และกราฟแนวโน้มรายเดือนเรียบร้อยแล้ว`
+    );
   };
 
   const handleDaysChange = (days: DayOption) => {
@@ -69,8 +84,8 @@ export const VisitorAnalyticsDashboard = () => {
   };
 
   useEffect(() => {
-    loadData(7);
-  }, []);
+    loadData(selectedDays, Boolean(monthlyData && monthlyData.length > 0));
+  }, [totalQuestions, totalSessions, monthlyData]);
 
   const handleClear = () => {
     if (window.confirm("คุณแน่ใจหรือไม่ว่าต้องการล้างประวัติสถิติการเข้าชมทั้งหมดบนเครื่องนี้?")) {

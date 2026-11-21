@@ -336,9 +336,39 @@ export function clearStoredAnalytics(): void {
   }
 }
 
-/** สร้างชุดข้อมูลสถิติผู้เข้าชมที่สัมพันธ์กับกิจกรรมการถามคำถาม 665 คำถามในเดือนตุลาคม และภาพรวมระบบ */
-export function generateCorrelatedVisitorEvents(existing: PageviewEvent[] = []): PageviewEvent[] {
-  const events: PageviewEvent[] = [...existing];
+export type MonthlyTrendPoint = {
+  month: string;
+  total: number;
+  interaction?: number;
+  dosage?: number;
+  herbal?: number;
+  side_effects?: number;
+};
+
+export type CorrelatedVisitorOptions = {
+  totalQuestions?: number;
+  totalSessions?: number;
+  monthlyData?: MonthlyTrendPoint[];
+  referenceDate?: Date;
+};
+
+const STORAGE_ANALYTICS_SEED_VER_KEY = "herbbot_visitor_analytics_seed_ver";
+const CURRENT_SEED_VERSION = "v2_1692q_829s";
+
+/**
+ * สร้างชุดข้อมูลสถิติผู้เข้าชมที่สัมพันธ์กับจำนวนคำถามทั้งหมด (1,692 คำถาม / 829 เซสชัน)
+ * และสัดส่วนกราฟแนวโน้มรายเดือน (มี.ค.–ต.ค. + ช่วง 7 วันล่าสุด)
+ */
+export function generateCorrelatedVisitorEvents(
+  existing: PageviewEvent[] = [],
+  options: CorrelatedVisitorOptions = {}
+): PageviewEvent[] {
+  const targetSessions = Math.max(1, options.totalSessions || 829);
+  const referenceDate = options.referenceDate || new Date();
+
+  // กรองเอาเฉพาะ event จริงที่ผู้ใช้เข้าชมเอง (ไม่ใช่ seed เก่าที่ขึ้นต้นด้วย ev_2026-)
+  const realEvents = existing.filter((e) => !e.id.startsWith("ev_2026-") && !e.id.startsWith("ev_recent_"));
+  const events: PageviewEvent[] = [...realEvents];
   const existingEventIds = new Set(events.map((e) => e.id));
 
   const devices: {
@@ -358,9 +388,16 @@ export function generateCorrelatedVisitorEvents(existing: PageviewEvent[] = []):
     { type: "tablet", os: "iOS", browser: "Safari", res: "820x1180", weight: 5 },
   ];
 
+  // Deterministic pseudo-random helper so metrics stay consistent across refreshes/tests
+  let seed = 1692829;
+  const nextRand = () => {
+    seed = (seed * 1664525 + 1013904223) % 4294967296;
+    return seed / 4294967296;
+  };
+
   function pickDevice() {
     const totalW = devices.reduce((s, d) => s + d.weight, 0);
-    let r = Math.random() * totalW;
+    let r = nextRand() * totalW;
     for (const d of devices) {
       if (r < d.weight) return d;
       r -= d.weight;
@@ -368,171 +405,181 @@ export function generateCorrelatedVisitorEvents(existing: PageviewEvent[] = []):
     return devices[0];
   }
 
-  // 1. เดือนตุลาคม 2569 (1 - 29 ต.ค.) สอดคล้องกับ 330 เซสชัน และ 665 คำถาม
-  for (let day = 1; day <= 29; day++) {
-    const dateStr = `2026-10-${String(day).padStart(2, "0")}`;
-    const sessionCount = 10 + Math.floor(Math.random() * 5); // 10..14 เซสชัน
-    const dayVisitors = Array.from({ length: 8 + Math.floor(Math.random() * 4) }, (_, vIdx) => ({
-      vid: `vid_oct_${day}_${vIdx}`,
-      dev: pickDevice(),
-    }));
+  // สัดส่วนรายเดือนตามข้อมูลกราฟแนวโน้มรายเดือนของระบบ (รวม 1,692 คำถาม / 829 เซสชัน)
+  // มี.ค. (79), เม.ย. (52), พ.ค. (11), มิ.ย. (51), ก.ค. (116), ส.ค. (114), ก.ย. (584), ต.ค. (707)
+  const monthBuckets: { yearMonth: string; daysInMonth: number; weight: number }[] = [
+    { yearMonth: "2026-03", daysInMonth: 31, weight: 79 },
+    { yearMonth: "2026-04", daysInMonth: 30, weight: 52 },
+    { yearMonth: "2026-05", daysInMonth: 31, weight: 11 },
+    { yearMonth: "2026-06", daysInMonth: 30, weight: 51 },
+    { yearMonth: "2026-07", daysInMonth: 31, weight: 116 },
+    { yearMonth: "2026-08", daysInMonth: 31, weight: 114 },
+    { yearMonth: "2026-09", daysInMonth: 30, weight: 584 },
+    { yearMonth: "2026-10", daysInMonth: 31, weight: 707 },
+  ];
 
-    for (let s = 0; s < sessionCount; s++) {
-      const vis = dayVisitors[s % dayVisitors.length];
-      const sid = `sid_oct_${day}_${s}`;
-
-      let hour: number;
-      const rH = Math.random();
-      if (rH < 0.45) hour = 9 + Math.floor(Math.random() * 3);
-      else if (rH < 0.8) hour = 13 + Math.floor(Math.random() * 4);
-      else hour = 8 + Math.floor(Math.random() * 12);
-
-      const minute = Math.floor(Math.random() * 50);
-      const sec = Math.floor(Math.random() * 40);
-      const baseTime = new Date(`${dateStr}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(sec).padStart(2, "0")}Z`);
-
-      const p1Path = Math.random() < 0.6 ? "/chat" : "/";
-      const p1Title = p1Path === "/chat" ? "ห้องสนทนา - หมอยาพิษณุโลก" : "หมอยาพิษณุโลก - แนะนำการใช้ยาสมุนไพร";
-      const ev1Id = `ev_${dateStr}_${s}_1`;
-      if (!existingEventIds.has(ev1Id)) {
-        events.push({
-          id: ev1Id,
-          visitorId: vis.vid,
-          sessionId: sid,
-          path: p1Path,
-          title: p1Title,
-          referrer: "Direct / Bookmarks",
-          timestamp: baseTime.toISOString(),
-          durationSeconds: 40 + Math.floor(Math.random() * 80),
-          deviceType: vis.dev.type,
-          browser: vis.dev.browser,
-          os: vis.dev.os,
-          screenResolution: vis.dev.res,
-          language: "th-TH",
-        });
-      }
-
-      const t2 = new Date(baseTime.getTime() + (45 + Math.floor(Math.random() * 60)) * 1000);
-      const ev2Id = `ev_${dateStr}_${s}_2`;
-      if (!existingEventIds.has(ev2Id)) {
-        events.push({
-          id: ev2Id,
-          visitorId: vis.vid,
-          sessionId: sid,
-          path: "/chat",
-          title: "ห้องสนทนา - หมอยาพิษณุโลก",
-          referrer: p1Path,
-          timestamp: t2.toISOString(),
-          durationSeconds: 60 + Math.floor(Math.random() * 120),
-          deviceType: vis.dev.type,
-          browser: vis.dev.browser,
-          os: vis.dev.os,
-          screenResolution: vis.dev.res,
-          language: "th-TH",
-        });
-      }
-
-      if (Math.random() < 0.45) {
-        const t3 = new Date(t2.getTime() + (70 + Math.floor(Math.random() * 80)) * 1000);
-        const ev3Id = `ev_${dateStr}_${s}_3`;
-        if (!existingEventIds.has(ev3Id)) {
-          events.push({
-            id: ev3Id,
-            visitorId: vis.vid,
-            sessionId: sid,
-            path: "/herbs",
-            title: "คลังข้อมูลสมุนไพร 97 รายการ",
-            referrer: "/chat",
-            timestamp: t3.toISOString(),
-            durationSeconds: 50 + Math.floor(Math.random() * 90),
-            deviceType: vis.dev.type,
-            browser: vis.dev.browser,
-            os: vis.dev.os,
-            screenResolution: vis.dev.res,
-            language: "th-TH",
-          });
-        }
+  // หากมีการส่ง monthlyData ล่าสุดเข้ามา ให้อัปเดต weight ตามเดือนที่ตรงกัน
+  if (options.monthlyData && options.monthlyData.length > 0) {
+    const thMonthMap: Record<string, string> = {
+      "ม.ค.": "01", "ก.พ.": "02", "มี.ค.": "03", "เม.ย.": "04",
+      "พ.ค.": "05", "มิ.ย.": "06", "ก.ค.": "07", "ส.ค.": "08",
+      "ก.ย.": "09", "ต.ค.": "10", "พ.ย.": "11", "ธ.ค.": "12",
+    };
+    for (const m of options.monthlyData) {
+      const mm = thMonthMap[m.month];
+      if (!mm) continue;
+      const bucket = monthBuckets.find((b) => b.yearMonth.endsWith(`-${mm}`));
+      if (bucket && m.total > 0) {
+        bucket.weight = m.total;
       }
     }
   }
 
-  // 2. เดือนกันยายน 2569 สอดคล้องกับ 280 เซสชัน และ 552 คำถาม
-  for (let day = 1; day <= 30; day++) {
-    const dateStr = `2026-09-${String(day).padStart(2, "0")}`;
-    const sessionCount = 8 + Math.floor(Math.random() * 4);
-    const dayVisitors = Array.from({ length: 7 + Math.floor(Math.random() * 3) }, (_, vIdx) => ({
-      vid: `vid_sep_${day}_${vIdx}`,
-      dev: pickDevice(),
-    }));
+  // แบ่งเซสชันช่วง 7 วันล่าสุด (~21 เซสชัน) เพื่อให้กราฟรายวัน 7 วันแสดงแนวโน้มต่อเนื่องจาก 829 เซสชัน
+  const recentSessionsCount = Math.min(21, Math.max(7, Math.round(targetSessions * 0.025)));
+  const historicalSessionsTarget = Math.max(0, targetSessions - recentSessionsCount);
+  const totalWeight = monthBuckets.reduce((s, b) => s + b.weight, 0);
 
-    for (let s = 0; s < sessionCount; s++) {
-      const vis = dayVisitors[s % dayVisitors.length];
-      const sid = `sid_sep_${day}_${s}`;
-      const hour = 9 + Math.floor(Math.random() * 9);
-      const minute = Math.floor(Math.random() * 50);
-      const baseTime = new Date(`${dateStr}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00Z`);
+  // จัดสรรจำนวนเซสชันลงแต่ละเดือนตามสัดส่วนกราฟแนวโน้มรายเดือน (Largest-remainder)
+  const exactMonthSessions = monthBuckets.map((b) => (b.weight / totalWeight) * historicalSessionsTarget);
+  const monthSessionCounts = exactMonthSessions.map((v) => Math.floor(v));
+  let rem = historicalSessionsTarget - monthSessionCounts.reduce((s, v) => s + v, 0);
+  const order = exactMonthSessions
+    .map((v, idx) => ({ idx, frac: v - monthSessionCounts[idx] }))
+    .sort((a, b) => b.frac - a.frac);
+  for (let i = 0; i < rem && i < order.length; i++) {
+    monthSessionCounts[order[i].idx]++;
+  }
 
-      const ev1Id = `ev_${dateStr}_${s}_1`;
-      if (!existingEventIds.has(ev1Id)) {
+  const addSessionEvents = (
+    dateStr: string,
+    sessionIdx: number,
+    prefix: string
+  ) => {
+    const dev = pickDevice();
+    const vid = `vid_${prefix}_${dateStr}_${Math.floor(sessionIdx * 0.8)}`;
+    const sid = `sid_${prefix}_${dateStr}_${sessionIdx}`;
+
+    const rH = nextRand();
+    let hour: number;
+    if (rH < 0.45) hour = 9 + Math.floor(nextRand() * 3);
+    else if (rH < 0.8) hour = 13 + Math.floor(nextRand() * 4);
+    else hour = 8 + Math.floor(nextRand() * 12);
+
+    const minute = Math.floor(nextRand() * 55);
+    const sec = Math.floor(nextRand() * 50);
+    const baseTime = new Date(
+      `${dateStr}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:${String(sec).padStart(2, "0")}Z`
+    );
+
+    const p1Path = nextRand() < 0.65 ? "/chat" : "/";
+    const p1Title =
+      p1Path === "/chat"
+        ? "ห้องสนทนา - หมอยาพิษณุโลก"
+        : "หมอยาพิษณุโลก - แนะนำการใช้ยาสมุนไพร";
+    const ev1Id = `ev_${prefix === "recent" ? "recent" : dateStr}_${dateStr}_${sessionIdx}_1`;
+    if (!existingEventIds.has(ev1Id)) {
+      events.push({
+        id: ev1Id,
+        visitorId: vid,
+        sessionId: sid,
+        path: p1Path,
+        title: p1Title,
+        referrer: "Direct / Bookmarks",
+        timestamp: baseTime.toISOString(),
+        durationSeconds: 45 + Math.floor(nextRand() * 80),
+        deviceType: dev.type,
+        browser: dev.browser,
+        os: dev.os,
+        screenResolution: dev.res,
+        language: "th-TH",
+      });
+    }
+
+    const t2 = new Date(baseTime.getTime() + (45 + Math.floor(nextRand() * 60)) * 1000);
+    const ev2Id = `ev_${prefix === "recent" ? "recent" : dateStr}_${dateStr}_${sessionIdx}_2`;
+    if (!existingEventIds.has(ev2Id)) {
+      events.push({
+        id: ev2Id,
+        visitorId: vid,
+        sessionId: sid,
+        path: "/chat",
+        title: "ห้องสนทนา - หมอยาพิษณุโลก",
+        referrer: p1Path,
+        timestamp: t2.toISOString(),
+        durationSeconds: 65 + Math.floor(nextRand() * 110),
+        deviceType: dev.type,
+        browser: dev.browser,
+        os: dev.os,
+        screenResolution: dev.res,
+        language: "th-TH",
+      });
+    }
+
+    if (nextRand() < 0.45) {
+      const t3 = new Date(t2.getTime() + (70 + Math.floor(nextRand() * 80)) * 1000);
+      const ev3Id = `ev_${prefix === "recent" ? "recent" : dateStr}_${dateStr}_${sessionIdx}_3`;
+      if (!existingEventIds.has(ev3Id)) {
         events.push({
-          id: ev1Id,
-          visitorId: vis.vid,
+          id: ev3Id,
+          visitorId: vid,
           sessionId: sid,
-          path: "/chat",
-          title: "ห้องสนทนา - หมอยาพิษณุโลก",
-          referrer: "Direct / Bookmarks",
-          timestamp: baseTime.toISOString(),
-          durationSeconds: 60 + Math.floor(Math.random() * 90),
-          deviceType: vis.dev.type,
-          browser: vis.dev.browser,
-          os: vis.dev.os,
-          screenResolution: vis.dev.res,
+          path: "/herbs",
+          title: "คลังข้อมูลสมุนไพร 97 รายการ",
+          referrer: "/chat",
+          timestamp: t3.toISOString(),
+          durationSeconds: 50 + Math.floor(nextRand() * 90),
+          deviceType: dev.type,
+          browser: dev.browser,
+          os: dev.os,
+          screenResolution: dev.res,
           language: "th-TH",
         });
       }
-
-      if (Math.random() < 0.5) {
-        const t2 = new Date(baseTime.getTime() + 65000);
-        const ev2Id = `ev_${dateStr}_${s}_2`;
-        if (!existingEventIds.has(ev2Id)) {
-          events.push({
-            id: ev2Id,
-            visitorId: vis.vid,
-            sessionId: sid,
-            path: "/herbs",
-            title: "คลังข้อมูลสมุนไพร 97 รายการ",
-            referrer: "/chat",
-            timestamp: t2.toISOString(),
-            durationSeconds: 45 + Math.floor(Math.random() * 60),
-            deviceType: vis.dev.type,
-            browser: vis.dev.browser,
-            os: vis.dev.os,
-            screenResolution: vis.dev.res,
-            language: "th-TH",
-          });
-        }
-      }
     }
+  };
+
+  // สร้างเหตุการณ์รายวันกระจายตามจำนวนเซสชันในแต่ละเดือน (มี.ค.–ต.ค.)
+  monthBuckets.forEach((bucket, bIdx) => {
+    const count = monthSessionCounts[bIdx];
+    for (let i = 0; i < count; i++) {
+      const day = 1 + ((i * 7 + Math.floor(nextRand() * bucket.daysInMonth)) % bucket.daysInMonth);
+      const dateStr = `${bucket.yearMonth}-${String(day).padStart(2, "0")}`;
+      addSessionEvents(dateStr, i, `m${bIdx}`);
+    }
+  });
+
+  // กระจายเซสชันช่วง 7 วันล่าสุดให้กราฟรายวันสัมพันธ์กับค่าเฉลี่ยปัจจุบัน
+  for (let i = 0; i < recentSessionsCount; i++) {
+    const daysAgo = i % 7;
+    const d = new Date(referenceDate);
+    d.setDate(d.getDate() - daysAgo);
+    const dateStr = d.toISOString().split("T")[0];
+    addSessionEvents(dateStr, i, "recent");
   }
 
   events.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   return events;
 }
 
-/** ตรวจสอบและซิงค์ข้อมูลสถิติผู้เข้าชมให้สัมพันธ์กับกิจกรรมจริงของระบบ */
-export function ensureCorrelatedVisitorData(force = false): PageviewEvent[] {
+/** ตรวจสอบและซิงค์ข้อมูลสถิติผู้เข้าชมให้สัมพันธ์กับจำนวนคำถามทั้งหมดและกราฟแนวโน้มรายเดือน */
+export function ensureCorrelatedVisitorData(
+  force = false,
+  options: CorrelatedVisitorOptions = {}
+): PageviewEvent[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(STORAGE_ANALYTICS_KEY);
     const existing: PageviewEvent[] = raw ? JSON.parse(raw) : [];
+    const currentVer = localStorage.getItem(STORAGE_ANALYTICS_SEED_VER_KEY);
 
-    const octEvents = existing.filter((e) => (e.timestamp || "").startsWith("2026-10"));
-    if (!force && octEvents.length >= 200) {
+    if (!force && currentVer === CURRENT_SEED_VERSION && existing.length >= 1000) {
       return existing;
     }
 
-    const seeded = generateCorrelatedVisitorEvents(existing);
+    const seeded = generateCorrelatedVisitorEvents(existing, options);
     localStorage.setItem(STORAGE_ANALYTICS_KEY, JSON.stringify(seeded));
+    localStorage.setItem(STORAGE_ANALYTICS_SEED_VER_KEY, CURRENT_SEED_VERSION);
     return seeded;
   } catch (e) {
     console.warn("Failed to ensure correlated visitor data:", e);
