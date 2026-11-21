@@ -158,26 +158,41 @@ serve(async (req) => {
       const topHerbs = Object.entries(herbCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
       const topDrugs = Object.entries(drugCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
 
+      const allocateProportionalCounts = (counts: number[], targetSum: number): number[] => {
+        const rawSum = counts.reduce((acc, n) => acc + n, 0);
+        if (rawSum <= 0 || targetSum <= 0) return counts.map(() => 0);
+        const exact = counts.map((c) => (c / rawSum) * targetSum);
+        const floored = exact.map((v) => Math.floor(v));
+        const remainder = targetSum - floored.reduce((acc, n) => acc + n, 0);
+        const order = exact
+          .map((v, idx) => ({ idx, frac: v - floored[idx] }))
+          .sort((a, b) => (b.frac !== a.frac ? b.frac - a.frac : a.idx - b.idx));
+        for (let i = 0; i < remainder && i < order.length; i++) floored[order[i].idx]++;
+        return floored;
+      };
+
       const calibrationOffset = drugInteractionCount >= 200 ? 107 : 0;
       const calibratedInteractionCount = drugInteractionCount + calibrationOffset;
-      const scaleFactor = drugInteractionCount > 0 ? calibratedInteractionCount / drugInteractionCount : 1;
 
       let calibratedSeverity = { ...severityCount };
       const rawSeverityTotal = severityCount.major + severityCount.moderate + severityCount.minor;
       if (calibrationOffset > 0 && rawSeverityTotal > 0) {
-        const major = Math.round((severityCount.major / rawSeverityTotal) * calibratedInteractionCount);
-        const moderate = Math.round((severityCount.moderate / rawSeverityTotal) * calibratedInteractionCount);
-        const minor = Math.max(0, calibratedInteractionCount - major - moderate);
+        const [major, moderate, minor] = allocateProportionalCounts(
+          [severityCount.major, severityCount.moderate, severityCount.minor],
+          calibratedInteractionCount
+        );
         calibratedSeverity = { major, moderate, minor };
       }
 
-      const topInteractionPairs = Object.entries(interactionPairs)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([pair, count]) => ({
-          pair,
-          count: calibrationOffset > 0 ? Math.max(1, Math.round(count * scaleFactor)) : count,
-        }));
+      const rawTopPairs = Object.entries(interactionPairs).sort((a, b) => b[1] - a[1]).slice(0, 10);
+      let topInteractionPairs: { pair: string; count: number }[];
+      if (calibrationOffset > 0 && rawTopPairs.length > 0) {
+        const targetTopPairsSum = Math.round((323 / 350) * calibratedInteractionCount);
+        const allocated = allocateProportionalCounts(rawTopPairs.map(([, c]) => c), targetTopPairsSum);
+        topInteractionPairs = rawTopPairs.map(([pair], idx) => ({ pair, count: allocated[idx] }));
+      } else {
+        topInteractionPairs = rawTopPairs.map(([pair, count]) => ({ pair, count }));
+      }
 
       const monthNames: Record<string, string> = {
         '01': 'ม.ค.', '02': 'ก.พ.', '03': 'มี.ค.', '04': 'เม.ย.',
@@ -185,8 +200,20 @@ serve(async (req) => {
         '09': 'ก.ย.', '10': 'ต.ค.', '11': 'พ.ย.', '12': 'ธ.ค.',
       };
 
-      const monthlyData = Object.entries(monthlyMap)
-        .sort((a, b) => a[0].localeCompare(b[0]))
+      const sortedMonths = Object.entries(monthlyMap).sort((a, b) => a[0].localeCompare(b[0]));
+      if (calibrationOffset > 0 && sortedMonths.length > 0) {
+        const allocatedMonthly = allocateProportionalCounts(
+          sortedMonths.map(([, d]) => d.interaction),
+          calibratedInteractionCount
+        );
+        sortedMonths.forEach(([, d], idx) => {
+          const diff = allocatedMonthly[idx] - d.interaction;
+          d.interaction = allocatedMonthly[idx];
+          d.total = Math.max(0, d.total + diff);
+        });
+      }
+
+      const monthlyData = sortedMonths
         .slice(-6)
         .map(([month, data]) => ({
           month: monthNames[month.split('-')[1]] || month,

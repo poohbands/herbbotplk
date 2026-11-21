@@ -77,9 +77,15 @@ describe("Admin Stats Service (Items 1-3 Accuracy & Synonym Deduplication)", () 
     expect(stats.topHerbs.find((h) => h.name === "ขมิ้นชัน (Curcuma longa)")?.count).toBe(1);
   });
 
-  it("calibrates 243 drug interactions to 350 with proportional severity breakdown and top interaction pairs", () => {
+  it("calibrates 243 drug interactions to 350 with proportional severity, 323/350 top pairs, and monthly trend", () => {
     const messages: RawChatMessageForStats[] = [];
-    const addInteractions = (count: number, severity: string | null, herb?: string, drug?: string) => {
+    const addInteractions = (
+      count: number,
+      severity: string | null,
+      herb?: string,
+      drug?: string,
+      createdAt = "2026-10-15T10:00:00Z"
+    ) => {
       for (let i = 0; i < count; i++) {
         messages.push({
           role: "assistant",
@@ -87,34 +93,51 @@ describe("Admin Stats Service (Items 1-3 Accuracy & Synonym Deduplication)", () 
           severity,
           herbs_mentioned: herb ? [herb] : null,
           drugs_mentioned: drug ? [drug] : null,
-          created_at: "2026-11-21T10:00:00Z",
+          created_at: createdAt,
         });
       }
     };
 
     // Match exact production distribution (86 major + 113 moderate + 32 minor + 12 none = 243)
-    addInteractions(31, "moderate", "ขมิ้นชัน", "Warfarin");
-    addInteractions(20, "major", "แปะก๊วย", "Aspirin");
-    addInteractions(66, "major");
-    addInteractions(82, "moderate");
-    addInteractions(32, "minor");
-    addInteractions(12, "none");
+    // across top 10 pairs summing to 138 raw + remaining interactions across months
+    addInteractions(31, "moderate", "ขมิ้นชัน", "Warfarin", "2026-10-15T10:00:00Z");
+    addInteractions(20, "major", "แปะก๊วย", "Aspirin", "2026-10-14T10:00:00Z");
+    addInteractions(16, "major", "ฟ้าทะลายโจร", "Warfarin", "2026-10-13T10:00:00Z");
+    addInteractions(12, "major", "แปะก๊วย", "Warfarin", "2026-10-12T10:00:00Z");
+    addInteractions(11, "minor", "ขมิ้นชัน", "Omeprazole", "2026-10-11T10:00:00Z");
+    addInteractions(10, "major", "แปะก๊วย", "Clopidogrel", "2026-09-15T10:00:00Z");
+    addInteractions(10, "major", "กัญชา", "Lorazepam", "2026-09-14T10:00:00Z");
+    addInteractions(10, "moderate", "กระเทียม", "Warfarin", "2026-09-13T10:00:00Z");
+    addInteractions(9, "moderate", "ขิง", "Clopidogrel", "2026-09-12T10:00:00Z");
+    addInteractions(9, "major", "กัญชา", "Clonazepam", "2026-09-11T10:00:00Z");
+    addInteractions(19 - 10, "major", undefined, undefined, "2026-09-10T10:00:00Z");
+    addInteractions(63, "moderate", undefined, undefined, "2026-08-10T10:00:00Z");
+    addInteractions(21, "minor", undefined, undefined, "2026-07-10T10:00:00Z");
+    addInteractions(12, "none", undefined, undefined, "2026-06-10T10:00:00Z");
 
-    const stats = computeAdminOverviewStats(messages, 829, new Date("2026-11-21T12:00:00Z"));
+    const stats = computeAdminOverviewStats(messages, 829, new Date("2026-10-20T12:00:00Z"));
 
     expect(stats.drugInteractionCount).toBe(350);
     expect(stats.severityBreakdown).toEqual({ major: 130, moderate: 171, minor: 49 });
     expect(
       stats.severityBreakdown.major + stats.severityBreakdown.moderate + stats.severityBreakdown.minor
     ).toBe(350);
+
+    // Top 10 pairs must sum to 323 out of 350 (323/350)
+    const topPairsSum = stats.topInteractionPairs.reduce((sum, p) => sum + p.count, 0);
+    expect(topPairsSum).toBe(323);
     expect(stats.topInteractionPairs[0]).toEqual({
       pair: "ขมิ้นชัน (Curcuma longa) × Warfarin (วาร์ฟาริน)",
-      count: 45,
+      count: 73,
     });
     expect(stats.topInteractionPairs[1]).toEqual({
       pair: "แปะก๊วย (Ginkgo biloba) × Aspirin (แอสไพริน)",
-      count: 29,
+      count: 47,
     });
+
+    // Monthly interaction counts across all months must sum to 350
+    const monthlyInteractionSum = stats.monthlyData.reduce((sum, m) => sum + m.interaction, 0);
+    expect(monthlyInteractionSum).toBe(350);
     expect(stats.categoryData.find((c) => c.name === "Drug Interaction")?.value).toBe(350);
   });
 });

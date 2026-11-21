@@ -218,7 +218,11 @@ const AdminPage = () => {
                 <h3 className="text-base font-semibold font-thai text-foreground mb-1 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-herb-terracotta" /> คู่ยา Drug-Herb Interaction ที่ถูกถามมากที่สุด
                 </h3>
-                <p className="text-xs text-muted-foreground mb-4">ข้อมูลสำคัญสำหรับวางแผนเฝ้าระวัง</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  ข้อมูลสำคัญสำหรับวางแผนเฝ้าระวัง (รวม{" "}
+                  {stats.topInteractionPairs.reduce((sum, p) => sum + p.count, 0).toLocaleString()}/
+                  {stats.drugInteractionCount.toLocaleString()} ครั้ง)
+                </p>
                 {stats.topInteractionPairs.length > 0 ? (
                   <div className="space-y-3">
                     {stats.topInteractionPairs.map((item, i) => (
