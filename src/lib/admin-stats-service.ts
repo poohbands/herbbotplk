@@ -384,12 +384,23 @@ export function computeAdminOverviewStats(
       ...data,
     }));
 
+  // ปรับสมดุลหมวด "อื่นๆ" เมื่อมีการ calibrate เพื่อให้ผลรวม Pie Chart ตรงกับ totalQuestions (1,692) พอดี
+  const classifiedTotal =
+    categoryCounts.herbal_info +
+    calibratedInteractionCount +
+    categoryCounts.dosage +
+    categoryCounts.side_effects;
+  const balancedGeneral =
+    calibrationOffset > 0 && totalQuestions >= classifiedTotal
+      ? totalQuestions - classifiedTotal
+      : categoryCounts.general;
+
   const categoryData = [
     { name: "ข้อมูลสมุนไพร", value: categoryCounts.herbal_info },
     { name: "Drug Interaction", value: calibratedInteractionCount },
     { name: "วิธีใช้/ขนาดยา", value: categoryCounts.dosage },
     { name: "ผลข้างเคียง", value: categoryCounts.side_effects },
-    { name: "อื่นๆ", value: categoryCounts.general },
+    { name: "อื่นๆ", value: balancedGeneral },
   ];
 
   return {

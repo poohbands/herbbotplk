@@ -368,6 +368,8 @@ export function generateCorrelatedVisitorEvents(
 
   // กรองเอาเฉพาะ event จริงที่ผู้ใช้เข้าชมเอง (ไม่ใช่ seed เก่าที่ขึ้นต้นด้วย ev_2026-)
   const realEvents = existing.filter((e) => !e.id.startsWith("ev_2026-") && !e.id.startsWith("ev_recent_"));
+  const realSessionsCount = new Set(realEvents.map((e) => e.sessionId)).size;
+  const sessionsToSeed = Math.max(0, targetSessions - realSessionsCount);
   const events: PageviewEvent[] = [...realEvents];
   const existingEventIds = new Set(events.map((e) => e.id));
 
@@ -435,9 +437,9 @@ export function generateCorrelatedVisitorEvents(
     }
   }
 
-  // แบ่งเซสชันช่วง 7 วันล่าสุด (~21 เซสชัน) เพื่อให้กราฟรายวัน 7 วันแสดงแนวโน้มต่อเนื่องจาก 829 เซสชัน
-  const recentSessionsCount = Math.min(21, Math.max(7, Math.round(targetSessions * 0.025)));
-  const historicalSessionsTarget = Math.max(0, targetSessions - recentSessionsCount);
+  // แบ่งเซสชันช่วง 7 วันล่าสุด (~21 เซสชัน) เพื่อให้กราฟรายวัน 7 วันแสดงแนวโน้มต่อเนื่องจากยอดเซสชันรวม
+  const recentSessionsCount = Math.min(21, Math.min(sessionsToSeed, Math.max(7, Math.round(sessionsToSeed * 0.025))));
+  const historicalSessionsTarget = Math.max(0, sessionsToSeed - recentSessionsCount);
   const totalWeight = monthBuckets.reduce((s, b) => s + b.weight, 0);
 
   // จัดสรรจำนวนเซสชันลงแต่ละเดือนตามสัดส่วนกราฟแนวโน้มรายเดือน (Largest-remainder)
