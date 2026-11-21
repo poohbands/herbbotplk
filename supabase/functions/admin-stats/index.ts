@@ -19,21 +19,63 @@ serve(async (req) => {
     const { action } = await req.json();
 
     if (action === 'overview') {
-      // Get overall stats
-      const { data: stats } = await supabase
-        .from('chat_statistics')
-        .select('*')
-        .single();
+      const INVALID_TOKENS = new Set(['', 'none', 'null', 'undefined', 'n/a', '-', 'drugs:', 'herbs:', 'ไม่มี', 'ไม่ระบุ']);
+      const HERB_SYNONYMS: Record<string, string> = {
+        'ขมิ้นชัน': 'ขมิ้นชัน (Curcuma longa)', 'ขมิ้น': 'ขมิ้นชัน (Curcuma longa)', 'curcuma longa': 'ขมิ้นชัน (Curcuma longa)', 'turmeric': 'ขมิ้นชัน (Curcuma longa)', 'curcumin': 'ขมิ้นชัน (Curcuma longa)',
+        'แปะก๊วย': 'แปะก๊วย (Ginkgo biloba)', 'ใบแปะก๊วย': 'แปะก๊วย (Ginkgo biloba)', 'ginkgo biloba': 'แปะก๊วย (Ginkgo biloba)', 'ginkgo': 'แปะก๊วย (Ginkgo biloba)',
+        'ฟ้าทะลายโจร': 'ฟ้าทะลายโจร (Andrographis paniculata)', 'andrographis paniculata': 'ฟ้าทะลายโจร (Andrographis paniculata)', 'andrographis': 'ฟ้าทะลายโจร (Andrographis paniculata)',
+        'ขิง': 'ขิง (Zingiber officinale)', 'zingiber officinale': 'ขิง (Zingiber officinale)', 'ginger': 'ขิง (Zingiber officinale)',
+        'กัญชา': 'กัญชา / ยาศุขไสยาศน์ (Cannabis)', 'cannabis': 'กัญชา / ยาศุขไสยาศน์ (Cannabis)', 'ยาศุขไสยาศน์': 'กัญชา / ยาศุขไสยาศน์ (Cannabis)',
+        'เถาวัลย์เปรียง': 'เถาวัลย์เปรียง (Derris scandens)', 'derris scandens': 'เถาวัลย์เปรียง (Derris scandens)',
+        'รางจืด': 'รางจืด (Thunbergia laurifolia)', 'thunbergia laurifolia': 'รางจืด (Thunbergia laurifolia)',
+        'กระเทียม': 'กระเทียม (Allium sativum)', 'allium sativum': 'กระเทียม (Allium sativum)', 'garlic': 'กระเทียม (Allium sativum)',
+        'โสม': 'โสม (Panax ginseng)', 'ginseng': 'โสม (Panax ginseng)', 'panax ginseng': 'โสม (Panax ginseng)',
+        'มะระขี้นก': 'มะระขี้นก (Momordica charantia)', 'กระชายดำ': 'กระชายดำ (Kaempferia parviflora)',
+        'บัวบก': 'บัวบก (Centella asiatica)', 'ใบบัวบก': 'บัวบก (Centella asiatica)', 'centella asiatica': 'บัวบก (Centella asiatica)',
+      };
+      const DRUG_SYNONYMS: Record<string, string> = {
+        'warfarin': 'Warfarin (วาร์ฟาริน)', 'วาร์ฟาริน': 'Warfarin (วาร์ฟาริน)',
+        'aspirin': 'Aspirin (แอสไพริน)', 'แอสไพริน': 'Aspirin (แอสไพริน)',
+        'clopidogrel': 'Clopidogrel (โคลพิโดเกรล)', 'โคลพิโดเกรล': 'Clopidogrel (โคลพิโดเกรล)',
+        'heparin': 'Heparin (เฮพาริน)', 'เฮพาริน': 'Heparin (เฮพาริน)',
+        'omeprazole': 'Omeprazole (โอเมพราโซล)', 'โอเมพราโซล': 'Omeprazole (โอเมพราโซล)',
+        'metformin': 'Metformin (เมทฟอร์มิน)', 'เมทฟอร์มิน': 'Metformin (เมทฟอร์มิน)',
+        'ibuprofen': 'Ibuprofen (ไอบูโพรเฟน)', 'ไอบูโพรเฟน': 'Ibuprofen (ไอบูโพรเฟน)',
+        'lorazepam': 'Lorazepam (ลอราซีแพม)', 'ลอราซีแพม': 'Lorazepam (ลอราซีแพม)',
+        'clonazepam': 'Clonazepam (โคลนาซีแพม)', 'โคลนาซีแพม': 'Clonazepam (โคลนาซีแพม)',
+        'phenytoin': 'Phenytoin (เฟนิทอยน์)', 'simvastatin': 'Simvastatin (ซิมวาสแตติน)',
+        'amlodipine': 'Amlodipine (แอมโลดิปีน)', 'losartan': 'Losartan (โลซาร์แทน)',
+        'paracetamol': 'Paracetamol (พาราเซตามอล)', 'พาราเซตามอล': 'Paracetamol (พาราเซตามอล)',
+      };
+      const normToken = (raw: string | null | undefined, map: Record<string, string>) => {
+        if (!raw || typeof raw !== 'string') return null;
+        const cleaned = raw.trim().replace(/^[-•*]\s*/, '');
+        const lower = cleaned.toLowerCase();
+        if (INVALID_TOKENS.has(lower) || lower.startsWith('drugs:') || lower.startsWith('herbs:')) return null;
+        return map[lower] || cleaned;
+      };
 
-      // Get daily counts for last 7 days
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-      const { data: dailyMessages } = await supabase
-        .from('chat_messages')
-        .select('created_at, category, role')
-        .gte('created_at', sevenDaysAgo.toISOString())
-        .eq('role', 'user');
+      const [{ count: totalSessions }, allMessages] = await Promise.all([
+        supabase.from('chat_sessions').select('id', { count: 'exact', head: true }),
+        (async () => {
+          const rows: any[] = [];
+          const pageSize = 1000;
+          let offset = 0;
+          while (true) {
+            const { data, error } = await supabase
+              .from('chat_messages')
+              .select('herbs_mentioned, drugs_mentioned, category, severity, created_at, role')
+              .order('created_at', { ascending: true })
+              .range(offset, offset + pageSize - 1);
+            if (error) throw error;
+            if (!data || data.length === 0) break;
+            rows.push(...data);
+            if (data.length < pageSize) break;
+            offset += pageSize;
+          }
+          return rows;
+        })(),
+      ]);
 
       const dayNames = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
       const dailyMap: Record<string, { questions: number; interactions: number }> = {};
@@ -43,67 +85,75 @@ serve(async (req) => {
         dailyMap[d.toISOString().split('T')[0]] = { questions: 0, interactions: 0 };
       }
 
-      (dailyMessages || []).forEach((msg: any) => {
-        const key = msg.created_at.split('T')[0];
-        if (dailyMap[key]) {
-          dailyMap[key].questions++;
-          if (msg.category === 'drug_interaction') dailyMap[key].interactions++;
-        }
-      });
-
-      const dailyData = Object.entries(dailyMap).map(([date, data]) => ({
-        date: dayNames[new Date(date).getDay()],
-        questions: data.questions,
-        interactions: data.interactions,
-      }));
-
-      // All messages with metadata
-      const { data: allMessages } = await supabase
-        .from('chat_messages')
-        .select('herbs_mentioned, drugs_mentioned, category, severity, created_at, role')
-        .eq('role', 'assistant');
-
+      let totalQuestions = 0;
+      let drugInteractionCount = 0;
       const herbCount: Record<string, number> = {};
       const drugCount: Record<string, number> = {};
       const interactionPairs: Record<string, number> = {};
       const severityCount: Record<string, number> = { major: 0, moderate: 0, minor: 0 };
       const monthlyMap: Record<string, { total: number; interaction: number; dosage: number; herbal: number; side_effects: number }> = {};
+      const categoryCounts: Record<string, number> = { herbal_info: 0, drug_interaction: 0, dosage: 0, side_effects: 0, general: 0 };
 
-      (allMessages || []).forEach((msg: any) => {
-        // Herb/drug counts
-        (msg.herbs_mentioned || []).forEach((h: string) => {
-          herbCount[h] = (herbCount[h] || 0) + 1;
-        });
-        (msg.drugs_mentioned || []).forEach((d: string) => {
-          drugCount[d] = (drugCount[d] || 0) + 1;
-        });
+      for (const msg of allMessages) {
+        const dateKey = msg.created_at ? msg.created_at.split('T')[0] : '';
+        if (msg.role === 'user') {
+          totalQuestions++;
+          if (dateKey && dailyMap[dateKey]) dailyMap[dateKey].questions++;
+          continue;
+        }
+        if (msg.role !== 'assistant') continue;
 
-        // Interaction pairs: herb × drug
-        if (msg.category === 'drug_interaction' && msg.herbs_mentioned?.length && msg.drugs_mentioned?.length) {
-          for (const herb of msg.herbs_mentioned) {
-            for (const drug of msg.drugs_mentioned) {
+        const cat = msg.category || 'general';
+        if (categoryCounts[cat] !== undefined) categoryCounts[cat]++;
+        else categoryCounts.general++;
+
+        if (cat === 'drug_interaction') {
+          drugInteractionCount++;
+          if (dateKey && dailyMap[dateKey]) dailyMap[dateKey].interactions++;
+          if (msg.severity && severityCount[msg.severity] !== undefined) {
+            severityCount[msg.severity]++;
+          }
+        }
+
+        const uniqueHerbs = new Set<string>();
+        for (const h of msg.herbs_mentioned || []) {
+          const norm = normToken(h, HERB_SYNONYMS);
+          if (norm) uniqueHerbs.add(norm);
+        }
+        for (const h of uniqueHerbs) herbCount[h] = (herbCount[h] || 0) + 1;
+
+        const uniqueDrugs = new Set<string>();
+        for (const d of msg.drugs_mentioned || []) {
+          const norm = normToken(d, DRUG_SYNONYMS);
+          if (norm) uniqueDrugs.add(norm);
+        }
+        for (const d of uniqueDrugs) drugCount[d] = (drugCount[d] || 0) + 1;
+
+        if (cat === 'drug_interaction' && uniqueHerbs.size > 0 && uniqueDrugs.size > 0) {
+          for (const herb of uniqueHerbs) {
+            for (const drug of uniqueDrugs) {
               const pair = `${herb} × ${drug}`;
               interactionPairs[pair] = (interactionPairs[pair] || 0) + 1;
             }
           }
         }
 
-        // Severity breakdown
-        if (msg.severity && severityCount[msg.severity] !== undefined) {
-          severityCount[msg.severity]++;
-        }
-
-        // Monthly trends
-        const month = msg.created_at?.substring(0, 7); // YYYY-MM
+        const month = msg.created_at?.substring(0, 7);
         if (month) {
           if (!monthlyMap[month]) monthlyMap[month] = { total: 0, interaction: 0, dosage: 0, herbal: 0, side_effects: 0 };
           monthlyMap[month].total++;
-          if (msg.category === 'drug_interaction') monthlyMap[month].interaction++;
-          if (msg.category === 'dosage') monthlyMap[month].dosage++;
-          if (msg.category === 'herbal_info') monthlyMap[month].herbal++;
-          if (msg.category === 'side_effects') monthlyMap[month].side_effects++;
+          if (cat === 'drug_interaction') monthlyMap[month].interaction++;
+          else if (cat === 'dosage') monthlyMap[month].dosage++;
+          else if (cat === 'herbal_info') monthlyMap[month].herbal++;
+          else if (cat === 'side_effects') monthlyMap[month].side_effects++;
         }
-      });
+      }
+
+      const dailyData = Object.entries(dailyMap).map(([date, data]) => ({
+        date: dayNames[new Date(date).getDay()],
+        questions: data.questions,
+        interactions: data.interactions,
+      }));
 
       const topHerbs = Object.entries(herbCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
       const topDrugs = Object.entries(drugCount).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, count]) => ({ name, count }));
@@ -124,17 +174,17 @@ serve(async (req) => {
         }));
 
       const categoryData = [
-        { name: 'ข้อมูลสมุนไพร', value: stats?.herbal_info_count || 0 },
-        { name: 'Drug Interaction', value: stats?.drug_interaction_count || 0 },
-        { name: 'วิธีใช้/ขนาดยา', value: stats?.dosage_count || 0 },
-        { name: 'ผลข้างเคียง', value: stats?.side_effects_count || 0 },
-        { name: 'อื่นๆ', value: stats?.general_count || 0 },
+        { name: 'ข้อมูลสมุนไพร', value: categoryCounts.herbal_info },
+        { name: 'Drug Interaction', value: categoryCounts.drug_interaction },
+        { name: 'วิธีใช้/ขนาดยา', value: categoryCounts.dosage },
+        { name: 'ผลข้างเคียง', value: categoryCounts.side_effects },
+        { name: 'อื่นๆ', value: categoryCounts.general },
       ];
 
       return new Response(JSON.stringify({
-        totalQuestions: stats?.total_questions || 0,
-        totalSessions: stats?.total_sessions || 0,
-        drugInteractionCount: stats?.drug_interaction_count || 0,
+        totalQuestions,
+        totalSessions: totalSessions || 0,
+        drugInteractionCount,
         dailyData,
         topHerbs,
         topDrugs,
