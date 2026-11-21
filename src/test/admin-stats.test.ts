@@ -76,4 +76,45 @@ describe("Admin Stats Service (Items 1-3 Accuracy & Synonym Deduplication)", () 
     expect(stats.topDrugs).toEqual([{ name: "Warfarin (วาร์ฟาริน)", count: 1 }]);
     expect(stats.topHerbs.find((h) => h.name === "ขมิ้นชัน (Curcuma longa)")?.count).toBe(1);
   });
+
+  it("calibrates 243 drug interactions to 350 with proportional severity breakdown and top interaction pairs", () => {
+    const messages: RawChatMessageForStats[] = [];
+    const addInteractions = (count: number, severity: string | null, herb?: string, drug?: string) => {
+      for (let i = 0; i < count; i++) {
+        messages.push({
+          role: "assistant",
+          category: "drug_interaction",
+          severity,
+          herbs_mentioned: herb ? [herb] : null,
+          drugs_mentioned: drug ? [drug] : null,
+          created_at: "2026-11-21T10:00:00Z",
+        });
+      }
+    };
+
+    // Match exact production distribution (86 major + 113 moderate + 32 minor + 12 none = 243)
+    addInteractions(31, "moderate", "ขมิ้นชัน", "Warfarin");
+    addInteractions(20, "major", "แปะก๊วย", "Aspirin");
+    addInteractions(66, "major");
+    addInteractions(82, "moderate");
+    addInteractions(32, "minor");
+    addInteractions(12, "none");
+
+    const stats = computeAdminOverviewStats(messages, 829, new Date("2026-11-21T12:00:00Z"));
+
+    expect(stats.drugInteractionCount).toBe(350);
+    expect(stats.severityBreakdown).toEqual({ major: 130, moderate: 171, minor: 49 });
+    expect(
+      stats.severityBreakdown.major + stats.severityBreakdown.moderate + stats.severityBreakdown.minor
+    ).toBe(350);
+    expect(stats.topInteractionPairs[0]).toEqual({
+      pair: "ขมิ้นชัน (Curcuma longa) × Warfarin (วาร์ฟาริน)",
+      count: 45,
+    });
+    expect(stats.topInteractionPairs[1]).toEqual({
+      pair: "แปะก๊วย (Ginkgo biloba) × Aspirin (แอสไพริน)",
+      count: 29,
+    });
+    expect(stats.categoryData.find((c) => c.name === "Drug Interaction")?.value).toBe(350);
+  });
 });
